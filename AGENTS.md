@@ -115,6 +115,10 @@ Ensure all agent-driven changes follow project architecture, security rules, and
 7. **Testing**: Update tests with code changes
 8. **AI integration**: Backend only (functions-ai, functions-ai-document)
 
+## **Firebase Files Location**
+- **Paths**: src/firebase/firebase.json, src/firebase/firestore.indexes.json, src/firebase/firestore.rules, src/firebase/storage.rules
+- **Note**: These Firebase configuration files live under `src/firebase`. Do NOT recreate, move, or duplicate them at the repository root — agents and scripts should reference `src/firebase` when reading or updating Firebase configuration.
+
 ## Related
 - `src/AGENTS.md` - Source directory rules
 - `src/app/AGENTS.md` - Application structure
