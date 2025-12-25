@@ -6,7 +6,8 @@
       "args": [
         "run",
         "-i",
-        "--rm",
+        "--name", "awesome-copilot",   // 固定名字
+        "--restart", "unless-stopped", // 自動重啟
         "ghcr.io/microsoft/mcp-dotnet-samples/awesome-copilot:latest"
       ]
     },
@@ -18,6 +19,5 @@
       },
       "tools": ["get-library-docs", "resolve-library-id"]
     }
-
   }
 }
