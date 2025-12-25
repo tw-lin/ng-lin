@@ -75,6 +75,7 @@
     "@delon/util": "^20.1.0",
     "ng-zorro-antd": "^20.3.1",
     "ngx-tinymce": "^20.0.0",
+    "reflect-metadata": "^0.2.2",
     "rxjs": "~7.8.0",
     "screenfull": "^6.0.2",
     "tslib": "^2.3.0",
