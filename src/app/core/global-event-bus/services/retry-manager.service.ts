@@ -61,19 +61,25 @@ export class RetryManagerService {
         attempts.push({
           attempt,
           timestamp: attemptStart,
-          success: true,
+          error: new Error('Success'), // Placeholder error for successful attempt
+          delayMs: 0,
+          maxAttempts: policy.maxAttempts
         });
 
         return result;
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
+        // Calculate delay for next retry
+        const delay = this.calculateDelay(attempt, policy);
+
         // Record failed attempt
         attempts.push({
           attempt,
           timestamp: attemptStart,
-          success: false,
           error: lastError,
+          delayMs: delay,
+          maxAttempts: policy.maxAttempts
         });
 
         // Check if should retry
@@ -81,29 +87,20 @@ export class RetryManagerService {
           const shouldRetry = this.shouldRetry(lastError, attempt, policy);
 
           if (!shouldRetry) {
-            throw new RetryExhaustedError(
-              `Operation failed and retry policy decided not to retry: ${lastError.message}`,
-              attempt,
-              policy.maxAttempts,
-              attempts,
-              lastError
+            throw new Error(
+              `Operation failed and retry policy decided not to retry: ${lastError.message}`
             );
           }
 
-          // Calculate delay and wait
-          const delay = this.calculateDelay(attempt, policy);
+          // Wait before next attempt
           await this.sleep(delay);
         }
       }
     }
 
     // All attempts exhausted
-    throw new RetryExhaustedError(
-      `Operation failed after ${policy.maxAttempts} attempts: ${lastError?.message ?? 'Unknown error'}`,
-      policy.maxAttempts,
-      policy.maxAttempts,
-      attempts,
-      lastError
+    throw new Error(
+      `Operation failed after ${policy.maxAttempts} attempts: ${lastError?.message ?? 'Unknown error'}`
     );
   }
 
@@ -180,9 +177,8 @@ export class RetryManagerService {
   createRetryResult(attempts: RetryAttempt[], success: boolean): RetryResult {
     return {
       success,
-      attempts,
-      totalAttempts: attempts.length,
-      totalDuration: this.calculateTotalDuration(attempts),
+      attempts: attempts.length,
+      totalTimeMs: this.calculateTotalDuration(attempts),
     };
   }
 

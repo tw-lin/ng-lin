@@ -64,7 +64,7 @@ const DEFAULT_CONFIG: AuditLogConfig = {
 
 @Injectable({ providedIn: 'root' })
 export class AuditLogService {
-  private eventBus = inject(IEventBus);
+  private eventBus = inject(EVENT_BUS);
   private destroyRef = inject(DestroyRef);
   
   /**
@@ -364,6 +364,8 @@ export class AuditLogService {
     const stats: Record<AuditCategory, number> = {
       [AuditCategory.AUTHENTICATION]: 0,
       [AuditCategory.AUTHORIZATION]: 0,
+      [AuditCategory.PERMISSION]: 0,
+      [AuditCategory.ROLE]: 0,
       [AuditCategory.DATA_ACCESS]: 0,
       [AuditCategory.DATA_MODIFICATION]: 0,
       [AuditCategory.SYSTEM_CONFIGURATION]: 0,

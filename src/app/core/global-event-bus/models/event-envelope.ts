@@ -72,6 +72,13 @@ export class EventEnvelope<T extends DomainEvent = DomainEvent> {
   static create<T extends DomainEvent>(event: T): EventEnvelope<T> {
     return new EventEnvelope({ event });
   }
+  
+  /**
+   * Alias for create (for backward compatibility)
+   */
+  static wrap<T extends DomainEvent>(event: T): EventEnvelope<T> {
+    return EventEnvelope.create(event);
+  }
 
   /**
    * Create envelope with incremented retry count

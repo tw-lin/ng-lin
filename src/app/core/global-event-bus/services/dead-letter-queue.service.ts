@@ -152,16 +152,21 @@ export class DeadLetterQueueService {
       return next;
     });
 
-    // Reset retry count for fresh retry
-    envelope.retryCount = 0;
-    envelope.error = undefined;
-    envelope.lastAttempt = undefined;
+    // Create a new envelope with reset retry count for fresh retry
+    const freshEnvelope = new EventEnvelope({
+      event: envelope.event,
+      retryCount: 0,
+      error: undefined,
+      lastAttempt: undefined,
+      createdAt: envelope.createdAt,
+      isDeadLetter: false
+    });
 
     console.info(
       `[DeadLetterQueue] Event ${eventId} removed from DLQ for retry`
     );
 
-    return envelope;
+    return freshEnvelope;
   }
 
   /**
@@ -180,19 +185,27 @@ export class DeadLetterQueueService {
       const next = new Map(current);
       for (const envelope of toRetry) {
         next.delete(envelope.event.eventId);
-        // Reset retry count
-        envelope.retryCount = 0;
-        envelope.error = undefined;
-        envelope.lastAttempt = undefined;
       }
       return next;
     });
-
-    console.info(
-      `[DeadLetterQueue] ${toRetry.length} events of type ${eventType} removed from DLQ for retry`
+    
+    // Create fresh envelopes with reset retry count
+    const freshEnvelopes: EventEnvelope[] = toRetry.map(envelope => 
+      new EventEnvelope({
+        event: envelope.event,
+        retryCount: 0,
+        error: undefined,
+        lastAttempt: undefined,
+        createdAt: envelope.createdAt,
+        isDeadLetter: false
+      })
     );
 
-    return toRetry;
+    console.info(
+      `[DeadLetterQueue] ${freshEnvelopes.length} events of type ${eventType} removed from DLQ for retry`
+    );
+
+    return freshEnvelopes;
   }
 
   /**

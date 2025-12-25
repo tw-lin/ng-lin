@@ -54,15 +54,19 @@ export interface UserLoginPayload {
  * - SecurityMonitoringConsumer (異常登入檢測)
  */
 export class UserLoginEvent extends DomainEvent<UserLoginPayload> {
-  readonly type = 'auth.user.login';
+  readonly eventType = 'auth.user.login';
+  override readonly payload: UserLoginPayload;
 
   constructor(payload: UserLoginPayload) {
-    super('auth.user.login', payload, {
+    super({
       aggregateId: payload.userId,
       aggregateType: 'User',
-      version: '1.0.0',
-      tags: ['auth', 'security', 'audit']
+      metadata: {
+        version: '1.0.0',
+        source: 'auth-service'
+      }
     });
+    this.payload = payload;
   }
 }
 
@@ -96,15 +100,19 @@ export interface UserLogoutPayload {
  * - Token 過期
  */
 export class UserLogoutEvent extends DomainEvent<UserLogoutPayload> {
-  readonly type = 'auth.user.logout';
+  readonly eventType = 'auth.user.logout';
+  override readonly payload: UserLogoutPayload;
 
   constructor(payload: UserLogoutPayload) {
-    super('auth.user.logout', payload, {
+    super({
       aggregateId: payload.userId,
       aggregateType: 'User',
-      version: '1.0.0',
-      tags: ['auth', 'security', 'audit']
+      metadata: {
+        version: '1.0.0',
+        source: 'auth-service'
+      }
     });
+    this.payload = payload;
   }
 }
 
@@ -141,15 +149,19 @@ export interface PasswordChangedPayload {
  * - 記錄變更方式與 IP
  */
 export class PasswordChangedEvent extends DomainEvent<PasswordChangedPayload> {
-  readonly type = 'auth.password.changed';
+  readonly eventType = 'auth.password.changed';
+  override readonly payload: PasswordChangedPayload;
 
   constructor(payload: PasswordChangedPayload) {
-    super('auth.password.changed', payload, {
+    super({
       aggregateId: payload.userId,
       aggregateType: 'User',
-      version: '1.0.0',
-      tags: ['auth', 'security', 'audit', 'sensitive']
+      metadata: {
+        version: '1.0.0',
+        source: 'auth-service'
+      }
     });
+    this.payload = payload;
   }
 }
 
@@ -179,15 +191,19 @@ export interface MFAEnabledPayload {
  * - MFA 重新配置
  */
 export class MFAEnabledEvent extends DomainEvent<MFAEnabledPayload> {
-  readonly type = 'auth.mfa.enabled';
+  readonly eventType = 'auth.mfa.enabled';
+  override readonly payload: MFAEnabledPayload;
 
   constructor(payload: MFAEnabledPayload) {
-    super('auth.mfa.enabled', payload, {
+    super({
       aggregateId: payload.userId,
       aggregateType: 'User',
-      version: '1.0.0',
-      tags: ['auth', 'security', 'mfa', 'audit']
+      metadata: {
+        version: '1.0.0',
+        source: 'auth-service'
+      }
     });
+    this.payload = payload;
   }
 }
 
@@ -218,15 +234,19 @@ export interface MFADisabledPayload {
  * - 安全事件導致停用
  */
 export class MFADisabledEvent extends DomainEvent<MFADisabledPayload> {
-  readonly type = 'auth.mfa.disabled';
+  readonly eventType = 'auth.mfa.disabled';
+  override readonly payload: MFADisabledPayload;
 
   constructor(payload: MFADisabledPayload) {
-    super('auth.mfa.disabled', payload, {
+    super({
       aggregateId: payload.userId,
       aggregateType: 'User',
-      version: '1.0.0',
-      tags: ['auth', 'security', 'mfa', 'audit']
+      metadata: {
+        version: '1.0.0',
+        source: 'auth-service'
+      }
     });
+    this.payload = payload;
   }
 }
 
@@ -258,15 +278,19 @@ export interface TokenRefreshedPayload {
  * - 手動 Token 刷新
  */
 export class TokenRefreshedEvent extends DomainEvent<TokenRefreshedPayload> {
-  readonly type = 'auth.token.refreshed';
+  readonly eventType = 'auth.token.refreshed';
+  override readonly payload: TokenRefreshedPayload;
 
   constructor(payload: TokenRefreshedPayload) {
-    super('auth.token.refreshed', payload, {
+    super({
       aggregateId: payload.userId,
       aggregateType: 'User',
-      version: '1.0.0',
-      tags: ['auth', 'token', 'session']
+      metadata: {
+        version: '1.0.0',
+        source: 'auth-service'
+      }
     });
+    this.payload = payload;
   }
 }
 
@@ -301,15 +325,19 @@ export interface SessionExpiredPayload {
  * - 達到最大生命週期
  */
 export class SessionExpiredEvent extends DomainEvent<SessionExpiredPayload> {
-  readonly type = 'auth.session.expired';
+  readonly eventType = 'auth.session.expired';
+  override readonly payload: SessionExpiredPayload;
 
   constructor(payload: SessionExpiredPayload) {
-    super('auth.session.expired', payload, {
+    super({
       aggregateId: payload.userId,
       aggregateType: 'User',
-      version: '1.0.0',
-      tags: ['auth', 'session', 'security']
+      metadata: {
+        version: '1.0.0',
+        source: 'auth-service'
+      }
     });
+    this.payload = payload;
   }
 }
 
@@ -355,15 +383,19 @@ export interface PermissionChangedPayload {
  * - NotificationConsumer (通知權限變更)
  */
 export class PermissionChangedEvent extends DomainEvent<PermissionChangedPayload> {
-  readonly type = 'auth.permission.changed';
+  readonly eventType = 'auth.permission.changed';
+  override readonly payload: PermissionChangedPayload;
 
   constructor(payload: PermissionChangedPayload) {
-    super('auth.permission.changed', payload, {
+    super({
       aggregateId: payload.userId,
       aggregateType: 'User',
-      version: '1.0.0',
-      tags: ['auth', 'permission', 'rbac', 'audit']
+      metadata: {
+        version: '1.0.0',
+        source: 'auth-service'
+      }
     });
+    this.payload = payload;
   }
 }
 
@@ -400,15 +432,19 @@ export interface RoleChangedPayload {
  * - 更新角色
  */
 export class RoleChangedEvent extends DomainEvent<RoleChangedPayload> {
-  readonly type = 'auth.role.changed';
+  readonly eventType = 'auth.role.changed';
+  override readonly payload: RoleChangedPayload;
 
   constructor(payload: RoleChangedPayload) {
-    super('auth.role.changed', payload, {
+    super({
       aggregateId: payload.userId,
       aggregateType: 'User',
-      version: '1.0.0',
-      tags: ['auth', 'role', 'rbac', 'audit']
+      metadata: {
+        version: '1.0.0',
+        source: 'auth-service'
+      }
     });
+    this.payload = payload;
   }
 }
 
@@ -449,15 +485,19 @@ export interface LoginFailedPayload {
  * - 自動帳戶鎖定
  */
 export class LoginFailedEvent extends DomainEvent<LoginFailedPayload> {
-  readonly type = 'auth.login.failed';
+  readonly eventType = 'auth.login.failed';
+  override readonly payload: LoginFailedPayload;
 
   constructor(payload: LoginFailedPayload) {
-    super('auth.login.failed', payload, {
-      aggregateId: payload.email, // 使用 email 作為 aggregateId
+    super({
+      aggregateId: payload.email,
       aggregateType: 'LoginAttempt',
-      version: '1.0.0',
-      tags: ['auth', 'security', 'audit', 'alert']
+      metadata: {
+        version: '1.0.0',
+        source: 'auth-service'
+      }
     });
+    this.payload = payload;
   }
 }
 
@@ -487,14 +527,18 @@ export interface EmailVerifiedPayload {
  * - 用戶輸入驗證碼
  */
 export class EmailVerifiedEvent extends DomainEvent<EmailVerifiedPayload> {
-  readonly type = 'auth.email.verified';
+  readonly eventType = 'auth.email.verified';
+  override readonly payload: EmailVerifiedPayload;
 
   constructor(payload: EmailVerifiedPayload) {
-    super('auth.email.verified', payload, {
+    super({
       aggregateId: payload.userId,
       aggregateType: 'User',
-      version: '1.0.0',
-      tags: ['auth', 'verification', 'audit']
+      metadata: {
+        version: '1.0.0',
+        source: 'auth-service'
+      }
     });
+    this.payload = payload;
   }
 }

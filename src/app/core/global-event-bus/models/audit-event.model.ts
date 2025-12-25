@@ -33,6 +33,10 @@ export enum AuditCategory {
   AUTHENTICATION = 'AUTHENTICATION',
   /** 授權相關 */
   AUTHORIZATION = 'AUTHORIZATION',
+  /** 權限變更 */
+  PERMISSION = 'PERMISSION',
+  /** 角色變更 */
+  ROLE = 'ROLE',
   /** 資料存取 */
   DATA_ACCESS = 'DATA_ACCESS',
   /** 資料修改 */
@@ -125,7 +129,32 @@ export interface AuditChanges {
  * 審計事件建構器
  */
 export class AuditEventBuilder {
-  private event: Partial<AuditEvent> = {
+  private data: {
+    id?: string;
+    eventId?: string;
+    eventType?: string;
+    timestamp?: Date;
+    level: AuditLevel;
+    category: AuditCategory;
+    actor?: string;
+    tenantId?: string;
+    action?: string;
+    resourceType?: string;
+    resourceId?: string;
+    resourceName?: string;
+    result: 'success' | 'failure' | 'partial';
+    errorMessage?: string;
+    changes?: AuditChanges;
+    metadata?: Record<string, unknown>;
+    ipAddress?: string;
+    userAgent?: string;
+    correlationId?: string;
+    requiresReview: boolean;
+    reviewed: boolean;
+    reviewedBy?: string;
+    reviewedAt?: Date;
+    reviewNotes?: string;
+  } = {
     level: AuditLevel.INFO,
     category: AuditCategory.BUSINESS_OPERATION,
     result: 'success',
@@ -134,96 +163,121 @@ export class AuditEventBuilder {
   };
   
   withId(id: string): this {
-    this.event.id = id;
+    this.data.id = id;
     return this;
   }
   
   fromDomainEvent(eventId: string, eventType: string, timestamp: Date): this {
-    this.event.eventId = eventId;
-    this.event.eventType = eventType;
-    this.event.timestamp = timestamp;
+    this.data.eventId = eventId;
+    this.data.eventType = eventType;
+    this.data.timestamp = timestamp;
     return this;
   }
   
   withLevel(level: AuditLevel): this {
-    this.event.level = level;
+    this.data.level = level;
     return this;
   }
   
   withCategory(category: AuditCategory): this {
-    this.event.category = category;
+    this.data.category = category;
     return this;
   }
   
   withActor(actor: string): this {
-    this.event.actor = actor;
+    this.data.actor = actor;
     return this;
   }
   
   withTenant(tenantId: string): this {
-    this.event.tenantId = tenantId;
+    this.data.tenantId = tenantId;
     return this;
   }
   
   withAction(action: string): this {
-    this.event.action = action;
+    this.data.action = action;
     return this;
   }
   
   withResource(resourceType: string, resourceId: string, resourceName?: string): this {
-    this.event.resourceType = resourceType;
-    this.event.resourceId = resourceId;
+    this.data.resourceType = resourceType;
+    this.data.resourceId = resourceId;
     if (resourceName) {
-      this.event.resourceName = resourceName;
+      this.data.resourceName = resourceName;
     }
     return this;
   }
   
   withResult(result: 'success' | 'failure' | 'partial', errorMessage?: string): this {
-    this.event.result = result;
+    this.data.result = result;
     if (errorMessage) {
-      this.event.errorMessage = errorMessage;
+      this.data.errorMessage = errorMessage;
     }
     return this;
   }
   
   withChanges(changes: AuditChanges): this {
-    this.event.changes = changes;
+    this.data.changes = changes;
     return this;
   }
   
   withMetadata(metadata: Record<string, unknown>): this {
-    this.event.metadata = metadata;
+    this.data.metadata = metadata;
     return this;
   }
   
   withContext(ipAddress?: string, userAgent?: string, correlationId?: string): this {
-    this.event.ipAddress = ipAddress;
-    this.event.userAgent = userAgent;
-    this.event.correlationId = correlationId;
+    this.data.ipAddress = ipAddress;
+    this.data.userAgent = userAgent;
+    this.data.correlationId = correlationId;
     return this;
   }
   
   requiresReview(required: boolean = true): this {
-    this.event.requiresReview = required;
+    this.data.requiresReview = required;
     return this;
   }
   
   markAsReviewed(reviewedBy: string, notes?: string): this {
-    this.event.reviewed = true;
-    this.event.reviewedBy = reviewedBy;
-    this.event.reviewedAt = new Date();
-    this.event.reviewNotes = notes;
+    this.data.reviewed = true;
+    this.data.reviewedBy = reviewedBy;
+    this.data.reviewedAt = new Date();
+    this.data.reviewNotes = notes;
     return this;
   }
   
   build(): AuditEvent {
-    if (!this.event.id || !this.event.eventId || !this.event.eventType || 
-        !this.event.timestamp || !this.event.actor || !this.event.action || 
-        !this.event.resourceType || !this.event.resourceId) {
+    if (!this.data.id || !this.data.eventId || !this.data.eventType || 
+        !this.data.timestamp || !this.data.actor || !this.data.action || 
+        !this.data.resourceType || !this.data.resourceId) {
       throw new Error('Missing required audit event fields');
     }
-    return this.event as AuditEvent;
+    return {
+      id: this.data.id,
+      eventId: this.data.eventId,
+      eventType: this.data.eventType,
+      timestamp: this.data.timestamp,
+      level: this.data.level,
+      category: this.data.category,
+      actor: this.data.actor,
+      tenantId: this.data.tenantId,
+      action: this.data.action,
+      resourceType: this.data.resourceType,
+      resourceId: this.data.resourceId,
+      resourceName: this.data.resourceName,
+      result: this.data.result,
+      errorMessage: this.data.errorMessage,
+      changes: this.data.changes,
+      metadata: this.data.metadata,
+      ipAddress: this.data.ipAddress,
+      userAgent: this.data.userAgent,
+      correlationId: this.data.correlationId,
+      requiresReview: this.data.requiresReview,
+      reviewed: this.data.reviewed,
+      reviewedBy: this.data.reviewedBy,
+      reviewedAt: this.data.reviewedAt,
+      reviewNotes: this.data.reviewNotes
+    };
   }
 }
 
