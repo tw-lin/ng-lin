@@ -1,23 +1,121 @@
 /**
- * Audit Collector Service (v2.0.0 - Tenant-Aware)
- *
- * 審計收集器服務 (租戶感知版本)
- * - 自動收集並轉換領域事件為審計事件
- * - 提供便捷的 API 供其他服務手動記錄審計
- * - 整合 AuditLogService 進行持久化
- * - 強制租戶隔離：所有審計記錄必須包含 tenant_id
- * - 遵循 docs/⭐️/Global Audit Log.md 規範
- *
- * Tenant Isolation:
- * - All audit recording methods verify tenant_id exists
- * - Automatically extracts tenant_id from TenantContextService
- * - Throws error if tenant_id missing (except superadmin cross-tenant)
- * - Supports manual tenant_id override for migration/admin scenarios
- *
- * Follows: docs/⭐️/Global-Audit-Log-系統拆解與對齊方案.md (Part V - Phase 1 - Task 1.2 Part 4)
- *
+ * @module AuditCollectorService
+ * @description Audit Collector Service - Tenant-Aware Audit Event Recording (審計收集器服務)
+ * 
+ * **Purpose**: Automatic collection and transformation of domain events into audit events
+ * with strict tenant isolation enforcement.
+ * 
+ * **Key Features**:
+ * - **Auto-Collection**: Transforms domain events to audit events
+ * - **Manual Recording**: Convenient API for explicit audit logging
+ * - **Tenant Isolation**: Strict tenant_id validation on all operations
+ * - **Integration**: Seamlessly integrates with AuditLogService
+ * - **Flexible Options**: Supports level, category, result, changes, metadata
+ * 
+ * **Architecture Patterns**:
+ * - **Service Pattern**: Provides stateless audit recording methods
+ * - **Builder Pattern**: Uses AuditEventBuilder internally for event construction
+ * - **Dependency Injection**: Integrates TenantContextService for tenant_id
+ * - **Error Handling**: Throws AuditTenantValidationError when tenant_id missing
+ * 
+ * **Tenant Isolation Rules** (Primary Purpose):
+ * - **Mandatory tenant_id**: All audit records MUST include tenant_id
+ * - **Auto-extraction**: Automatically retrieves tenant_id from TenantContextService
+ * - **Validation**: Throws error if tenant_id unavailable (except superadmin)
+ * - **Manual override**: Supports explicit tenant_id for migration scenarios
+ * - **Cross-tenant**: Allows superadmin bypass with `allowCrossTenant: true`
+ * 
+ * **Audit Recording Methods**:
+ * - `recordCreate()`: Record entity creation
+ * - `recordUpdate()`: Record entity modification with before/after
+ * - `recordDelete()`: Record entity deletion
+ * - `recordAccess()`: Record data access/view
+ * - `recordAction()`: Record custom business action
+ * - `recordAuth()`: Record authentication events (login, logout)
+ * - `recordPermission()`: Record permission/role changes
+ * - `recordSystemEvent()`: Record system-level events
+ * - `fromDomainEvent()`: Transform domain event to audit event
+ * 
+ * **Audit Levels**:
+ * - `DEBUG`: Development/troubleshooting (low importance)
+ * - `INFO`: Normal operations (default)
+ * - `WARNING`: Potential issues or anomalies
+ * - `ERROR`: Failed operations or errors
+ * - `CRITICAL`: Security violations or critical failures
+ * 
+ * **Audit Categories**:
+ * - `AUTHENTICATION`: Login, logout, password changes
+ * - `AUTHORIZATION`: Permission changes, role assignments
+ * - `DATA_ACCESS`: Entity reads, queries
+ * - `DATA_MODIFICATION`: Create, update, delete operations
+ * - `BUSINESS_OPERATION`: Business logic execution
+ * - `SYSTEM_EVENT`: Configuration changes, deployments
+ * - `SECURITY_EVENT`: Security-related actions
+ * 
+ * **Multi-Tenancy Context**:
+ * - Integrates with TenantContextService for automatic tenant_id
+ * - Validates tenant context before recording
+ * - Stores tenant metadata in audit events
+ * - Supports cross-tenant operations for superadmin
+ * 
+ * **Integration Points**:
+ * - **TenantContextService**: Automatic tenant_id extraction
+ * - **AuditLogService**: Persistence to Firestore
+ * - **Domain Events**: Event transformation pipeline
+ * - **Security Rules**: Server-side tenant validation
+ * 
+ * **Performance**:
+ * - Stateless service (no internal state overhead)
+ * - Batch operations supported via AuditLogService
+ * - Efficient event transformation
+ * - Minimal validation overhead
+ * 
+ * @see docs/⭐️/Global Audit Log.md (Audit system specification)
+ * @see docs/⭐️/Global-Audit-Log-系統拆解與對齊方案.md (Part V - Phase 1 - Task 1.2 Part 4)
+ * @see docs/⭐️/Global Event Bus.md (Event-driven architecture)
+ * 
+ * @remarks
+ * **Version**: 2.0.0 - Tenant isolation enforcement
+ * **Security**: All audit records validated with tenant_id
+ * **Compliance**: Follows GDPR audit trail requirements
+ * 
+ * @example
+ * ```typescript
+ * // Inject service
+ * private auditCollector = inject(AuditCollectorService);
+ * 
+ * // Record entity creation
+ * await this.auditCollector.recordCreate(
+ *   'task.created',
+ *   'tasks',
+ *   'task-123',
+ *   { title: 'New Task', status: 'pending' },
+ *   'user-456'
+ * );
+ * 
+ * // Record update with changes
+ * await this.auditCollector.recordUpdate(
+ *   'task.updated',
+ *   'tasks',
+ *   'task-123',
+ *   'user-456',
+ *   {
+ *     changes: {
+ *       status: { from: 'pending', to: 'completed' }
+ *     }
+ *   }
+ * );
+ * 
+ * // Cross-tenant operation (superadmin)
+ * await this.auditCollector.recordSystemEvent(
+ *   'system.backup',
+ *   'Scheduled backup completed',
+ *   'system',
+ *   { allowCrossTenant: true }
+ * );
+ * ```
+ * 
  * @author Global Event Bus Team
- * @version 2.0.0 - Tenant isolation enforcement
  */
 
 import { Injectable, inject } from '@angular/core';
