@@ -1,3 +1,38 @@
+/**
+ * Application Configuration
+ * 
+ * @module app.config
+ * @description
+ * Central configuration for the ng-lin Angular application. Provides all necessary
+ * dependencies, services, and configurations using Angular's standalone bootstrap pattern.
+ * 
+ * Key Configurations:
+ * 1. **Router**: Feature-based lazy loading with view transitions
+ * 2. **ng-alain**: Enterprise UI framework with Xuanwu theme
+ * 3. **ng-zorro-antd**: Ant Design component library
+ * 4. **Firebase**: Backend services (Auth, Firestore, Storage, Functions)
+ * 5. **Internationalization**: Traditional Chinese (zh-TW) support
+ * 6. **Event Bus**: Global event-driven architecture with audit logging
+ * 
+ * Architecture Compliance:
+ * - Uses inject() DI pattern (Angular 20+)
+ * - Direct @angular/fire service injection (no wrapper services)
+ * - Standalone components only (0 NgModules)
+ * - Signals-based state management
+ * 
+ * Theme System:
+ * - Xuanwu Navy (#1E3A8A) - Primary brand color
+ * - Deep Teal (#0D9488) - Success states
+ * - Amber Yellow (#F59E0B) - Warning states
+ * - Crimson Red (#EF4444) - Error states
+ * - Steel Blue (#64748B) - Info states
+ * 
+ * @see {@link ./firebase/config/firebase.providers.ts} for Firebase setup
+ * @see {@link ./core/global-event-bus/initializers.ts} for event bus initialization
+ * @see {@link ./features/routes.ts} for application routes
+ * @see {@link docs/⭐️/整體架構設計.md} for architecture overview
+ */
+
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { default as ngLang } from '@angular/common/locales/zh';
 import { ApplicationConfig, EnvironmentProviders, Provider } from '@angular/core';

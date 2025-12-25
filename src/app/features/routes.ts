@@ -1,3 +1,42 @@
+/**
+ * Application Route Configuration
+ * 
+ * @module routes
+ * @description
+ * Main route definitions for the ng-lin construction site progress tracking system.
+ * Implements lazy-loading strategy for optimal performance and code splitting.
+ * 
+ * Route Architecture:
+ * - Feature-based module organization
+ * - Lazy loading for all feature modules
+ * - Authentication guards on protected routes
+ * - Redirect strategy for legacy routes
+ * 
+ * Feature Modules:
+ * 1. **Account Module** (account/*) - User, Organization, Team, Partner, Admin management
+ * 2. **Blueprint Module** (blueprints/*) - Construction blueprint management (user/organization)
+ * 3. **Explore Module** (explore/*) - Search and discovery features
+ * 4. **AI Assistant** (ai-assistant) - Google Generative AI powered chat assistant
+ * 5. **Auth Module** (passport/*) - Login, register, password recovery
+ * 6. **Exception Module** (exception/*) - Error pages (404, 403, 500)
+ * 
+ * Multi-Tenancy Model:
+ * - Blueprint-based permission boundaries
+ * - User blueprints vs Organization blueprints
+ * - BlueprintMember role/permission enforcement
+ * 
+ * Authentication:
+ * - Firebase Auth integration
+ * - @delon/auth guards (authSimpleCanActivate, authSimpleCanActivateChild)
+ * - Custom startPageGuard for initial navigation
+ * 
+ * @see {@link ./account/routes/routes.ts} for account module routes
+ * @see {@link ./blueprint/routes/routes.ts} for blueprint module routes
+ * @see {@link ./auth/routes.ts} for authentication routes
+ * @see {@link docs/⭐️/整體架構設計.md} for architecture details
+ * @see {@link .github/instructions/ng-gighub-architecture.instructions.md} for architecture guidelines
+ */
+
 import { Routes } from '@angular/router';
 import { startPageGuard } from '@core';
 import { authSimpleCanActivate, authSimpleCanActivateChild } from '@delon/auth';
