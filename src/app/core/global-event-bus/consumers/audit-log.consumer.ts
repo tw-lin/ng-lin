@@ -3,6 +3,11 @@
  * 
  * Records all domain events for compliance and security auditing.
  * 
+ * **Phase 7B Enhancement**: Integrates with Global Audit Log Service
+ * - Converts all domain events to standardized audit events
+ * - Leverages AuditCollectorService for intelligent categorization
+ * - Maintains backward compatibility with in-memory logs
+ * 
  * @module Consumers/AuditLog
  */
 
@@ -12,9 +17,12 @@ import { Subscribe } from '../decorators/subscribe.decorator';
 import { EventHandler } from '../decorators/event-handler.decorator';
 import { Retry } from '../decorators/retry.decorator';
 import { DomainEvent } from '../models/base-event';
+import { AuditLogService } from '../services/audit-log.service';
+import { AuditCollectorService } from '../services/audit-collector.service';
+import { AuditLevel } from '../models/audit-event.model';
 
 /**
- * Audit log entry
+ * Audit log entry (legacy interface for backward compatibility)
  */
 interface AuditLogEntry {
   readonly id: string;
@@ -39,6 +47,8 @@ interface AuditLogEntry {
  * 
  * Logs all events for compliance auditing.
  * MUST succeed - uses aggressive retry strategy.
+ * 
+ * **Phase 7B**: Enhanced with Global Audit Log Service integration
  */
 @Injectable({ providedIn: 'root' })
 @EventHandler({
@@ -46,11 +56,17 @@ interface AuditLogEntry {
   tags: ['audit', 'compliance', 'security'],
   description: 'Records all events for audit trail',
   group: 'audit',
-  version: '1.0.0'
+  version: '2.0.0' // Updated for Phase 7B
 })
 export class AuditLogConsumer extends EventConsumer {
   /**
-   * Audit logs (in-memory for demo)
+   * Phase 7B: Inject Global Audit Services
+   */
+  private auditLogService = inject(AuditLogService);
+  private auditCollector = inject(AuditCollectorService);
+  
+  /**
+   * Legacy: Audit logs (in-memory for backward compatibility)
    */
   private _auditLogs = signal<AuditLogEntry[]>([]);
   readonly auditLogs = this._auditLogs.asReadonly();
@@ -60,6 +76,8 @@ export class AuditLogConsumer extends EventConsumer {
    * 
    * Priority 100 ensures this runs before other consumers.
    * Aggressive retry ensures audit trail completeness.
+   * 
+   * **Phase 7B**: Enhanced with Global Audit Log Service
    */
   @Subscribe('**')
   @Retry({
@@ -69,10 +87,51 @@ export class AuditLogConsumer extends EventConsumer {
     maxDelay: 30000
   })
   async handleAllEvents(event: DomainEvent<any>): Promise<void> {
+    // Phase 7B: Convert to standardized audit event using AuditCollector
+    await this.auditCollector.collectFromDomainEvent(event, {
+      level: this.determineAuditLevel(event.eventType),
+      requiresReview: this.shouldRequireReview(event.eventType)
+    });
+    
+    // Legacy: Also maintain in-memory logs for backward compatibility
     const auditEntry = this.createAuditEntry(event);
     await this.persistAuditLog(auditEntry);
     
-    console.log('[AuditLogConsumer] Audit logged:', event.eventType);
+    console.log('[AuditLogConsumer] Audit logged (Phase 7B):', event.eventType);
+  }
+
+  /**
+   * Phase 7B: Determine audit level based on event type
+   */
+  private determineAuditLevel(eventType: string): AuditLevel {
+    const type = eventType.toLowerCase();
+    
+    if (type.includes('delete') || type.includes('remove') || type.includes('revoke')) {
+      return AuditLevel.WARNING;
+    }
+    if (type.includes('fail') || type.includes('error') || type.includes('denied')) {
+      return AuditLevel.ERROR;
+    }
+    if (type.includes('mfa.disabled') || type.includes('admin') || type.includes('critical')) {
+      return AuditLevel.CRITICAL;
+    }
+    
+    return AuditLevel.INFO;
+  }
+  
+  /**
+   * Phase 7B: Determine if event should require review
+   */
+  private shouldRequireReview(eventType: string): boolean {
+    const type = eventType.toLowerCase();
+    
+    const highRiskKeywords = [
+      'delete', 'remove', 'revoke', 'disable',
+      'admin', 'owner', 'superuser',
+      'mfa.disabled', 'password.changed'
+    ];
+    
+    return highRiskKeywords.some(keyword => type.includes(keyword));
   }
 
   /**

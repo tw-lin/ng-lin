@@ -21,3 +21,7 @@ export * from './dead-letter-queue.service';
 // Audit services (Phase 7A)
 export * from './auth-audit.service';
 export * from './permission-audit.service';
+
+// Global Audit Log services (Phase 7B)
+export * from './audit-log.service';
+export * from './audit-collector.service';
