@@ -31,7 +31,8 @@ export class BlueprintCreatedEvent extends DomainEvent<{
   blueprint: Blueprint;
   userId: string;
 }> {
-  readonly eventType = 'blueprint.created' as const;
+  override readonly eventType = 'blueprint.created' as const;
+  override readonly payload: { blueprint: Blueprint; userId: string };
 
   constructor(payload: { blueprint: Blueprint; userId: string }) {
     super(payload, {
@@ -39,6 +40,7 @@ export class BlueprintCreatedEvent extends DomainEvent<{
       aggregateType: 'Blueprint',
       aggregateVersion: 1
     });
+    this.payload = payload;
   }
 }
 
@@ -53,7 +55,13 @@ export class BlueprintUpdatedEvent extends DomainEvent<{
   previousValues: Partial<Blueprint>;
   userId: string;
 }> {
-  readonly eventType = 'blueprint.updated' as const;
+  override readonly eventType = 'blueprint.updated' as const;
+  override readonly payload: {
+    blueprintId: string;
+    changes: Partial<Blueprint>;
+    previousValues: Partial<Blueprint>;
+    userId: string;
+  };
 
   constructor(payload: {
     blueprintId: string;
@@ -65,6 +73,7 @@ export class BlueprintUpdatedEvent extends DomainEvent<{
       aggregateId: payload.blueprintId,
       aggregateType: 'Blueprint'
     });
+    this.payload = payload;
   }
 }
 
@@ -77,13 +86,15 @@ export class BlueprintPublishedEvent extends DomainEvent<{
   blueprintId: string;
   userId: string;
 }> {
-  readonly eventType = 'blueprint.published' as const;
+  override readonly eventType = 'blueprint.published' as const;
+  override readonly payload: { blueprintId: string; userId: string };
 
   constructor(payload: { blueprintId: string; userId: string }) {
     super(payload, {
       aggregateId: payload.blueprintId,
       aggregateType: 'Blueprint'
     });
+    this.payload = payload;
   }
 }
 
@@ -96,13 +107,15 @@ export class BlueprintArchivedEvent extends DomainEvent<{
   blueprintId: string;
   userId: string;
 }> {
-  readonly eventType = 'blueprint.archived' as const;
+  override readonly eventType = 'blueprint.archived' as const;
+  override readonly payload: { blueprintId: string; userId: string };
 
   constructor(payload: { blueprintId: string; userId: string }) {
     super(payload, {
       aggregateId: payload.blueprintId,
       aggregateType: 'Blueprint'
     });
+    this.payload = payload;
   }
 }
 
@@ -116,7 +129,12 @@ export class BlueprintDeletedEvent extends DomainEvent<{
   soft: boolean;
   userId: string;
 }> {
-  readonly eventType = 'blueprint.deleted' as const;
+  override readonly eventType = 'blueprint.deleted' as const;
+  override readonly payload: {
+    blueprintId: string;
+    soft: boolean;
+    userId: string;
+  };
 
   constructor(payload: {
     blueprintId: string;
@@ -127,5 +145,6 @@ export class BlueprintDeletedEvent extends DomainEvent<{
       aggregateId: payload.blueprintId,
       aggregateType: 'Blueprint'
     });
+    this.payload = payload;
   }
 }

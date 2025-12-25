@@ -1,114 +1,121 @@
-# Angular v20 現代化開發規範
+# Angular v20 開發規範
 
-## 語言與框架
-- TypeScript + Angular v20 + RxJS + Signals / Standalone Components
+## 目錄
+1. [核心開發觀念](#核心開發觀念)
+   - [語言與框架](#語言與框架)
+   - [聲明式 & 響應式控制流](#聲明式--響應式控制流)
+   - [結構與模組化](#結構與模組化)
+   - [程式碼風格](#程式碼風格)
+   - [高階設計原則](#高階設計原則)
+   - [底層防技術債觀念](#底層防技術債觀念)
+2. [核心設計原則](#核心設計原則)
+   - [解耦合 (Decoupling)](#解耦合-decoupling)
+   - [單一職責 (Single Responsibility Principle, SRP)](#單一職責-single-responsibility-principle-srp)
+   - [避免違反關注分離原則 (Separation of Concerns)](#避免違反關注分離原則-separation-of-concerns)
+3. [Angular v20 新特性與模式](#angular-v20-新特性與模式)
 
-## 聲明式 & 響應式控制流
-- 優先使用 `Observable + async pipe` 或 `Signals`，避免手動 `subscribe` 或 callback。
-- 使用 RxJS 運算符 (`switchMap`, `mergeMap`, `combineLatest`, `tap`) 管理非同步流程。
+---
+
+## 核心開發觀念
+
+### 語言與框架
+- 使用 **TypeScript + Angular v20 + RxJS + Signals/Standalone Components**。
+- 優先 **聲明式與響應式控制流**，避免手動 `subscribe` 或 callback。
+
+### 聲明式 & 響應式控制流
+- 使用 `Observable` 搭配 `async` pipe 或 `Signals` 管理非同步資料。
+- 常用 RxJS 運算符：`switchMap`、`mergeMap`、`combineLatest`、`tap`。
+- 優先單向資料流 + 聲明式設計。
 - 使用 `Signals + computed()` 管理本地狀態。
-- Component 使用 `OnPush` 變更檢測策略。
-- 禁止直接在 constructor 執行業務邏輯。
+- Component 設定 `ChangeDetectionStrategy.OnPush`。
+- 禁止在 constructor 執行業務邏輯。
 
-## 結構與模組化
-- Component、Service、Directive、Pipe 分層清晰。
-- 優先功能模組 (Feature Modules)。
-- 將副作用與狀態管理集中到 Service 或 Store（NgRx / Signals）。
+### 結構與模組化
+- 分層清晰：`Component`、`Service`、`Directive`、`Pipe`。
+- 優先 **功能模組化 (Feature Modules)**。
+- 副作用與狀態集中管理於 Service 或 Store（NgRx / Signals）。
 - 資料 / API / 副作用 → Service
 - 狀態管理 → Store / Signals / BehaviorSubject
 - UI → Component
 
-### 依賴方向
-```
-{
-  "src/app": {
-    "core": "核心 Service、全局 Provider",
-    "features": "功能模組 (Feature Modules)",
-    "firebase": "Firebase 封裝 (Auth / Firestore / Storage / FCM / Functions)",
-    "layout": "共用 Layout / Routing",
-    "shared": "共用 Component / Directive / Pipe / Utilities"
-  }
-}
+### 程式碼風格
+- 命名規則：
+  - 類 / Component / Pipe → **PascalCase**
+  - 函數 / 變數 → **camelCase**
+- 函數保持 **單一職責**、簡潔明瞭。
+- 儘量使用箭頭函數、環境變數、依賴注入，避免硬編碼。
 
-````
+### 高階設計原則
+- **單向資料流 + 聲明式設計**，保持代碼簡潔、可維護、可測試。
+- 優先可重用模組化設計，減少命令式邏輯。
 
-## @angular/fire 統一使用規範
-- 所有 Firebase 功能統一透過 Service 封裝，不直接在 Component 使用 `@angular/fire`。
-- 導入順序規範：
-  1. `@angular/fire/auth`
-  2. `@angular/fire/firestore`
-  3. `@angular/fire/storage`
-  4. 其他 Firebase 功能 (`functions`, `messaging`, `realtime-db`)
-- Service 內部使用 Firebase API，Component 透過 Service 或 Signals/Observable 訂閱資料。
-- 避免在 Component constructor 中初始化 Firebase 或呼叫 API。
-- 環境配置統一管理：API Key、Endpoints、Feature Flags 放在 `environment.ts`。
+### 底層防技術債觀念
 
-## 程式碼風格
-- 命名：
-  - 類 / Component / Pipe → PascalCase
-  - 函數 / 變數 → camelCase
-- 函數保持單一職責、簡潔明瞭。
-- 儘量使用箭頭函數、環境變數與依賴注入，避免硬編碼。
+#### 1. 不可變性 (Immutability)
+- **核心思想**：資料狀態不可被 Component 或函數直接修改，所有變更都透過 Service 或 Store 進行。
+- **實踐方式**：
+  - Signals、RxJS `BehaviorSubject` 或 NgRx Store 均使用不可變資料結構。
+  - 對於物件/陣列，使用 `readonly` 或 immutable 方案。
+- **好處**：
+  - 避免隱性副作用
+  - 減少跨模組狀態污染
+  - 便於時間旅行調試與測試
 
-## 高階原則
-- 單向資料流 + 聲明式設計
-- 保持代碼簡潔、可維護、可測試
-- 優先可重用模組化設計，減少命令式邏輯
+#### 2. 防禦性程式設計 (Defensive Programming)
+- **核心思想**：系統假設所有輸入可能出錯，主動檢查與容錯。
+- **實踐方式**：
+  - Service 層驗證 API 回傳格式、空值、異常。
+  - RxJS 流程加 `catchError`、`retry` 或 `defaultIfEmpty`。
+  - 使用 TypeScript `strict` 模式，避免隱性 any。
+- **好處**：
+  - 減少未預期錯誤導致的技術債累積
+  - 減少 bug 回溯成本
 
-### 1. 解耦合 (Decoupling)
-- 降低模組/Component/Service 之間的依賴。
-- Component 不直接處理資料或副作用，把邏輯放到 Service。
-- 使用依賴注入 (DI) 或 Signals/Observable 對外提供資料。
+#### 3. 持續重構與技術債管理
+- **核心思想**：技術債不可視而不管，需主動追蹤與評估。
+- **實踐方式**：
+  - 使用 `TODO` 或 `@deprecated` 標記已知債務
+  - 定期 Sprint / Iteration 進行技術債清理
+  - 代碼覆蓋率 / Cyclomatic Complexity 作為技術債指標
+- **好處**：
+  - 技術債不會累積成系統隱患
+  - AI 或團隊可以優先處理高風險區域
+
+---
+
+## 核心設計原則
+
+### 解耦合 (Decoupling)
+- 降低模組/Component/Service 之間依賴。
+- Component 不直接處理資料或副作用，邏輯放到 Service。
+- 使用 **DI** 或 **Signals/Observable** 對外提供資料。
 - 好處：易測試、可重用、可維護。
 
-### 2. 單一職責 (Single Responsibility Principle, SRP)
-- 每個 Component / Service / Pipe / Directive 都只做一件事。
-- 避免 Component 既處理 UI，又做資料抓取、邏輯計算、狀態管理。
+### 單一職責 (Single Responsibility Principle, SRP)
+- 每個 Component / Service / Pipe / Directive 只做一件事。
+- 實踐：
+  - UI → Component
+  - 資料 / API → Service
+  - 狀態 → Store / Signals / BehaviorSubject
+- 避免 Component 同時處理 UI、資料抓取或計算邏輯。
 
-### 3. 違反關注分離原則 (Violating Separation of Concerns)
-- 避免 Component 負責過多事情 → 破壞 SRP、降低可維護性、測試困難。
-- 避免在 Component 內直接操作 Firebase 或非 UI 邏輯。
+### 避免違反關注分離原則 (Separation of Concerns)
+- 過度複雜的 Component → 降低可維護性、測試困難。
+- 實踐：
+  - 使用 `Signals + computed()` 管理狀態。
+  - Component 設定 `ChangeDetectionStrategy.OnPush`。
+  - 不在 constructor 執行業務邏輯。
 
-## AI 可解析流程圖
-```mermaid
-flowchart TD
-  %% App 層級
-  App["src/app"]
+---
 
-  Core["core\n- 核心 Service\n- 全局 Provider"]
-  Features["features\n- 功能模組 (Feature Modules)"]
-  Firebase["firebase\n- Auth / Firestore / Storage / FCM / Functions"]
-  Layout["layout\n- 共用 Layout / Routing"]
-  Shared["shared\n- Component / Directive / Pipe / Utilities"]
-
-  %% App 結構
-  App --> Core
-  App --> Features
-  App --> Firebase
-  App --> Layout
-  App --> Shared
-
-  %% Firebase 封裝規範
-  Auth["@angular/fire/auth"]
-  Firestore["@angular/fire/firestore"]
-  Storage["@angular/fire/storage"]
-  OtherFirebase["其他 Firebase 功能\n(functions / messaging / realtime-db)"]
-
-  Firebase --> Auth
-  Firebase --> Firestore
-  Firebase --> Storage
-  Firebase --> OtherFirebase
-
-  %% Component 與 Service
-  Component["Component\n- UI\n- OnPush\n- 不操作 Firebase 直接 API"]
-  Service["Service\n- API / Firebase / 狀態管理\n- Signals / Observable"]
-
-  Features --> Component
-  Component -->|透過 DI 或 Signals / Observable| Service
-  Service -->|操作 Firebase API| Firebase
-
-  %% 狀態管理
-  Store["Store / Signals / BehaviorSubject"]
-  Service --> Store
-  Component -->|讀取狀態| Store
-````
+## Angular v20 新特性與模式
+- **Signals 模式** + **Standalone Components**。
+- 全新控制流語法：
+  - `*ngIf → @if`
+  - `*ngFor → @for`
+  - `*ngSwitch → @switch`
+- **Zoneless Angular** 支援 SSR + Hydration。
+- 內建 **View Transitions**。
+- Angular DevTools 與 Build system 升級。
+- 新 **Functional Router** 路由模式。
+- **Control Flow Migration Tool**：自動轉換舊模板為 Signals 控制流。

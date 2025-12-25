@@ -87,6 +87,114 @@
           }
         ]
       }
+    ],
+    "organization": [
+      {
+        "text": "組織管理",
+        "i18n": "menu.organization",
+        "group": true,
+        "hideInBreadcrumb": true,
+        "children": [
+          {
+            "text": "儀錶盤",
+            "i18n": "menu.dashboard",
+            "icon": "anticon-dashboard",
+            "link": "/account/dashboard",
+            "badge": 0
+          },
+          {
+            "text": "組織藍圖",
+            "i18n": "menu.org_blueprints",
+            "icon": "anticon-project",
+            "link": "/blueprints/organization",
+            "badge": 0
+          },
+          {
+            "text": "團隊管理",
+            "i18n": "menu.teams",
+            "icon": "anticon-team",
+            "link": "/teams"
+          },
+          {
+            "text": "合作夥伴",
+            "i18n": "menu.partners",
+            "icon": "anticon-solution",
+            "link": "/partners"
+          },
+          {
+            "text": "組織設定",
+            "i18n": "menu.org_settings",
+            "icon": "anticon-setting",
+            "link": "/organization/settings"
+          }
+        ]
+      }
+    ],
+    "team": [
+      {
+        "text": "團隊協作",
+        "i18n": "menu.team",
+        "group": true,
+        "hideInBreadcrumb": true,
+        "children": [
+          {
+            "text": "儀錶盤",
+            "i18n": "menu.dashboard",
+            "icon": "anticon-dashboard",
+            "link": "/account/dashboard",
+            "badge": 0
+          },
+          {
+            "text": "團隊藍圖",
+            "i18n": "menu.team_blueprints",
+            "icon": "anticon-project",
+            "link": "/blueprints/team",
+            "badge": 0
+          },
+          {
+            "text": "團隊成員",
+            "i18n": "menu.team_members",
+            "icon": "anticon-usergroup-add",
+            "link": "/team/members"
+          },
+          {
+            "text": "團隊設定",
+            "i18n": "menu.team_settings",
+            "icon": "anticon-setting",
+            "link": "/team/settings"
+          }
+        ]
+      }
+    ],
+    "partner": [
+      {
+        "text": "合作夥伴",
+        "i18n": "menu.partner",
+        "group": true,
+        "hideInBreadcrumb": true,
+        "children": [
+          {
+            "text": "儀錶盤",
+            "i18n": "menu.dashboard",
+            "icon": "anticon-dashboard",
+            "link": "/account/dashboard",
+            "badge": 0
+          },
+          {
+            "text": "共享藍圖",
+            "i18n": "menu.shared_blueprints",
+            "icon": "anticon-project",
+            "link": "/blueprints/partner",
+            "badge": 0
+          },
+          {
+            "text": "合作項目",
+            "i18n": "menu.partner_projects",
+            "icon": "anticon-folder",
+            "link": "/partner/projects"
+          }
+        ]
+      }
     ]
   }
 }

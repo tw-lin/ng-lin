@@ -10,7 +10,7 @@
  * @version 1.0.0
  */
 
-import { AuditLevel, AuditCategory } from './auth-audit-event.model';
+import { AuditLevel, AuditCategory } from './audit-event.model';
 
 /**
  * 權限操作類型

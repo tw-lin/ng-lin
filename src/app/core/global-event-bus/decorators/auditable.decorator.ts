@@ -104,13 +104,13 @@ export function Auditable(options: AuditableOptions = {}) {
         // 準備元數據
         const metadata: Record<string, unknown> = {};
         if (options.logArgs) {
-          metadata.arguments = args;
+          metadata['arguments'] = args;
         }
         if (options.logResult && result !== undefined) {
-          metadata.result = result;
+          metadata['result'] = result;
         }
         if (options.logDuration) {
-          metadata.durationMs = duration.toFixed(2);
+          metadata['durationMs'] = duration.toFixed(2);
         }
         
         // 提取變更 (如果有提供)
@@ -204,12 +204,12 @@ export function Auditable(options: AuditableOptions = {}) {
         // 記錄失敗的審計
         const metadata: Record<string, unknown> = {};
         if (options.logArgs) {
-          metadata.arguments = args;
+          metadata['arguments'] = args;
         }
         if (options.logDuration) {
-          metadata.durationMs = duration.toFixed(2);
+          metadata['durationMs'] = duration.toFixed(2);
         }
-        metadata.error = error instanceof Error ? error.message : String(error);
+        metadata['error'] = error instanceof Error ? error.message : String(error);
         
         const recordOptions: AuditRecordOptions = {
           level: AuditLevel.ERROR,

@@ -1,10 +1,18 @@
 import { Injectable } from '@angular/core';
 import { DomainEvent } from '../models/base-event';
 import {
-  ValidationError,
-  InvalidEventSchemaError,
-  InvalidEventVersionError,
+  HandlerValidationError,
+  EventHandlerError,
 } from '../errors/event-handler.error';
+import {
+  SchemaValidationError,
+  EventVersionMismatchError,
+} from '../errors/serialization.error';
+
+// Create aliases for backward compatibility
+const ValidationError = HandlerValidationError;
+const InvalidEventSchemaError = SchemaValidationError;
+const InvalidEventVersionError = EventVersionMismatchError;
 
 /**
  * Validation result structure
@@ -234,9 +242,10 @@ export class EventValidatorService {
 
     if (!allowedVersions.includes(eventVersion)) {
       throw new InvalidEventVersionError(
-        `Event version ${eventVersion} is not allowed`,
+        event.eventType,
+        allowedVersions.join(' | '),
         eventVersion,
-        allowedVersions
+        event
       );
     }
 

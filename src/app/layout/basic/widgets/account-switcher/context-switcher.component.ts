@@ -19,7 +19,7 @@ import { ContextType, Team, Partner, Bot } from '@core';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
 
-import { WorkspaceContextService } from '../../../../shared/services/workspace-context.service';
+import { WorkspaceContextService } from '@shared/services';
 
 @Component({
   selector: 'header-context-switcher',

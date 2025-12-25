@@ -1,26 +1,48 @@
 import { inject, Injectable, signal, computed } from '@angular/core';
 import { Observable, Subject, filter, tap } from 'rxjs';
-import { DomainEvent, EventHandler, SubscribeOptions, Subscription, RetryPolicy } from '../models';
-import { IEventBus, IEventStore } from '../interfaces';
-import { InMemoryEventStore } from './in-memory-event-store.service';
+import { DomainEvent, EventHandler, SubscribeOptions, Subscription, RetryPolicy } from '../../models';
+import { IEventBus, IEventStore } from '../../interfaces';
+import { HybridEventStore } from '../hybrid/hybrid-event-store';
+import { TenantValidationMiddleware } from '../../services/tenant-validation-middleware.service';
 
 /**
- * In-Memory Event Bus
+ * In-Memory Event Bus (with Firestore Persistence)
  * 
- * RxJS and Signals-based event bus implementation.
- * Uses Subject for event streaming and Signals for state management.
+ * RxJS and Signals-based event bus implementation with:
+ * - Hybrid storage (in-memory cache + Firestore persistence)
+ * - Tenant isolation middleware (validates tenant_id on all events)
+ * - GitHub-style event sourcing (all events persisted)
+ * 
+ * Storage Strategy:
+ * - Write: Both in-memory (cache) and Firestore (persistence)
+ * - Read: In-memory first (fast), Firestore fallback (complete)
+ * - Cache: Recent 1000 events in memory (24h warmup)
  * 
  * Features:
  * - Reactive event streaming with RxJS
  * - Automatic retry with exponential backoff
- * - Event persistence via event store
+ * - Event persistence via HybridEventStore
  * - Declarative subscriptions with Signals
+ * - Tenant isolation middleware (validates tenant_id on all events)
+ * 
+ * Tenant Isolation:
+ * - All events must have tenant_id in metadata
+ * - Auto-injection from TenantContextService if missing
+ * - Events without tenant context are rejected
+ * - Superadmin can bypass with allowCrossTenant flag
+ * 
+ * Follows:
+ * - docs/⭐️/Global-Audit-Log-系統拆解與對齊方案.md (Event sourcing)
+ * - docs/⭐️/⭐️⭐️⭐️⭐️⭐️ROLE.md (GitHub alignment - persist all events)
+ * 
+ * @phase Phase 1.5 (Blocker Fix) - Firestore Event Persistence
  */
 @Injectable({
   providedIn: 'root'
 })
 export class InMemoryEventBus implements IEventBus {
-  private readonly eventStore = inject(InMemoryEventStore);
+  private readonly eventStore = inject(HybridEventStore);
+  private readonly tenantMiddleware = inject(TenantValidationMiddleware);
   
   /** Main event stream */
   private readonly eventStream$ = new Subject<DomainEvent>();
@@ -42,17 +64,25 @@ export class InMemoryEventBus implements IEventBus {
   
   /**
    * Publish a single event to the bus
+   * 
+   * Tenant Isolation:
+   * - Validates and enriches event with tenant_id before publishing
+   * - Auto-injects tenant_id from TenantContextService if missing
+   * - Rejects events without tenant context
    */
   async publish(event: DomainEvent): Promise<void> {
     try {
+      // 0. Validate and enrich with tenant_id (MANDATORY)
+      const enrichedEvent = this.tenantMiddleware.validateAndEnrich(event);
+      
       // 1. Persist event to store
-      await this.eventStore.append(event);
+      await this.eventStore.append(enrichedEvent);
       
       // 2. Emit to stream
-      this.eventStream$.next(event);
+      this.eventStream$.next(enrichedEvent);
       
       // 3. Execute handlers
-      await this.executeHandlers(event);
+      await this.executeHandlers(enrichedEvent);
       
       // 4. Update metrics
       this.eventsPublished.update(count => count + 1);
@@ -64,14 +94,21 @@ export class InMemoryEventBus implements IEventBus {
   
   /**
    * Publish multiple events in a batch
+   * 
+   * Tenant Isolation:
+   * - Validates and enriches all events with tenant_id before publishing
+   * - Batch validation is atomic (all or nothing)
    */
   async publishBatch(events: DomainEvent[]): Promise<void> {
     try {
+      // 0. Validate and enrich ALL events with tenant_id (MANDATORY)
+      const enrichedEvents = this.tenantMiddleware.validateAndEnrichBatch(events);
+      
       // 1. Persist all events
-      await this.eventStore.appendBatch(events);
+      await this.eventStore.appendBatch(enrichedEvents);
       
       // 2. Emit and execute in sequence
-      for (const event of events) {
+      for (const event of enrichedEvents) {
         this.eventStream$.next(event);
         await this.executeHandlers(event);
       }

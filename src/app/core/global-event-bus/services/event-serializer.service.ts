@@ -2,9 +2,13 @@ import { Injectable } from '@angular/core';
 import { DomainEvent } from '../models/base-event';
 import {
   SerializationError,
-  DeserializationError,
-  InvalidEventFormatError,
+  EventDeserializationError,
+  InvalidJsonError,
 } from '../errors/serialization.error';
+
+// Create aliases for backward compatibility
+const DeserializationError = EventDeserializationError;
+const InvalidEventFormatError = InvalidJsonError;
 
 /**
  * Event Serializer Service
@@ -185,47 +189,43 @@ export class EventSerializerService {
    */
   private validateEventStructure(data: any): void {
     if (!data || typeof data !== 'object') {
-      throw new InvalidEventFormatError(
-        'Event data must be a non-null object',
-        'INVALID_TYPE'
+      throw new InvalidJsonError(
+        JSON.stringify(data),
+        new Error('Event data must be a non-null object')
       );
     }
 
     const required = ['eventId', 'eventType', 'timestamp'];
     for (const field of required) {
       if (!(field in data)) {
-        throw new InvalidEventFormatError(
-          `Missing required field: ${field}`,
-          'MISSING_FIELD',
-          field
+        throw new InvalidJsonError(
+          JSON.stringify(data),
+          new Error(`Missing required field: ${field}`)
         );
       }
     }
 
     // Validate eventId is string
     if (typeof data['eventId'] !== 'string') {
-      throw new InvalidEventFormatError(
-        'eventId must be a string',
-        'INVALID_FIELD_TYPE',
-        'eventId'
+      throw new InvalidJsonError(
+        JSON.stringify(data),
+        new Error('eventId must be a string')
       );
     }
 
     // Validate eventType is string
     if (typeof data['eventType'] !== 'string') {
-      throw new InvalidEventFormatError(
-        'eventType must be a string',
-        'INVALID_FIELD_TYPE',
-        'eventType'
+      throw new InvalidJsonError(
+        JSON.stringify(data),
+        new Error('eventType must be a string')
       );
     }
 
     // Validate timestamp (should be Date object after reviver)
     if (!(data['timestamp'] instanceof Date)) {
-      throw new InvalidEventFormatError(
-        'timestamp must be a Date object',
-        'INVALID_FIELD_TYPE',
-        'timestamp'
+      throw new InvalidJsonError(
+        JSON.stringify(data),
+        new Error('timestamp must be a Date object')
       );
     }
   }
@@ -243,9 +243,9 @@ export class EventSerializerService {
     const expectedType = (EventClass as any).eventType;
 
     if (expectedType && data['eventType'] !== expectedType) {
-      throw new InvalidEventFormatError(
-        `Event type mismatch: expected ${expectedType}, got ${data['eventType']}`,
-        'TYPE_MISMATCH'
+      throw new InvalidJsonError(
+        JSON.stringify(data),
+        new Error(`Event type mismatch: expected ${expectedType}, got ${data['eventType']}`)
       );
     }
   }

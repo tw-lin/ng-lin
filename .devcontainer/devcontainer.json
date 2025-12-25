@@ -1,0 +1,45 @@
+// ...existing code...
+{
+    "name": "ng-lin — Angular 20 + Firebase Dev Container",
+    "image": "mcr.microsoft.com/vscode/devcontainers/javascript-node:20-bullseye",
+    "features": {
+        "ghcr.io/devcontainers/features/git": {},
+        "ghcr.io/devcontainers/features/docker-in-docker": {}
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "Angular.ng-template",
+                "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode",
+                "ms-vscode.vscode-typescript-next",
+                "Firebase.firebase-tools",
+                "GitHub.copilot",
+                "GitHub.codespaces"
+            ],
+            "settings": {
+                "github.copilot.enable": true,
+                "editor.formatOnSave": true,
+                "editor.accessibilitySupport": "on",
+                "files.exclude": {
+                    "node_modules": true
+                }
+            }
+        }
+    },
+    "forwardPorts": [
+        4200,  // Angular dev server
+        5000,  // Firebase Hosting / Functions (emulator)
+        5001,  // Functions emulator
+        8080,  // Firestore emulator
+        9099,  // Auth emulator
+        4000   // Emulator UI
+    ],
+    "postCreateCommand": "bash -lc 'pnpm install 2>/dev/null || npm install'",
+    "remoteUser": "vscode",
+    "workspaceFolder": "/workspace",
+    "containerEnv": {
+        "NODE_ENV": "development"
+    }
+}
+// ...existing code...

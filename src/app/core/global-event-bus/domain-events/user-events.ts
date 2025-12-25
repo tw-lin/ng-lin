@@ -32,7 +32,11 @@ export class UserRegisteredEvent extends DomainEvent<{
   user: User;
   provider: 'email' | 'google' | 'github' | 'anonymous';
 }> {
-  readonly eventType = 'user.registered' as const;
+  override readonly eventType = 'user.registered' as const;
+  override readonly payload: {
+    user: User;
+    provider: 'email' | 'google' | 'github' | 'anonymous';
+  };
 
   constructor(payload: {
     user: User;
@@ -43,6 +47,7 @@ export class UserRegisteredEvent extends DomainEvent<{
       aggregateType: 'User',
       aggregateVersion: 1
     });
+    this.payload = payload;
   }
 }
 
@@ -56,7 +61,12 @@ export class UserUpdatedEvent extends DomainEvent<{
   changes: Partial<User>;
   previousValues: Partial<User>;
 }> {
-  readonly eventType = 'user.updated' as const;
+  override readonly eventType = 'user.updated' as const;
+  override readonly payload: {
+    userId: string;
+    changes: Partial<User>;
+    previousValues: Partial<User>;
+  };
 
   constructor(payload: {
     userId: string;
@@ -67,6 +77,7 @@ export class UserUpdatedEvent extends DomainEvent<{
       aggregateId: payload.userId,
       aggregateType: 'User'
     });
+    this.payload = payload;
   }
 }
 
@@ -74,14 +85,28 @@ export class UserUpdatedEvent extends DomainEvent<{
  * Event: User Login
  * 
  * Published when user successfully authenticates.
+ * 
+ * NOTE: This is a deprecated simplified version.
+ * For detailed auth events with provider info, session tracking, and security metadata,
+ * use UserLoginEvent from auth-events.ts (auth.user.login).
+ * 
+ * @deprecated Use UserLoginEvent from auth-events.ts for authentication tracking
  */
+// Commented out to avoid duplicate exports - use auth-events.ts version
+/*
 export class UserLoginEvent extends DomainEvent<{
   userId: string;
   provider: string;
   ipAddress?: string;
   userAgent?: string;
 }> {
-  readonly eventType = 'user.login' as const;
+  override readonly eventType = 'user.login' as const;
+  override readonly payload: {
+    userId: string;
+    provider: string;
+    ipAddress?: string;
+    userAgent?: string;
+  };
 
   constructor(payload: {
     userId: string;
@@ -93,26 +118,39 @@ export class UserLoginEvent extends DomainEvent<{
       aggregateId: payload.userId,
       aggregateType: 'User'
     });
+    this.payload = payload;
   }
 }
+*/
 
 /**
  * Event: User Logout
  * 
  * Published when user logs out.
+ * 
+ * NOTE: This is a deprecated simplified version.
+ * For detailed logout events with session duration and security context,
+ * use UserLogoutEvent from auth-events.ts (auth.user.logout).
+ * 
+ * @deprecated Use UserLogoutEvent from auth-events.ts for authentication tracking
  */
+// Commented out to avoid duplicate exports - use auth-events.ts version
+/*
 export class UserLogoutEvent extends DomainEvent<{
   userId: string;
 }> {
-  readonly eventType = 'user.logout' as const;
+  override readonly eventType = 'user.logout' as const;
+  override readonly payload: { userId: string };
 
   constructor(payload: { userId: string }) {
     super(payload, {
       aggregateId: payload.userId,
       aggregateType: 'User'
     });
+    this.payload = payload;
   }
 }
+*/
 
 /**
  * Event: User Deleted
@@ -123,12 +161,14 @@ export class UserDeletedEvent extends DomainEvent<{
   userId: string;
   soft: boolean;
 }> {
-  readonly eventType = 'user.deleted' as const;
+  override readonly eventType = 'user.deleted' as const;
+  override readonly payload: { userId: string; soft: boolean };
 
   constructor(payload: { userId: string; soft: boolean }) {
     super(payload, {
       aggregateId: payload.userId,
       aggregateType: 'User'
     });
+    this.payload = payload;
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
-import { DomainEvent } from '../models';
-import { EventCriteria, IEventStore } from '../interfaces';
+import { DomainEvent } from '../../models';
+import { EventCriteria, IEventStore } from '../../interfaces';
 
 /**
  * In-Memory Event Store

@@ -13,7 +13,7 @@
  */
 
 import { Injectable, inject } from '@angular/core';
-import { EventConsumerBase } from '../services/event-consumer.base';
+import { EventConsumer } from '../services/event-consumer.base';
 import { Subscribe } from '../decorators/subscribe.decorator';
 import { EventHandler } from '../decorators/event-handler.decorator';
 import { Retry } from '../decorators/retry.decorator';
@@ -54,7 +54,7 @@ import {
   enabled: true,
   version: '1.0.0'
 })
-export class AuthEventConsumer extends EventConsumerBase {
+export class AuthEventConsumer extends EventConsumer {
   private authAuditService = inject(AuthAuditService);
   private permissionAuditService = inject(PermissionAuditService);
 
@@ -71,11 +71,11 @@ export class AuthEventConsumer extends EventConsumerBase {
    * 3. 檢測異常登入 (地理位置、裝置)
    * 4. 發送登入通知
    */
-  @Subscribe('auth.user.login', { targetVersion: 'latest' })
+  @Subscribe('auth.user.login')
   @Retry({
     maxAttempts: 3,
     initialDelay: 1000,
-    backoffStrategy: 'exponential'
+    backoff: 'exponential'
   })
   async handleUserLogin(event: UserLoginEvent): Promise<void> {
     console.log('[AuthEventConsumer] User logged in:', {
@@ -98,7 +98,7 @@ export class AuthEventConsumer extends EventConsumerBase {
   /**
    * 處理用戶登出事件
    */
-  @Subscribe('auth.user.logout', { targetVersion: 'latest' })
+  @Subscribe('auth.user.logout')
   @Retry({ maxAttempts: 2, initialDelay: 500 })
   async handleUserLogout(event: UserLogoutEvent): Promise<void> {
     console.log('[AuthEventConsumer] User logged out:', {
@@ -123,7 +123,7 @@ export class AuthEventConsumer extends EventConsumerBase {
    * 3. 觸發帳戶鎖定 (如達到閾值)
    * 4. 發送安全告警
    */
-  @Subscribe('auth.login.failed', { targetVersion: 'latest' })
+  @Subscribe('auth.login.failed')
   @Retry({ maxAttempts: 5, initialDelay: 2000 }) // 失敗事件重試次數較多
   async handleLoginFailed(event: LoginFailedEvent): Promise<void> {
     console.warn('[AuthEventConsumer] Login failed:', {
@@ -161,7 +161,7 @@ export class AuthEventConsumer extends EventConsumerBase {
   /**
    * 處理密碼變更事件
    */
-  @Subscribe('auth.password.changed', { targetVersion: 'latest' })
+  @Subscribe('auth.password.changed')
   @Retry({ maxAttempts: 3, initialDelay: 1000 })
   async handlePasswordChanged(event: PasswordChangedEvent): Promise<void> {
     console.log('[AuthEventConsumer] Password changed:', {
@@ -179,7 +179,7 @@ export class AuthEventConsumer extends EventConsumerBase {
   /**
    * 處理 MFA 啟用事件
    */
-  @Subscribe('auth.mfa.enabled', { targetVersion: 'latest' })
+  @Subscribe('auth.mfa.enabled')
   @Retry({ maxAttempts: 2, initialDelay: 500 })
   async handleMFAEnabled(event: MFAEnabledEvent): Promise<void> {
     console.log('[AuthEventConsumer] MFA enabled:', {
@@ -201,7 +201,7 @@ export class AuthEventConsumer extends EventConsumerBase {
    * - 需要二次確認
    * - 記錄詳細審計日誌
    */
-  @Subscribe('auth.mfa.disabled', { targetVersion: 'latest' })
+  @Subscribe('auth.mfa.disabled')
   @Retry({ maxAttempts: 5, initialDelay: 2000 })
   async handleMFADisabled(event: MFADisabledEvent): Promise<void> {
     console.warn('[AuthEventConsumer] MFA disabled (HIGH RISK):', {
@@ -224,7 +224,7 @@ export class AuthEventConsumer extends EventConsumerBase {
   /**
    * 處理 Token 刷新事件
    */
-  @Subscribe('auth.token.refreshed', { targetVersion: 'latest' })
+  @Subscribe('auth.token.refreshed')
   @Retry({ maxAttempts: 2, initialDelay: 500 })
   async handleTokenRefreshed(event: TokenRefreshedEvent): Promise<void> {
     console.log('[AuthEventConsumer] Token refreshed:', {
@@ -239,7 +239,7 @@ export class AuthEventConsumer extends EventConsumerBase {
   /**
    * 處理 Session 過期事件
    */
-  @Subscribe('auth.session.expired', { targetVersion: 'latest' })
+  @Subscribe('auth.session.expired')
   @Retry({ maxAttempts: 2, initialDelay: 500 })
   async handleSessionExpired(event: SessionExpiredEvent): Promise<void> {
     console.log('[AuthEventConsumer] Session expired:', {
@@ -267,7 +267,7 @@ export class AuthEventConsumer extends EventConsumerBase {
    * 3. 發送權限變更通知
    * 4. 觸發存取控制更新
    */
-  @Subscribe('auth.permission.changed', { targetVersion: 'latest' })
+  @Subscribe('auth.permission.changed')
   @Retry({ maxAttempts: 5, initialDelay: 2000 })
   async handlePermissionChanged(event: PermissionChangedEvent): Promise<void> {
     console.log('[AuthEventConsumer] Permission changed:', {
@@ -292,7 +292,7 @@ export class AuthEventConsumer extends EventConsumerBase {
   /**
    * 處理角色變更事件
    */
-  @Subscribe('auth.role.changed', { targetVersion: 'latest' })
+  @Subscribe('auth.role.changed')
   @Retry({ maxAttempts: 5, initialDelay: 2000 })
   async handleRoleChanged(event: RoleChangedEvent): Promise<void> {
     console.log('[AuthEventConsumer] Role changed:', {
@@ -316,7 +316,7 @@ export class AuthEventConsumer extends EventConsumerBase {
   /**
    * 處理 Email 驗證完成事件
    */
-  @Subscribe('auth.email.verified', { targetVersion: 'latest' })
+  @Subscribe('auth.email.verified')
   @Retry({ maxAttempts: 3, initialDelay: 1000 })
   async handleEmailVerified(event: EmailVerifiedEvent): Promise<void> {
     console.log('[AuthEventConsumer] Email verified:', {
@@ -340,7 +340,7 @@ export class AuthEventConsumer extends EventConsumerBase {
    * 
    * 認證事件處理失敗屬於嚴重問題，需要特殊處理
    */
-  protected override handleError(error: Error, event: any): void {
+  protected handleError(error: Error, event: any): void {
     console.error('[AuthEventConsumer] CRITICAL - Failed to handle auth event:', {
       eventType: event.type,
       eventId: event.id,

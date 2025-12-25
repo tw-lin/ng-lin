@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { AuthPort } from './auth.port';
-import { FirebaseAuthService } from './infra/firebase-auth.service';
+import { FirebaseAuthService } from '../../../firebase/infra/firebase-auth.service';
 
 /**
  * Application-layer authentication facade.

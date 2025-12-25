@@ -1,26 +1,35 @@
 /**
- * Workspace Context Service (Firebase Version) - Refactored with Angular 20 Best Practices
- *
- * 統一的工作區上下文管理服務 (Firebase 版本) - 使用 Angular 20 最佳實踐重構
- * Unified workspace context management service (Firebase version) - Refactored with Angular 20 best practices
- *
- * Manages the current workspace context (user, organization, team, bot)
- * and provides reactive state for context switching.
- *
+ * Tenant Context Service - Unified Workspace & Tenant Management
+ * 
+ * Primary service for workspace management with built-in multi-tenant isolation
+ * Replaces WorkspaceContextService with enhanced tenant-first architecture
+ * 
+ * Manages workspace context (user, organization, team, partner, bot) with automatic tenant isolation
+ * 
  * Architecture:
  * - RxJS Pipeline: Handles ALL async operations (data loading, HTTP requests)
- * - Signals: Manages sync state only (context type, context ID)
- * - Computed: Derived state (labels, icons, mappings)
+ * - Signals: Manages sync state only (context type, context ID, tenant ID)
+ * - Computed: Derived state (labels, icons, mappings, tenant metadata)
  * - Effects: Side effects only (sync to SettingsService, persistence)
  *
- * This follows Angular 20 best practices from Context7 documentation:
+ * Tenant Isolation (Primary Purpose):
+ * - User Context: tenant_id = user.uid (personal workspace)
+ * - Organization Context: tenant_id = organization.id (organization workspace)
+ * - Team Context: tenant_id = team.organization_id (team's parent organization)
+ * - Partner Context: tenant_id = partner.organization_id (partner's organization)
+ * - Bot Context: tenant_id = bot.organization_id (bot's organization)
+ *
+ * Follows Angular 20 best practices:
  * - "RxJS for Async, Signals for Sync"
- * - Use switchMap to handle async operations in pipelines
- * - Use shareReplay(1) to prevent duplicate requests
- * - Use toSignal to convert Observable to Signal at the end
+ * - switchMap for async operations in pipelines
+ * - shareReplay(1) to prevent duplicate requests
+ * - toSignal to convert Observable to Signal at the end
  * - Keep effects "thin and focused" - no async operations
  *
- * @module shared/services
+ * Follows: docs/⭐️/Global-Audit-Log-系統拆解與對齊方案.md (Part V - Phase 1 - Task 1.2)
+ *
+ * @module core/global-event-bus/services
+ * @version 2.0.0 - Unified workspace & tenant management (replaced WorkspaceContextService)
  */
 
 import { Injectable, computed, inject, signal, effect } from '@angular/core';
@@ -28,19 +37,45 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ContextType, Account, Organization, Team, Partner, Bot, AuthFacade } from '@core';
 import { OrganizationRepository, TeamRepository, PartnerRepository } from '@core/repositories';
 import { SettingsService } from '@delon/theme';
+import { FirebaseService } from '@core/services/firebase.service';
 import { combineLatest, of, switchMap, map, shareReplay, catchError, BehaviorSubject } from 'rxjs';
 
 const STORAGE_KEY = 'workspace_context';
 
+/**
+ * Workspace Interface
+ * Represents a complete workspace with user and all accessible entities
+ */
+export interface Workspace {
+  user: Account | null;
+  organizations: Organization[];
+  teams: Team[];
+  partners: Partner[];
+  bots: Bot[];
+}
+
+/**
+ * Tenant Metadata
+ * Provides additional context about the current tenant for audit system
+ */
+export interface TenantMetadata {
+  tenantId: string;
+  tenantType: ContextType;
+  tenantName: string;
+  ownerId?: string; // For Organization/Team/Partner/Bot
+  parentOrgId?: string; // For Team/Partner/Bot
+}
+
 @Injectable({
   providedIn: 'root'
 })
-export class WorkspaceContextService {
+export class TenantContextService {
   private readonly auth = inject(AuthFacade);
   private readonly organizationRepo = inject(OrganizationRepository);
   private readonly teamRepo = inject(TeamRepository);
   private readonly partnerRepo = inject(PartnerRepository);
   private readonly settingsService = inject(SettingsService);
+  private readonly firebaseService = inject(FirebaseService);
 
   // ============================================================================
   // RxJS Pipeline: Handle ALL async operations
@@ -61,11 +96,11 @@ export class WorkspaceContextService {
   private readonly userData$ = combineLatest([this.auth.user$, this.reloadTrigger$]).pipe(
     switchMap(([user]) => {
       if (!user) {
-        console.log('[WorkspaceContextService] 👤 No user authenticated');
+        console.log('[TenantContextService] 👤 No user authenticated');
         return of({ user: null, organizations: [], teams: [], partners: [], bots: [] });
       }
 
-      console.log('[WorkspaceContextService] 👤 User authenticated:', user.email);
+      console.log('[TenantContextService] 👤 User authenticated:', user.email);
 
       // Convert Firebase user to Account
       const account: Account = {
@@ -80,7 +115,7 @@ export class WorkspaceContextService {
       // Load organizations for this user
       return this.organizationRepo.findByCreator(user.uid).pipe(
         switchMap(organizations => {
-          console.log('[WorkspaceContextService] ✅ Organizations loaded:', organizations.length);
+          console.log('[TenantContextService] ✅ Organizations loaded:', organizations.length);
 
           if (organizations.length === 0) {
             return of({ user: account, organizations: [], teams: [], partners: [], bots: [] });
@@ -94,8 +129,8 @@ export class WorkspaceContextService {
             map(([teamArrays, partnerArrays]) => {
               const allTeams = teamArrays.flat();
               const allPartners = partnerArrays.flat();
-              console.log('[WorkspaceContextService] ✅ Teams loaded:', allTeams.length);
-              console.log('[WorkspaceContextService] ✅ Partners loaded:', allPartners.length);
+              console.log('[TenantContextService] ✅ Teams loaded:', allTeams.length);
+              console.log('[TenantContextService] ✅ Partners loaded:', allPartners.length);
               return {
                 user: account,
                 organizations,
@@ -107,7 +142,7 @@ export class WorkspaceContextService {
           );
         }),
         catchError(error => {
-          console.error('[WorkspaceContextService] ❌ Error loading user data:', error);
+          console.error('[TenantContextService] ❌ Error loading user data:', error);
           // Return partial data on error (user info is still valid)
           return of({ user: account, organizations: [], teams: [], partners: [], bots: [] });
         })
@@ -242,6 +277,205 @@ export class WorkspaceContextService {
   });
 
   // ============================================================================
+  // Tenant Isolation: Computed Signals for Multi-Tenant Audit System
+  // ============================================================================
+
+  /**
+   * Current Tenant ID
+   * Extracted from workspace context (User/Organization/Team/Partner/Bot)
+   * 
+   * Tenant ID Mapping:
+   * - User: user.uid
+   * - Organization: organization.id
+   * - Team: team.organization_id (parent organization)
+   * - Partner: partner.organization_id (parent organization)
+   * - Bot: bot.organization_id (parent organization)
+   */
+  readonly currentTenantId = computed(() => {
+    const contextType = this.contextType();
+    const contextId = this.contextId();
+
+    if (!contextType || !contextId) {
+      // Fallback to current user if no workspace context
+      const user = this.currentUser();
+      return user?.uid ?? null;
+    }
+
+    switch (contextType) {
+      case ContextType.USER:
+        return contextId; // user.uid
+
+      case ContextType.ORGANIZATION:
+        return contextId; // organization.id
+
+      case ContextType.TEAM: {
+        // Team belongs to an organization, use organization_id as tenant
+        const team = this.teams().find(t => t.id === contextId);
+        return team?.organization_id ?? null;
+      }
+
+      case ContextType.PARTNER: {
+        // Partner belongs to an organization, use organization_id as tenant
+        const partner = this.partners().find(p => p.id === contextId);
+        return partner?.organization_id ?? null;
+      }
+
+      case ContextType.BOT: {
+        // Bot belongs to an organization, use organization_id as tenant
+        const bot = this.bots().find(b => b.id === contextId);
+        return (bot as any)?.organization_id ?? null;
+      }
+
+      default:
+        return null;
+    }
+  });
+
+  /**
+   * Is Superadmin
+   * Superadmins can access all tenants (cross-tenant queries)
+   * 
+   * TODO: Integrate with actual role/permission system
+   * For now, check custom claim 'role' === 'superadmin' from Firebase Auth
+   */
+  readonly isSuperAdmin = computed(() => {
+    const user = this.firebaseService.getCurrentUser();
+    if (!user) return false;
+
+    // Check custom claims (requires Firebase Admin SDK to set)
+    const customClaims = (user as any).reloadUserInfo?.customAttributes;
+    if (customClaims) {
+      try {
+        const claims = JSON.parse(customClaims);
+        return claims.role === 'superadmin' || claims.is_superadmin === true;
+      } catch {
+        return false;
+      }
+    }
+
+    return false;
+  });
+
+  /**
+   * Tenant Metadata
+   * Provides additional context about the current tenant for audit system
+   */
+  readonly tenantMetadata = computed((): TenantMetadata | null => {
+    const tenantId = this.currentTenantId();
+    const tenantType = this.contextType();
+
+    if (!tenantId || !tenantType) return null;
+
+    switch (tenantType) {
+      case ContextType.USER: {
+        const user = this.currentUser();
+        return user ? {
+          tenantId,
+          tenantType,
+          tenantName: user.name || user.email || 'User'
+        } : null;
+      }
+
+      case ContextType.ORGANIZATION: {
+        const org = this.organizations().find(o => o.id === tenantId);
+        return org ? {
+          tenantId,
+          tenantType,
+          tenantName: org.name,
+          ownerId: org.created_by || org.creator_id
+        } : null;
+      }
+
+      case ContextType.TEAM: {
+        const contextId = this.contextId();
+        const team = this.teams().find(t => t.id === contextId);
+        return team ? {
+          tenantId, // organization_id
+          tenantType,
+          tenantName: team.name,
+          parentOrgId: team.organization_id
+        } : null;
+      }
+
+      case ContextType.PARTNER: {
+        const contextId = this.contextId();
+        const partner = this.partners().find(p => p.id === contextId);
+        return partner ? {
+          tenantId, // organization_id
+          tenantType,
+          tenantName: partner.name,
+          parentOrgId: partner.organization_id
+        } : null;
+      }
+
+      case ContextType.BOT: {
+        const contextId = this.contextId();
+        const bot = this.bots().find(b => b.id === contextId);
+        return bot ? {
+          tenantId, // organization_id
+          tenantType,
+          tenantName: bot.name,
+          parentOrgId: (bot as any).organization_id
+        } : null;
+      }
+
+      default:
+        return null;
+    }
+  });
+
+  /**
+   * Current Workspace
+   * Complete workspace data (for backward compatibility)
+   */
+  readonly currentWorkspace = computed((): Workspace => {
+    return {
+      user: this.currentUser(),
+      organizations: this.organizations(),
+      teams: this.teams(),
+      partners: this.partners(),
+      bots: this.bots()
+    };
+  });
+
+  // ============================================================================
+  // Tenant Isolation: Validation Methods
+  // ============================================================================
+
+  /**
+   * Ensure Tenant ID Exists
+   * Throws error if no tenant context is available
+   * 
+   * Use this before any audit operation to ensure tenant isolation
+   */
+  ensureTenantId(): string {
+    const tenantId = this.currentTenantId();
+    if (!tenantId) {
+      throw new Error(
+        '[TenantContextService] No tenant context available. ' +
+        'User must be authenticated and have a workspace context.'
+      );
+    }
+    return tenantId;
+  }
+
+  /**
+   * Get Tenant ID or Throw
+   * Alias for ensureTenantId()
+   */
+  getTenantIdOrThrow(): string {
+    return this.ensureTenantId();
+  }
+
+  /**
+   * Has Tenant Context
+   * Check if tenant context is available (non-throwing)
+   */
+  hasTenantContext(): boolean {
+    return this.currentTenantId() !== null;
+  }
+
+  // ============================================================================
   // Effects: Side effects only (sync to SettingsService, persistence)
   // ============================================================================
 
@@ -309,11 +543,12 @@ export class WorkspaceContextService {
 
       // Only restore context when user is first loaded
       if (user && this.contextType() === ContextType.USER && !this.contextId()) {
-        console.log('[WorkspaceContextService] 🔄 Auto-restoring context...');
+        console.log('[TenantContextService] 🔄 Auto-restoring context...');
         this.restoreContext();
       }
     });
   }
+
   // ============================================================================
   // Context Switching: Pure sync operations
   // ============================================================================
@@ -358,7 +593,7 @@ export class WorkspaceContextService {
    * Pure sync operation - just updates signals
    */
   switchContext(type: ContextType, id: string | null): void {
-    console.log('[WorkspaceContextService] 🔀 Switching context:', { type, id });
+    console.log('[TenantContextService] 🔀 Switching context:', { type, id });
     this._switching.set(true);
 
     this._contextType.set(type);
@@ -367,7 +602,7 @@ export class WorkspaceContextService {
     this.persistContext();
     this._switching.set(false);
 
-    console.log('[WorkspaceContextService] ✅ Context switched successfully');
+    console.log('[TenantContextService] ✅ Context switched successfully');
   }
 
   // ============================================================================
@@ -387,7 +622,7 @@ export class WorkspaceContextService {
       // Note: We can't directly mutate _userData since it's from toSignal
       // This is a limitation - ideally organizations should be a separate signal
       // For now, we'll reload data
-      console.log('[WorkspaceContextService] ⚠️ Organization added, reloading data...');
+      console.log('[TenantContextService] ⚠️ Organization added, reloading data...');
       this.reloadData();
     }
   }
@@ -397,7 +632,7 @@ export class WorkspaceContextService {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   removeOrganization(_orgId: string): void {
-    console.log('[WorkspaceContextService] ⚠️ Organization removed, reloading data...');
+    console.log('[TenantContextService] ⚠️ Organization removed, reloading data...');
     this.reloadData();
   }
 
@@ -406,7 +641,7 @@ export class WorkspaceContextService {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   addTeam(_team: Team): void {
-    console.log('[WorkspaceContextService] ⚠️ Team added, reloading data...');
+    console.log('[TenantContextService] ⚠️ Team added, reloading data...');
     this.reloadData();
   }
 
@@ -415,7 +650,7 @@ export class WorkspaceContextService {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   removeTeam(_teamId: string): void {
-    console.log('[WorkspaceContextService] ⚠️ Team removed, reloading data...');
+    console.log('[TenantContextService] ⚠️ Team removed, reloading data...');
     this.reloadData();
   }
 
@@ -424,7 +659,7 @@ export class WorkspaceContextService {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   addPartner(_partner: Partner): void {
-    console.log('[WorkspaceContextService] ⚠️ Partner added, reloading data...');
+    console.log('[TenantContextService] ⚠️ Partner added, reloading data...');
     this.reloadData();
   }
 
@@ -433,7 +668,7 @@ export class WorkspaceContextService {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   removePartner(_partnerId: string): void {
-    console.log('[WorkspaceContextService] ⚠️ Partner removed, reloading data...');
+    console.log('[TenantContextService] ⚠️ Partner removed, reloading data...');
     this.reloadData();
   }
 
@@ -442,7 +677,7 @@ export class WorkspaceContextService {
    * Forces the userData$ pipeline to re-execute by emitting on reloadTrigger$
    */
   reloadData(): void {
-    console.log('[WorkspaceContextService] 🔄 Triggering data reload...');
+    console.log('[TenantContextService] 🔄 Triggering data reload...');
     this.reloadTrigger$.next();
   }
 
@@ -472,13 +707,13 @@ export class WorkspaceContextService {
 
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      console.log('[WorkspaceContextService] 💾 Restoring context from localStorage:', saved);
+      console.log('[TenantContextService] 💾 Restoring context from localStorage:', saved);
 
       if (saved) {
         const { type, id } = JSON.parse(saved);
         this._contextType.set(type);
         this._contextId.set(id);
-        console.log('[WorkspaceContextService] ✅ Context restored:', { type, id });
+        console.log('[TenantContextService] ✅ Context restored:', { type, id });
       } else {
         // Default to user context
         const userId = this.currentUser()?.id;
@@ -487,7 +722,7 @@ export class WorkspaceContextService {
         }
       }
     } catch (error) {
-      console.error('[WorkspaceContextService] ❌ Failed to restore context:', error);
+      console.error('[TenantContextService] ❌ Failed to restore context:', error);
     }
   }
 
@@ -503,9 +738,9 @@ export class WorkspaceContextService {
         id: this.contextId()
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      console.log('[WorkspaceContextService] 💾 Context persisted:', state);
+      console.log('[TenantContextService] 💾 Context persisted:', state);
     } catch (error) {
-      console.error('[WorkspaceContextService] ❌ Failed to persist context:', error);
+      console.error('[TenantContextService] ❌ Failed to persist context:', error);
     }
   }
 }

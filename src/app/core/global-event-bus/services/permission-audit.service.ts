@@ -20,7 +20,7 @@ import {
   PermissionActionType,
   RoleActionType
 } from '../models/permission-audit-event.model';
-import { AuditLevel, AuditCategory } from '../models/auth-audit-event.model';
+import { AuditLevel, AuditCategory } from '../models/audit-event.model';
 import { PermissionChangedEvent, RoleChangedEvent } from '../domain-events/auth-events';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -171,18 +171,18 @@ export class PermissionAuditService {
    */
   private subscribeToPermissionEvents(): void {
     // 訂閱權限變更事件
-    this.eventBus.observe<PermissionChangedEvent>('auth.permission.changed')
+    this.eventBus.observe('auth.permission.changed')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (event) => this.handlePermissionChangedEvent(event),
+        next: (event) => this.handlePermissionChangedEvent(event as any),
         error: (error) => console.error('[PermissionAuditService] Permission event error:', error)
       });
 
     // 訂閱角色變更事件
-    this.eventBus.observe<RoleChangedEvent>('auth.role.changed')
+    this.eventBus.observe('auth.role.changed')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (event) => this.handleRoleChangedEvent(event),
+        next: (event) => this.handleRoleChangedEvent(event as any),
         error: (error) => console.error('[PermissionAuditService] Role event error:', error)
       });
   }

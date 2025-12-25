@@ -107,15 +107,16 @@ export class EventDispatcherService {
       }
     } catch (error) {
       // After all retries exhausted or immediate failure, send to DLQ
-      envelope.markFailed(
+      const failedEnvelope = envelope.asDeadLetter(
         error instanceof Error ? error : new Error(String(error))
       );
-      await this.deadLetterQueue.send(envelope);
+      await this.deadLetterQueue.send(failedEnvelope);
 
       // Re-throw to maintain error isolation at caller level
       throw new HandlerExecutionError(
-        `Handler failed for event ${event.eventType}: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error : undefined
+        event,
+        'EventDispatcher',
+        error instanceof Error ? error : new Error(String(error))
       );
     }
   }
@@ -137,7 +138,8 @@ export class EventDispatcherService {
       setTimeout(() => {
         reject(
           new HandlerTimeoutError(
-            `Handler timeout after ${timeout}ms`,
+            event,
+            'EventDispatcher',
             timeout
           )
         );

@@ -54,7 +54,7 @@ export function Retry(policy: Partial<IRetryPolicy>): MethodDecorator {
       backoff: policy.backoff ?? 'exponential',
       initialDelay: policy.initialDelay ?? 1000,
       maxDelay: policy.maxDelay ?? 30000,
-      shouldRetry: policy.shouldRetry ?? ((error: Error) => {
+      shouldRetry: policy.shouldRetry ?? ((error: Error, _attempt: number) => {
         // 預設：所有錯誤都重試，除了特定的非重試錯誤
         const nonRetryableErrors = [
           'ValidationError',
@@ -82,7 +82,7 @@ export function Retry(policy: Partial<IRetryPolicy>): MethodDecorator {
           lastError = error as Error;
           
           // 檢查是否應該重試
-          if (!retryPolicy.shouldRetry || !retryPolicy.shouldRetry(lastError)) {
+          if (!retryPolicy.shouldRetry || !retryPolicy.shouldRetry(lastError, attempt - 1)) {
             throw lastError;
           }
           

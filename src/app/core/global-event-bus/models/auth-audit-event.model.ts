@@ -10,41 +10,10 @@
  * @version 1.0.0
  */
 
-/**
- * 審計事件嚴重級別
- */
-export enum AuditLevel {
-  /** 資訊級別 - 一般操作 */
-  INFO = 'INFO',
-  /** 警告級別 - 需要注意的操作 */
-  WARNING = 'WARNING',
-  /** 錯誤級別 - 操作失敗 */
-  ERROR = 'ERROR',
-  /** 嚴重級別 - 安全威脅 */
-  CRITICAL = 'CRITICAL'
-}
+import { AuditLevel, AuditCategory } from './audit-event.model';
 
-/**
- * 審計事件類別
- */
-export enum AuditCategory {
-  /** 認證操作 */
-  AUTHENTICATION = 'AUTHENTICATION',
-  /** 授權操作 */
-  AUTHORIZATION = 'AUTHORIZATION',
-  /** 權限變更 */
-  PERMISSION = 'PERMISSION',
-  /** 角色變更 */
-  ROLE = 'ROLE',
-  /** MFA 操作 */
-  MFA = 'MFA',
-  /** Session 管理 */
-  SESSION = 'SESSION',
-  /** Token 操作 */
-  TOKEN = 'TOKEN',
-  /** 安全事件 */
-  SECURITY = 'SECURITY'
-}
+// Re-export for backward compatibility
+export { AuditLevel, AuditCategory };
 
 /**
  * 認證審計事件基礎介面
@@ -172,7 +141,7 @@ export interface PasswordChangedAuditEvent extends AuthAuditEvent {
  * MFA 啟用審計事件
  */
 export interface MFAEnabledAuditEvent extends AuthAuditEvent {
-  category: AuditCategory.MFA;
+  category: AuditCategory.AUTHENTICATION;
   level: AuditLevel.INFO;
   action: 'mfa_enabled';
   details: {
@@ -187,7 +156,7 @@ export interface MFAEnabledAuditEvent extends AuthAuditEvent {
  * MFA 禁用審計事件
  */
 export interface MFADisabledAuditEvent extends AuthAuditEvent {
-  category: AuditCategory.MFA;
+  category: AuditCategory.AUTHENTICATION;
   level: AuditLevel.WARNING;
   action: 'mfa_disabled';
   requiresReview: true;
@@ -203,7 +172,7 @@ export interface MFADisabledAuditEvent extends AuthAuditEvent {
  * Token 刷新審計事件
  */
 export interface TokenRefreshedAuditEvent extends AuthAuditEvent {
-  category: AuditCategory.TOKEN;
+  category: AuditCategory.AUTHENTICATION;
   level: AuditLevel.INFO;
   action: 'token_refreshed';
   details: {
@@ -222,7 +191,7 @@ export interface TokenRefreshedAuditEvent extends AuthAuditEvent {
  * Session 過期審計事件
  */
 export interface SessionExpiredAuditEvent extends AuthAuditEvent {
-  category: AuditCategory.SESSION;
+  category: AuditCategory.AUTHENTICATION;
   level: AuditLevel.INFO;
   action: 'session_expired';
   details: {
@@ -307,13 +276,13 @@ export class AuthAuditEventBuilder {
       return AuditCategory.ROLE;
     }
     if (eventType.includes('mfa')) {
-      return AuditCategory.MFA;
+      return AuditCategory.AUTHENTICATION;
     }
     if (eventType.includes('session')) {
-      return AuditCategory.SESSION;
+      return AuditCategory.AUTHENTICATION;
     }
     if (eventType.includes('token')) {
-      return AuditCategory.TOKEN;
+      return AuditCategory.AUTHENTICATION;
     }
     if (eventType.includes('password') || eventType.includes('failed')) {
       return AuditCategory.SECURITY;
