@@ -100,7 +100,7 @@ src/app/
 │   │   │
 │   │   └── permission.module.ts
 │   │
-│   ├── audit/                                   # 審計日誌 (Auth 相關)
+│   ├── global-audit-log/                                   # 審計日誌 (Auth 相關)
 │   │   ├── services/
 │   │   │   ├── auth-audit.service.ts            # 認證事件審計
 │   │   │   └── permission-audit.service.ts      # 權限變更審計
