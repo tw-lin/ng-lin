@@ -20,7 +20,7 @@ src/app/
 │   │       ├── tenant.model.ts
 │   │       └── permission.model.ts
 │   │
-│   ├── event-bus/                  # 全域事件總線
+│   ├── global-event-bus/                  # 全域事件總線
 │   │   ├── services/
 │   │   │   ├── event-bus.service.ts         # 事件分發核心
 │   │   │   └── event-logger.service.ts      # 事件記錄
@@ -30,7 +30,7 @@ src/app/
 │   │   └── operators/
 │   │       └── tenant-filter.operator.ts     # RxJS 租戶過濾
 │   │
-│   ├── audit/                      # 審計日誌系統
+│   ├── global-audit-log/                      # 審計日誌系統
 │   │   ├── services/
 │   │   │   ├── audit-log.service.ts         # 日誌收集與查詢
 │   │   │   └── audit-collector.service.ts   # 自動攔截關鍵操作
