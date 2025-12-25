@@ -1,18 +1,28 @@
 /**
- * Audit Collector Service
+ * Audit Collector Service (v2.0.0 - Tenant-Aware)
  * 
- * 審計收集器服務
+ * 審計收集器服務 (租戶感知版本)
  * - 自動收集並轉換領域事件為審計事件
  * - 提供便捷的 API 供其他服務手動記錄審計
  * - 整合 AuditLogService 進行持久化
+ * - 強制租戶隔離：所有審計記錄必須包含 tenant_id
  * - 遵循 docs/⭐️/Global Audit Log.md 規範
  * 
+ * Tenant Isolation:
+ * - All audit recording methods verify tenant_id exists
+ * - Automatically extracts tenant_id from TenantContextService
+ * - Throws error if tenant_id missing (except superadmin cross-tenant)
+ * - Supports manual tenant_id override for migration/admin scenarios
+ * 
+ * Follows: docs/⭐️/Global-Audit-Log-系統拆解與對齊方案.md (Part V - Phase 1 - Task 1.2 Part 4)
+ * 
  * @author Global Event Bus Team
- * @version 1.0.0
+ * @version 2.0.0 - Tenant isolation enforcement
  */
 
 import { Injectable, inject } from '@angular/core';
 import { AuditLogService } from './audit-log.service';
+import { TenantContextService } from './tenant-context.service';
 import { DomainEvent } from '../models/base-event';
 import {
   AuditEvent,
@@ -23,7 +33,7 @@ import {
 } from '../models/audit-event.model';
 
 /**
- * 審計記錄選項
+ * 審計記錄選項 (增強：租戶隔離)
  */
 export interface AuditRecordOptions {
   /** 審計級別 (預設: INFO) */
@@ -44,29 +54,97 @@ export interface AuditRecordOptions {
   userAgent?: string;
   /** 是否需要審查 */
   requiresReview?: boolean;
+  /** 租戶 ID (選用：手動覆寫，用於遷移或管理場景) */
+  tenantId?: string;
+  /** 超級管理員跨租戶操作 (跳過租戶驗證) */
+  allowCrossTenant?: boolean;
+}
+
+/**
+ * Tenant Validation Error for Audit Recording
+ */
+export class AuditTenantValidationError extends Error {
+  constructor(message: string, public readonly method: string) {
+    super(message);
+    this.name = 'AuditTenantValidationError';
+  }
 }
 
 @Injectable({ providedIn: 'root' })
 export class AuditCollectorService {
   private auditLogService = inject(AuditLogService);
+  private tenantContext = inject(TenantContextService);
   
   constructor() {
-    console.log('[AuditCollectorService] Initialized');
+    console.log('[AuditCollectorService] Initialized (v2.0.0 - Tenant-Aware)');
   }
   
   /**
-   * 從領域事件創建審計事件
+   * Verify and extract tenant_id
+   * 
+   * Priority:
+   * 1. Manual override (options.tenantId)
+   * 2. Auto-extract from TenantContextService
+   * 3. Superadmin bypass (options.allowCrossTenant)
+   * 4. Error if no tenant context available
+   * 
+   * @param options - Audit record options
+   * @param methodName - Caller method name for error reporting
+   * @returns Verified tenant_id or null (if superadmin cross-tenant)
+   * @throws AuditTenantValidationError if tenant unavailable
+   */
+  private verifyTenantId(options: AuditRecordOptions, methodName: string): string | null {
+    // Superadmin cross-tenant bypass
+    if (options.allowCrossTenant === true) {
+      return null;
+    }
+    
+    // Manual override (migration/admin scenarios)
+    if (options.tenantId) {
+      return options.tenantId;
+    }
+    
+    // Auto-extract from TenantContextService
+    if (this.tenantContext.hasTenantContext()) {
+      return this.tenantContext.ensureTenantId();
+    }
+    
+    // No tenant available - reject audit recording
+    throw new AuditTenantValidationError(
+      `Audit recording rejected in ${methodName}: No tenant context available. ` +
+      `Audit events must be recorded within a tenant context (user, organization, team, partner, bot). ` +
+      `Current context type: ${this.tenantContext.contextType() || 'none'}. ` +
+      `To record cross-tenant events, use options.allowCrossTenant = true (superadmin only).`,
+      methodName
+    );
+  }
+  
+  /**
+   * 從領域事件創建審計事件 (v2.0.0 - Tenant-Aware)
+   * 
+   * Tenant Isolation:
+   * - Automatically extracts tenant_id from TenantContextService
+   * - Throws error if no tenant context available
    */
   async collectFromDomainEvent(
     domainEvent: DomainEvent<any>,
     options: AuditRecordOptions = {}
   ): Promise<void> {
-    const auditEvent = this.createAuditEventFromDomain(domainEvent, options);
+    // Verify and extract tenant_id (MANDATORY)
+    const tenantId = this.verifyTenantId(options, 'collectFromDomainEvent');
+    
+    const auditEvent = this.createAuditEventFromDomain(domainEvent, options, tenantId);
     await this.auditLogService.logAuditEvent(auditEvent);
   }
   
   /**
-   * 記錄認證操作
+   * 記錄認證操作 (v2.0.0 - Tenant-Aware)
+   * 
+   * Tenant Isolation:
+   * - Automatically extracts tenant_id from TenantContextService
+   * - Throws error if no tenant context available
+   * - Supports manual tenant_id override via options.tenantId
+   * - Supports superadmin cross-tenant via options.allowCrossTenant
    */
   async recordAuth(
     eventId: string,
@@ -75,7 +153,10 @@ export class AuditCollectorService {
     action: string,
     options: AuditRecordOptions = {}
   ): Promise<void> {
-    const auditEvent = new AuditEventBuilder()
+    // Verify and extract tenant_id (MANDATORY)
+    const tenantId = this.verifyTenantId(options, 'recordAuth');
+    
+    const builder = new AuditEventBuilder()
       .withId(`audit-auth-${eventId}`)
       .fromDomainEvent(eventId, eventType, new Date())
       .withLevel(options.level || AuditLevel.INFO)
@@ -86,14 +167,22 @@ export class AuditCollectorService {
       .withResult(options.result || 'success', options.errorMessage)
       .withMetadata(options.metadata || {})
       .withContext(options.ipAddress, options.userAgent)
-      .requiresReview(options.requiresReview || false)
-      .build();
+      .requiresReview(options.requiresReview || false);
     
-    await this.auditLogService.logAuditEvent(auditEvent);
+    // Inject tenant_id (unless superadmin cross-tenant)
+    if (tenantId) {
+      builder.withTenant(tenantId);
+    }
+    
+    await this.auditLogService.logAuditEvent(builder.build());
   }
   
   /**
-   * 記錄授權操作
+   * 記錄授權操作 (v2.0.0 - Tenant-Aware)
+   * 
+   * Tenant Isolation:
+   * - Automatically extracts tenant_id from TenantContextService
+   * - Throws error if no tenant context available
    */
   async recordAuthorization(
     eventId: string,
@@ -104,7 +193,10 @@ export class AuditCollectorService {
     resourceId: string,
     options: AuditRecordOptions = {}
   ): Promise<void> {
-    const auditEvent = new AuditEventBuilder()
+    // Verify and extract tenant_id (MANDATORY)
+    const tenantId = this.verifyTenantId(options, 'recordAuthorization');
+    
+    const builder = new AuditEventBuilder()
       .withId(`audit-authz-${eventId}`)
       .fromDomainEvent(eventId, eventType, new Date())
       .withLevel(options.level || AuditLevel.INFO)
@@ -116,14 +208,23 @@ export class AuditCollectorService {
       .withChanges(options.changes || {})
       .withMetadata(options.metadata || {})
       .withContext(options.ipAddress, options.userAgent)
-      .requiresReview(options.requiresReview || false)
-      .build();
+      .requiresReview(options.requiresReview || false);
     
-    await this.auditLogService.logAuditEvent(auditEvent);
+    // Inject tenant_id (unless superadmin cross-tenant)
+    if (tenantId) {
+      builder.withTenant(tenantId);
+    }
+    
+    await this.auditLogService.logAuditEvent(builder.build());
   }
   
   /**
-   * 記錄資料存取
+   * 記錄資料存取 (v2.0.0 - Tenant-Aware)
+   * 
+   * Tenant Isolation:
+   * - tenantId parameter deprecated (use options.tenantId instead)
+   * - Automatically extracts tenant_id from TenantContextService
+   * - Throws error if no tenant context available
    */
   async recordDataAccess(
     eventId: string,
@@ -132,9 +233,17 @@ export class AuditCollectorService {
     action: string,
     resourceType: string,
     resourceId: string,
-    tenantId?: string,
+    tenantId?: string, // @deprecated - Use options.tenantId instead
     options: AuditRecordOptions = {}
   ): Promise<void> {
+    // Backward compatibility: merge deprecated tenantId param into options
+    if (tenantId && !options.tenantId) {
+      options.tenantId = tenantId;
+    }
+    
+    // Verify and extract tenant_id (MANDATORY)
+    const verifiedTenantId = this.verifyTenantId(options, 'recordDataAccess');
+    
     const builder = new AuditEventBuilder()
       .withId(`audit-data-access-${eventId}`)
       .fromDomainEvent(eventId, eventType, new Date())
@@ -148,15 +257,21 @@ export class AuditCollectorService {
       .withContext(options.ipAddress, options.userAgent)
       .requiresReview(options.requiresReview || false);
     
-    if (tenantId) {
-      builder.withTenant(tenantId);
+    // Inject tenant_id (unless superadmin cross-tenant)
+    if (verifiedTenantId) {
+      builder.withTenant(verifiedTenantId);
     }
     
     await this.auditLogService.logAuditEvent(builder.build());
   }
   
   /**
-   * 記錄資料修改
+   * 記錄資料修改 (v2.0.0 - Tenant-Aware)
+   * 
+   * Tenant Isolation:
+   * - tenantId parameter deprecated (use options.tenantId instead)
+   * - Automatically extracts tenant_id from TenantContextService
+   * - Throws error if no tenant context available
    */
   async recordDataModification(
     eventId: string,
@@ -166,9 +281,17 @@ export class AuditCollectorService {
     resourceType: string,
     resourceId: string,
     changes: AuditChanges,
-    tenantId?: string,
+    tenantId?: string, // @deprecated - Use options.tenantId instead
     options: AuditRecordOptions = {}
   ): Promise<void> {
+    // Backward compatibility: merge deprecated tenantId param into options
+    if (tenantId && !options.tenantId) {
+      options.tenantId = tenantId;
+    }
+    
+    // Verify and extract tenant_id (MANDATORY)
+    const verifiedTenantId = this.verifyTenantId(options, 'recordDataModification');
+    
     const builder = new AuditEventBuilder()
       .withId(`audit-data-mod-${eventId}`)
       .fromDomainEvent(eventId, eventType, new Date())
@@ -183,8 +306,9 @@ export class AuditCollectorService {
       .withContext(options.ipAddress, options.userAgent)
       .requiresReview(options.requiresReview || false);
     
-    if (tenantId) {
-      builder.withTenant(tenantId);
+    // Inject tenant_id (unless superadmin cross-tenant)
+    if (verifiedTenantId) {
+      builder.withTenant(verifiedTenantId);
     }
     
     // 自動標記刪除/移除操作需要審查
@@ -196,7 +320,11 @@ export class AuditCollectorService {
   }
   
   /**
-   * 記錄安全事件
+   * 記錄安全事件 (v2.0.0 - Tenant-Aware)
+   * 
+   * Tenant Isolation:
+   * - Automatically extracts tenant_id from TenantContextService
+   * - Throws error if no tenant context available
    */
   async recordSecurityEvent(
     eventId: string,
@@ -207,7 +335,10 @@ export class AuditCollectorService {
     level: AuditLevel = AuditLevel.WARNING,
     options: AuditRecordOptions = {}
   ): Promise<void> {
-    const auditEvent = new AuditEventBuilder()
+    // Verify and extract tenant_id (MANDATORY)
+    const tenantId = this.verifyTenantId(options, 'recordSecurityEvent');
+    
+    const builder = new AuditEventBuilder()
       .withId(`audit-security-${eventId}`)
       .fromDomainEvent(eventId, eventType, new Date())
       .withLevel(level)
@@ -218,14 +349,22 @@ export class AuditCollectorService {
       .withResult(options.result || 'success', options.errorMessage)
       .withMetadata({ description, ...options.metadata })
       .withContext(options.ipAddress, options.userAgent)
-      .requiresReview(true) // 安全事件總是需要審查
-      .build();
+      .requiresReview(true); // 安全事件總是需要審查
     
-    await this.auditLogService.logAuditEvent(auditEvent);
+    // Inject tenant_id (unless superadmin cross-tenant)
+    if (tenantId) {
+      builder.withTenant(tenantId);
+    }
+    
+    await this.auditLogService.logAuditEvent(builder.build());
   }
   
   /**
-   * 記錄系統配置變更
+   * 記錄系統配置變更 (v2.0.0 - Tenant-Aware)
+   * 
+   * Tenant Isolation:
+   * - Automatically extracts tenant_id from TenantContextService
+   * - Throws error if no tenant context available
    */
   async recordConfigChange(
     eventId: string,
@@ -236,7 +375,10 @@ export class AuditCollectorService {
     changes: AuditChanges,
     options: AuditRecordOptions = {}
   ): Promise<void> {
-    const auditEvent = new AuditEventBuilder()
+    // Verify and extract tenant_id (MANDATORY)
+    const tenantId = this.verifyTenantId(options, 'recordConfigChange');
+    
+    const builder = new AuditEventBuilder()
       .withId(`audit-config-${eventId}`)
       .fromDomainEvent(eventId, eventType, new Date())
       .withLevel(options.level || AuditLevel.WARNING)
@@ -248,14 +390,22 @@ export class AuditCollectorService {
       .withChanges(changes)
       .withMetadata(options.metadata || {})
       .withContext(options.ipAddress, options.userAgent)
-      .requiresReview(true) // 配置變更需要審查
-      .build();
+      .requiresReview(true); // 配置變更需要審查
     
-    await this.auditLogService.logAuditEvent(auditEvent);
+    // Inject tenant_id (unless superadmin cross-tenant)
+    if (tenantId) {
+      builder.withTenant(tenantId);
+    }
+    
+    await this.auditLogService.logAuditEvent(builder.build());
   }
   
   /**
-   * 記錄合規性事件
+   * 記錄合規性事件 (v2.0.0 - Tenant-Aware)
+   * 
+   * Tenant Isolation:
+   * - Automatically extracts tenant_id from TenantContextService
+   * - Throws error if no tenant context available
    */
   async recordComplianceEvent(
     eventId: string,
@@ -267,7 +417,10 @@ export class AuditCollectorService {
     complianceType: string,
     options: AuditRecordOptions = {}
   ): Promise<void> {
-    const auditEvent = new AuditEventBuilder()
+    // Verify and extract tenant_id (MANDATORY)
+    const tenantId = this.verifyTenantId(options, 'recordComplianceEvent');
+    
+    const builder = new AuditEventBuilder()
       .withId(`audit-compliance-${eventId}`)
       .fromDomainEvent(eventId, eventType, new Date())
       .withLevel(options.level || AuditLevel.INFO)
@@ -278,10 +431,14 @@ export class AuditCollectorService {
       .withResult(options.result || 'success', options.errorMessage)
       .withMetadata({ complianceType, ...options.metadata })
       .withContext(options.ipAddress, options.userAgent)
-      .requiresReview(options.requiresReview || false)
-      .build();
+      .requiresReview(options.requiresReview || false);
     
-    await this.auditLogService.logAuditEvent(auditEvent);
+    // Inject tenant_id (unless superadmin cross-tenant)
+    if (tenantId) {
+      builder.withTenant(tenantId);
+    }
+    
+    await this.auditLogService.logAuditEvent(builder.build());
   }
   
   /**
@@ -289,7 +446,8 @@ export class AuditCollectorService {
    */
   private createAuditEventFromDomain(
     domainEvent: DomainEvent<any>,
-    options: AuditRecordOptions
+    options: AuditRecordOptions,
+    tenantId: string | null
   ): AuditEvent {
     const actor = this.extractActor(domainEvent);
     const action = this.extractAction(domainEvent.eventType);
@@ -310,6 +468,11 @@ export class AuditCollectorService {
     
     if (options.changes) {
       builder.withChanges(options.changes);
+    }
+    
+    // Inject tenant_id (unless superadmin cross-tenant)
+    if (tenantId) {
+      builder.withTenant(tenantId);
     }
     
     if (options.ipAddress || options.userAgent) {
