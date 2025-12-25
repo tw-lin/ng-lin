@@ -1,3 +1,74 @@
+/**
+ * @module BlueprintDesignerComponent
+ * @description
+ * Visual blueprint designer with drag-and-drop module composition
+ * 
+ * ## Purpose
+ * Interactive canvas for designing construction project blueprints by:
+ * - Visual drag-and-drop module placement
+ * - Module dependency management with validation
+ * - Real-time connection visualization
+ * - Automatic dependency resolution and cycle detection
+ * 
+ * ## Key Features
+ * - **Visual Canvas**: Drag-and-drop interface with grid-based positioning
+ * - **Module Library**: Categorized modules (Basic, Finance, Cloud, Quality, etc.)
+ * - **Connection Management**: Visual connection drawing with SVG layer
+ * - **Dependency Validation**: Real-time circular dependency detection
+ * - **Auto-save**: Automatic persistence on changes
+ * - **Module Configuration**: Drawer-based configuration editing
+ * 
+ * ## Architecture
+ * - **Presentation Layer**: Standalone component with OnPush change detection
+ * - **State Management**: Angular Signals for reactive UI updates
+ * - **Service Layer**: BlueprintFeatureService for data operations
+ * - **Validation**: DependencyValidatorService for graph analysis
+ * 
+ * ## Module Categories
+ * - **Basic**: Tasks, Members, Diary, Audit Logs
+ * - **Finance**: Budget tracking, payment management
+ * - **Cloud**: Document storage and backup
+ * - **Quality**: QA inspections, acceptance
+ * - **Documents**: Contracts, agreements
+ * 
+ * ## State Management
+ * Uses Angular 20+ Signals pattern:
+ * - `blueprint` - Current blueprint state
+ * - `modules` - Canvas modules with positions
+ * - `connections` - Module dependencies
+ * - `validationResult` - Dependency validation status
+ * - Computed signals for derived state
+ * 
+ * ## Multi-Tenancy
+ * Respects Blueprint-based isolation:
+ * - Each blueprint is a permission boundary
+ * - Modules belong to specific blueprints
+ * - Changes require blueprint-level permissions
+ * 
+ * @see {@link docs/⭐️/整體架構設計.md} - Overall Architecture
+ * @see {@link src/app/features/blueprint/README.md} - Blueprint Module Documentation
+ * @see {@link .github/instructions/ng-gighub-architecture.instructions.md} - Architecture Guidelines
+ * 
+ * @remarks
+ * This is the most complex component in the blueprint feature (1052 lines).
+ * Key complexity areas:
+ * - SVG connection rendering
+ * - Drag-and-drop state management
+ * - Dependency graph validation
+ * - Real-time UI updates
+ * 
+ * @example
+ * ```typescript
+ * // Route configuration
+ * {
+ *   path: ':id/designer',
+ *   component: BlueprintDesignerComponent
+ * }
+ * 
+ * // Navigation
+ * router.navigate(['/blueprint', blueprintId, 'designer']);
+ * ```
+ */
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy, ElementRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';

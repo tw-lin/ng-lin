@@ -1,3 +1,83 @@
+/**
+ * @module TeamMembersComponent
+ * @description
+ * Team-level member management component for internal organization teams
+ * 
+ * ## Purpose
+ * Manage internal team memberships within an organization:
+ * - Team roster management
+ * - Role assignment and updates
+ * - Member invitation from organization pool
+ * - Team-based permission control
+ * 
+ * ## Key Features
+ * - **Member List**: Display all team members with their roles
+ * - **Role Management**: Update team-specific roles (Admin, Member, Viewer)
+ * - **Member Invitation**: Add organization members to the team
+ * - **Member Removal**: Remove members from team
+ * - **Real-time Updates**: Reactive state management with Signals
+ * 
+ * ## Team Roles
+ * - **Admin** (管理員): Full team management permissions
+ * - **Member** (成員): Standard team participation
+ * - **Viewer** (檢視者): Read-only team access
+ * 
+ * ## Architecture
+ * - **Presentation Layer**: Standalone component with OnPush change detection
+ * - **State Management**: TeamStore for reactive team state
+ * - **Data Layer**: OrganizationMemberRepository for member operations
+ * - **Multi-Tenancy**: Team-scoped within organization context
+ * 
+ * ## State Management
+ * Uses Angular 20+ Signals pattern:
+ * - `teamId` - Current team context (from route)
+ * - `members` - Signal: List of team members
+ * - `availableOrgMembers` - Signal: Organization members available for invitation
+ * - `loading` - Signal: Loading state
+ * - Computed signals for derived state
+ * 
+ * ## Multi-Tenancy Context
+ * Team operations respect organizational isolation:
+ * - Team belongs to organization (tenant_id = organization.id)
+ * - Members must be from the same organization
+ * - Cross-tenant operations prohibited
+ * - All changes audit-logged to organization trail
+ * 
+ * ## Team vs Partner Distinction
+ * - **Team**: Internal organization subdivision for workflow
+ * - **Partner**: External collaboration entity
+ * - Teams share organization tenant_id
+ * - Partners maintain separate tenant context
+ * 
+ * ## Integration
+ * Integrates with:
+ * - Organization member management
+ * - Permission and ACL system
+ * - Workspace context service
+ * - Audit logging system
+ * 
+ * @see {@link docs/⭐️/整體架構設計.md} - Multi-Tenancy Architecture
+ * @see {@link .github/instructions/ng-gighub-architecture.instructions.md} - Architecture Guidelines
+ * 
+ * @remarks
+ * Teams enable internal organization structuring:
+ * - Departments, project groups, functional units
+ * - Hierarchical permission inheritance
+ * - Resource allocation and access control
+ * - Project-based or functional organization
+ * 
+ * @example
+ * ```typescript
+ * // Route configuration
+ * {
+ *   path: 'team/:teamId/members',
+ *   component: TeamMembersComponent
+ * }
+ * 
+ * // Navigation
+ * router.navigate(['/account/team', teamId, 'members']);
+ * ```
+ */
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, effect, DestroyRef, untracked } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
