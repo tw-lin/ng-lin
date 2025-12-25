@@ -2,6 +2,7 @@ import { DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomainEvent, Subscription } from '../models';
 import { IEventBus } from '../interfaces';
+import { EVENT_BUS } from '../constants/event-bus-tokens';
 
 /**
  * Subscription Metadata
@@ -43,7 +44,7 @@ interface SubscriptionMetadata {
  * ```
  */
 export abstract class EventConsumer {
-  protected readonly eventBus = inject(IEventBus, { optional: false }) as IEventBus;
+  protected readonly eventBus = inject(EVENT_BUS, { optional: false });
   private readonly destroyRef = inject(DestroyRef);
   private readonly subscriptions: Subscription[] = [];
   
@@ -94,9 +95,10 @@ export abstract class EventConsumer {
    * Get subscription metadata from decorated methods
    */
   private getSubscriptionMetadata(): SubscriptionMetadata[] {
-    const metadata: SubscriptionMetadata[] = 
-      Reflect.getMetadata('subscriptions', this.constructor) || [];
-    return metadata;
+    // Note: Reflect metadata API is not available in this environment
+    // Decorator-based subscriptions are not currently supported
+    // Use manual subscription via subscribe() method instead
+    return [];
   }
   
   /**

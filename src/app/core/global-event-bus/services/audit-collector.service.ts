@@ -127,7 +127,7 @@ export class AuditCollectorService {
    * - Throws error if no tenant context available
    */
   async collectFromDomainEvent(
-    domainEvent: DomainEvent<any>,
+    domainEvent: DomainEvent,
     options: AuditRecordOptions = {}
   ): Promise<void> {
     // Verify and extract tenant_id (MANDATORY)
@@ -445,7 +445,7 @@ export class AuditCollectorService {
    * 私有方法: 從領域事件創建審計事件
    */
   private createAuditEventFromDomain(
-    domainEvent: DomainEvent<any>,
+    domainEvent: DomainEvent,
     options: AuditRecordOptions,
     tenantId: string | null
   ): AuditEvent {
@@ -493,11 +493,12 @@ export class AuditCollectorService {
   /**
    * 私有方法: 提取執行者
    */
-  private extractActor(event: DomainEvent<any>): string {
-    return event.payload?.userId || 
-           event.payload?.actorId || 
-           event.payload?.executedBy ||
-           event.metadata?.userId ||
+  private extractActor(event: DomainEvent): string {
+    const payload = event.payload as any;
+    return payload?.userId || 
+           payload?.actorId || 
+           payload?.executedBy ||
+           (event.metadata as any)?.userId ||
            'system';
   }
   

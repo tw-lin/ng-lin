@@ -3,8 +3,10 @@
  * 
  * All events in the system extend from this base class.
  * Events are immutable records of something that happened in the system.
+ * 
+ * @template TPayload - Type of the event payload
  */
-export abstract class DomainEvent {
+export abstract class DomainEvent<TPayload = unknown> {
   /** Unique identifier for this event */
   readonly eventId: string;
   
@@ -21,7 +23,7 @@ export abstract class DomainEvent {
   abstract readonly eventType: string;
   
   /** Event payload - the actual data of what happened */
-  abstract readonly payload: unknown;
+  abstract readonly payload: TPayload;
   
   /** Metadata about the event */
   readonly metadata: Readonly<{

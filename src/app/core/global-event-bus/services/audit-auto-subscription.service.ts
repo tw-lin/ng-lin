@@ -395,8 +395,9 @@ export class AuditAutoSubscriptionService {
         
       case AuditCategory.SYSTEM_CONFIGURATION:
         const configChanges = {
-          old: (event.payload as any)?.oldValue,
-          new: (event.payload as any)?.newValue
+          before: { value: (event.payload as any)?.oldValue },
+          after: { value: (event.payload as any)?.newValue },
+          modifiedFields: ['value']
         };
         await this.auditCollector.recordConfigChange(
           event.eventId,
