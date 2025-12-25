@@ -25,3 +25,6 @@ export * from './permission-audit.service';
 // Global Audit Log services (Phase 7B)
 export * from './audit-log.service';
 export * from './audit-collector.service';
+
+// Tenant Context Service (Phase 1 P0 - Task 1.2 Part 2)
+export * from './tenant-context.service';
