@@ -17,7 +17,13 @@
                 "GitHub.codespaces"
             ],
             "settings": {
-                "github.copilot.enable": true,
+                "github.copilot.enable": {
+                    "*": true
+                },
+                "github.copilot.autocomplete": {
+                    "enable": true,
+                    "languages": ["javascript", "typescript", "html", "css"]
+                },
                 "editor.formatOnSave": true,
                 "editor.accessibilitySupport": "on",
                 "files.exclude": {
@@ -34,16 +40,14 @@
         9099,
         4000
     ],
-    // 第一次建立容器時安裝依賴
     "postCreateCommand": "bash -lc 'pnpm install 2>/dev/null || npm install'",
-    // 每次啟動容器時可以加一些初始化命令，但不重裝依賴
-    "postStartCommand": "echo 'Dev container started for Copilot usage!'",
+    "postStartCommand": "bash -lc 'docker start awesome-copilot 2>/dev/null || docker run -d --name awesome-copilot --restart unless-stopped ghcr.io/microsoft/mcp-dotnet-samples/awesome-copilot:latest && copilot start-mcp --config .vscode/mcp.json && echo \"Dev container ready with Copilot agent!\"'",
     "remoteUser": "vscode",
     "workspaceFolder": "/workspace",
     "containerEnv": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
+        "COPILOT_AGENT": "true"
     },
-    // 持久化 node_modules 避免每次重裝
     "mounts": [
         "source=node-modules,target=/workspace/node_modules,type=volume"
     ]
