@@ -35,14 +35,5 @@
     "*.json": "jsonc",
     ".prettierrc": "jsonc"
   },
-  "typescript.referencesCodeLens.enabled": true,
-
-  // Agent / Copilot settings
-  "chat.agent.enabled": true,
-  "chat.mcp.discovery.enabled": true,
-  "github.copilot.chat.codesearch.agent.enabled": true,
-  "github.copilot.chat.cli.customAgents.enabled": true,
-  "chat.tools.terminal.terminalProfile.windows": "PowerShell",
-  "chat.tools.terminal.terminalProfile.linux": "bash",
-  "chat.tools.terminal.terminalProfile.osx": "zsh"
+  "typescript.referencesCodeLens.enabled": true
 }
