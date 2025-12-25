@@ -1,16 +1,133 @@
 /**
- * Cloud Module View Component (Refactored)
- * 雲端域視圖元件 (重構版)
- *
- * Purpose: Main orchestrator for cloud storage module with feature-based architecture
- * Features: Delegates to specialized feature components
- *
- * Architecture: Feature-Based (High Cohesion, Low Coupling)
- * - Statistics Feature: Storage usage display
- * - Folder Management Feature: Tree navigation + create/rename
- * - File List Feature: Table display + actions
- * - File Details Feature: Selected file info + version history
- * - Upload Feature: Button + drag-drop uploads
+ * @module CloudModuleViewComponent
+ * @description
+ * Cloud Module View Component - Blueprint-scoped file storage and document management
+ * 雲端域視圖元件 - 藍圖範圍的檔案儲存與文件管理
+ * 
+ * **Purpose:**
+ * Comprehensive cloud storage solution for construction project documents, photos,
+ * plans, and files with folder organization, versioning, and collaboration features.
+ * 
+ * **Key Features:**
+ * - Hierarchical folder structure with tree navigation
+ * - File upload with drag-and-drop support
+ * - File versioning and history tracking
+ * - File metadata management (tags, descriptions, categories)
+ * - File preview for images and documents
+ * - Download and sharing capabilities
+ * - Storage quota management and usage statistics
+ * - Search and filtering by name, type, date
+ * 
+ * **Architecture Patterns:**
+ * - Feature-Based Architecture: High cohesion, low coupling
+ * - Delegation Pattern: Orchestrator delegates to specialized feature components
+ * - OnPush Change Detection: Performance optimization
+ * - Signal-based State Management: Reactive data flow
+ * - inject() DI: Angular 20 dependency injection
+ * 
+ * **Feature Components:**
+ * 1. **Statistics Feature** (`CloudStatisticsComponent`)
+ *    - Total storage used vs. quota
+ *    - File count by type (images, documents, etc.)
+ *    - Recent upload activity
+ *    - Storage trend over time
+ * 
+ * 2. **Folder Management Feature** (`FolderTreeComponent`, `FolderNameInputComponent`)
+ *    - Hierarchical tree navigation
+ *    - Create new folders
+ *    - Rename folders
+ *    - Delete folders (with confirmation)
+ *    - Drag-and-drop folder reorganization
+ * 
+ * 3. **File List Feature** (`FileListComponent`)
+ *    - Table view with sortable columns
+ *    - File actions: download, rename, delete, share
+ *    - Bulk operations: select multiple, bulk delete
+ *    - Context menu for quick actions
+ * 
+ * 4. **File Details Feature** (`FileDetailsComponent`)
+ *    - Selected file metadata display
+ *    - Version history with restore capability
+ *    - Preview for supported file types
+ *    - Download/share buttons
+ * 
+ * 5. **Upload Feature** (`FileUploadComponent`)
+ *    - Button-based upload
+ *    - Drag-and-drop zone
+ *    - Progress tracking for large files
+ *    - Batch upload support
+ * 
+ * **Storage Integration:**
+ * - **Firebase Cloud Storage** for file binary data
+ * - **Firestore** for file metadata (name, size, type, owner, timestamps)
+ * - Collection path: `blueprints/{blueprintId}/files/{fileId}`
+ * - Storage path: `blueprints/{blueprintId}/files/{filename}`
+ * 
+ * **File Model:**
+ * ```typescript
+ * interface CloudFile {
+ *   id: string;
+ *   name: string;
+ *   path: string;          // Storage path
+ *   type: string;          // MIME type
+ *   size: number;          // Bytes
+ *   folderId: string | null;
+ *   uploadedBy: string;    // User ID
+ *   uploadedAt: Date;
+ *   version: number;
+ *   tags: string[];
+ *   description?: string;
+ *   category?: string;
+ * }
+ * ```
+ * 
+ * **Multi-Tenancy:**
+ * - Blueprint-scoped: All files isolated to current Blueprint
+ * - Firestore Security Rules enforce Blueprint membership
+ * - Storage Rules enforce same-blueprint access only
+ * - File ownership tracked for audit purposes
+ * 
+ * **Security & Permissions:**
+ * - `cloud:view` - View file list and download files
+ * - `cloud:upload` - Upload new files
+ * - `cloud:edit` - Edit file metadata, rename, move
+ * - `cloud:delete` - Delete files (soft delete with 30-day recovery)
+ * - `cloud:admin` - Manage folders, restore deleted files, view all versions
+ * 
+ * **Performance Optimizations:**
+ * - OnPush change detection for large file lists
+ * - Virtual scrolling for 1000+ files
+ * - Lazy loading of file thumbnails
+ * - Pagination with 100 files per page
+ * - Client-side caching of folder structure
+ * - Resumable uploads for large files (>100MB)
+ * 
+ * **Storage Quotas:**
+ * - Free tier: 10GB per Blueprint
+ * - Standard tier: 100GB per Blueprint
+ * - Enterprise tier: Unlimited storage
+ * 
+ * @see {@link docs/⭐️/整體架構設計.md} - Overall Architecture Design
+ * @see {@link CloudService} - Business logic for cloud storage operations
+ * @see {@link CloudFile} - File data model
+ * 
+ * @remarks
+ * - Version: 2.0.0 (Refactored with feature-based architecture)
+ * - 433 lines: Medium-sized orchestrator with 5 feature components
+ * - Complexity: Medium - hierarchical folder structure + file operations
+ * - Refactored: 2025-12-20 - Split from monolithic component
+ * - Integration: Firebase Cloud Storage + Firestore metadata
+ * 
+ * @example
+ * ```typescript
+ * // Usage in Blueprint Detail Component
+ * <app-cloud-module-view [blueprintId]="blueprintId()" />
+ * 
+ * // Component auto-loads folder structure and files
+ * // Displays storage statistics
+ * // Provides drag-and-drop upload
+ * // Supports folder navigation and file management
+ * ```
  */
 
 import { Component, ChangeDetectionStrategy, OnInit, inject, input, signal } from '@angular/core';
