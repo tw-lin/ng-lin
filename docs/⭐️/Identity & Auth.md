@@ -100,14 +100,106 @@ src/app/
 │   │   │
 │   │   └── permission.module.ts
 │   │
-│   ├── audit/                                   # 審計日誌 (Auth 相關)
+│   ├── global-event-bus/                                   # 全域事件總線 (Global Event Bus)
+│   │   ├── USAGE.md
+│   │   ├── README.md
+│   │   ├── index.ts
+│   │   ├── IMPLEMENTATION.md
+│   │   ├── constants/
+│   │   │   ├── index.ts
+│   │   │   ├── event-types.constants.ts
+│   │   │   └── event-bus-tokens.ts
+│   │   ├── consumers/
+│   │   │   ├── search-indexer.consumer.ts
+│   │   │   ├── notification.consumer.ts
+│   │   │   ├── index.ts
+│   │   │   ├── audit-log.consumer.ts
+│   │   │   ├── analytics.consumer.ts
+│   │   │   └── activity-feed.consumer.ts
+│   │   ├── decorators/
+│   │   │   ├── event-handler.decorator.ts
+│   │   │   ├── index.ts
+│   │   │   ├── retry.decorator.ts
+│   │   │   └── subscribe.decorator.ts
+│   │   ├── domain-events/
+│   │   │   ├── index.ts
+│   │   │   ├── task-events.ts
+│   │   │   ├── user-events.ts
+│   │   │   └── blueprint-events.ts
+│   │   ├── errors/
+│   │   │   ├── serialization.error.ts
+│   │   │   ├── index.ts
+│   │   │   ├── event-handler.error.ts
+│   │   │   └── event-bus.error.ts
+│   │   ├── examples/
+│   │   │   ├── decorators-example.ts
+│   │   │   ├── index.ts
+│   │   │   ├── demo.component.ts
+│   │   │   ├── analytics.consumer.ts
+│   │   │   ├── notification.consumer.ts
+│   │   │   ├── phase5-integration-demo.component.ts
+│   │   │   ├── versioning-example.ts
+│   │   │   ├── task-events.ts
+│   │   │   └── task.service.ts
+│   │   ├── implementations/
+│   │   │   ├── index.ts
+│   │   │   ├── in-memory/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── in-memory-event-bus.ts
+│   │   │   │   ├── in-memory-event-store.ts
+│   │   │   │   ├── in-memory-event-store.spec.ts
+│   │   │   │   ├── in-memory-event-bus.spec.ts
+│   │   │   │   └── in-memory-event-store.spec.ts
+│   │   │   └── firebase/
+│   │   │       ├── index.ts
+│   │   │       ├── firebase-event-store.ts
+│   │   │       └── firebase-event-bus.ts
+│   │   ├── interfaces/
+│   │   │   ├── index.ts
+│   │   │   ├── event-store.interface.ts
+│   │   │   ├── event-handler.interface.ts
+│   │   │   ├── event-bus.interface.ts
+│   │   │   ├── subscription.interface.ts
+│   │   │   └── retry-policy.interface.ts
+│   │   ├── models/
+│   │   │   ├── index.ts
+│   │   │   ├── auth-audit-event.model.ts
+│   │   │   ├── permission-audit-event.model.ts
+│   │   │   ├── subscription.ts
+│   │   │   ├── event-metadata.ts
+│   │   │   ├── event-envelope.ts
+│   │   │   └── base-event.ts
 │   │   ├── services/
+│   │   │   ├── index.ts
 │   │   │   ├── auth-audit.service.ts            # 認證事件審計
-│   │   │   └── permission-audit.service.ts      # 權限變更審計
-│   │   │
-│   │   └── models/
-│   │       ├── auth-audit-event.model.ts
-│   │       └── permission-audit-event.model.ts
+│   │   │   ├── permission-audit.service.ts      # 權限變更審計
+│   │   │   ├── event-dispatcher.service.ts
+│   │   │   ├── event-serializer.service.ts
+│   │   │   ├── in-memory-event-bus.service.ts
+│   │   │   ├── in-memory-event-bus.service.spec.ts
+│   │   │   ├── in-memory-event-store.service.ts
+│   │   │   ├── in-memory-event-store.service.spec.ts
+│   │   │   ├── event-consumer.base.ts
+│   │   │   ├── event-validator.service.ts
+│   │   │   ├── retry-manager.service.ts
+│   │   │   └── dead-letter-queue.service.ts
+│   │   ├── testing/
+│   │   │   ├── index.ts
+│   │   │   ├── mock-event-bus.ts
+│   │   │   ├── test-event.ts
+│   │   │   └── event-bus-test.utils.ts
+│   │   ├── utils/
+│   │   │   ├── index.ts
+│   │   │   ├── event-matcher.util.ts
+│   │   │   ├── event-id-generator.util.ts
+│   │   │   └── correlation-tracker.util.ts
+│   │   └── versioning/
+│   │       ├── index.ts
+│   │       ├── upcaster-chain.ts
+│   │       ├── event-version.interface.ts
+│   │       ├── versioned-event-bus.ts
+│   │       ├── event-upcaster.base.ts
+│   │       └── version-migration.service.ts
 │   │
 │   └── core.module.ts
 │
