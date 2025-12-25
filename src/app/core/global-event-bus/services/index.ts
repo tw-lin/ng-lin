@@ -17,3 +17,7 @@ export * from './event-serializer.service';
 export * from './event-validator.service';
 export * from './retry-manager.service';
 export * from './dead-letter-queue.service';
+
+// Audit services (Phase 7A)
+export * from './auth-audit.service';
+export * from './permission-audit.service';

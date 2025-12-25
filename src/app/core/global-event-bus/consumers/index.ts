@@ -12,3 +12,4 @@ export * from './activity-feed.consumer';
 export * from './analytics.consumer';
 export * from './audit-log.consumer';
 export * from './search-indexer.consumer';
+export * from './auth-event.consumer';
