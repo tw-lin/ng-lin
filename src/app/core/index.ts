@@ -2,7 +2,7 @@ export * from './i18n/i18n.service';
 export * from './net/index';
 export * from './startup/startup.service';
 export * from './start-page.guard';
-export * from './data-access/firebase-auth';
+export * from './data-access/auth';
 export * from './services';
 export * from '../features/account/core';
 export { ModuleType, ModuleState } from '../features/blueprint/core/domain/types';
