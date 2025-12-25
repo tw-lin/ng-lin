@@ -668,5 +668,134 @@ service cloud.firestore {
       allow delete: if isAuthenticated() 
         && userId == getCurrentAccountId();
     }
+    
+    // ==========================================
+    // Global Audit Logs Collection Rules
+    // Phase 1 (P0) - Task 1.2 (Tenant Isolation)
+    // ==========================================
+    
+    /**
+     * Get user's tenant ID from auth token
+     */
+    function getUserTenantId() {
+      return request.auth.token.tenant_id;
+    }
+    
+    /**
+     * Check if user belongs to specified tenant
+     */
+    function belongsToTenant(tenantId) {
+      return isAuthenticated() && getUserTenantId() == tenantId;
+    }
+    
+    /**
+     * Check if user is superadmin
+     * Superadmins can read across all tenants
+     */
+    function isSuperAdmin() {
+      return isAuthenticated() && 
+             request.auth.token.role == 'superadmin';
+    }
+    
+    /**
+     * Check if user can read audit event
+     * - User must belong to same tenant OR be superadmin
+     */
+    function canReadAuditEvent(event) {
+      return belongsToTenant(event.tenant_id) || isSuperAdmin();
+    }
+    
+    /**
+     * Validate audit event write data
+     * - Must include tenant_id
+     * - tenant_id must match user's tenant (unless superadmin)
+     * - Required fields must be present
+     */
+    function isValidAuditEventWrite() {
+      let data = request.resource.data;
+      
+      return data.keys().hasAll([
+        'event_id', 'tenant_id', 'timestamp', 'level', 'category',
+        'actor_id', 'resource_type', 'resource_id', 'action',
+        'result', 'description', 'requires_review', 'created_at'
+      ]) &&
+      // Tenant isolation: tenant_id must match user's tenant
+      (belongsToTenant(data.tenant_id) || isSuperAdmin()) &&
+      // Validate field types
+      data.tenant_id is string &&
+      data.event_id is string &&
+      data.timestamp is timestamp &&
+      data.level in ['INFO', 'WARNING', 'ERROR', 'CRITICAL'] &&
+      data.category in [
+        'AUTHENTICATION', 'AUTHORIZATION', 'DATA_ACCESS', 
+        'DATA_MODIFICATION', 'SECURITY', 'SYSTEM_CONFIGURATION',
+        'COMPLIANCE', 'BUSINESS_OPERATION'
+      ] &&
+      data.actor_id is string &&
+      data.resource_type is string &&
+      data.resource_id is string &&
+      data.action is string &&
+      data.result in ['success', 'failure', 'partial'] &&
+      data.description is string &&
+      data.requires_review is bool &&
+      data.created_at is timestamp;
+    }
+    
+    /**
+     * Check if user can review audit events
+     * - Must be security reviewer or compliance officer
+     */
+    function canReviewAuditEvents() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'security_reviewer' ||
+        request.auth.token.role == 'compliance_officer' ||
+        isSuperAdmin()
+      );
+    }
+    
+    match /audit_logs/{auditEventId} {
+      
+      /**
+       * READ Rules
+       * - Authenticated users can read events from their tenant
+       * - Superadmins can read all events
+       */
+      allow read: if isAuthenticated() && 
+                     canReadAuditEvent(resource.data);
+      
+      /**
+       * CREATE Rules
+       * - Authenticated users can create audit events for their tenant
+       * - Must pass validation (tenant_id, required fields, types)
+       * - Superadmins can create events for any tenant
+       */
+      allow create: if isAuthenticated() && 
+                       isValidAuditEventWrite();
+      
+      /**
+       * UPDATE Rules
+       * - Only allow updating review fields (reviewed_at, reviewed_by, review_notes)
+       * - User must have reviewer role
+       * - Cannot modify core audit data (immutable)
+       * - Must belong to same tenant
+       */
+      allow update: if isAuthenticated() &&
+                       canReviewAuditEvents() &&
+                       canReadAuditEvent(resource.data) &&
+                       // Only allow updating review fields
+                       request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['reviewed_at', 'reviewed_by', 'review_notes']) &&
+                       // Ensure review fields are valid
+                       request.resource.data.reviewed_at is timestamp &&
+                       request.resource.data.reviewed_by is string;
+      
+      /**
+       * DELETE Rules
+       * - Audit events are immutable (cannot be deleted)
+       * - Use retention policies and archiving instead
+       * - Exception: Superadmins can delete for compliance (GDPR, data retention)
+       */
+      allow delete: if isSuperAdmin();
+    }
   }
 }
