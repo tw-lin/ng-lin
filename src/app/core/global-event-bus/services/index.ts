@@ -28,3 +28,6 @@ export * from './audit-collector.service';
 
 // Tenant Context Service (Phase 1 P0 - Task 1.2 Part 2)
 export * from './tenant-context.service';
+
+// Tenant Validation Middleware (Phase 1 P0 - Task 1.2 Part 3)
+export * from './tenant-validation-middleware.service';
