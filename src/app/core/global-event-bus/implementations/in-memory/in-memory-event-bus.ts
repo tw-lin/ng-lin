@@ -2,19 +2,26 @@ import { inject, Injectable, signal, computed } from '@angular/core';
 import { Observable, Subject, filter, tap } from 'rxjs';
 import { DomainEvent, EventHandler, SubscribeOptions, Subscription, RetryPolicy } from '../../models';
 import { IEventBus, IEventStore } from '../../interfaces';
-import { InMemoryEventStore } from './in-memory-event-store';
+import { HybridEventStore } from '../hybrid/hybrid-event-store';
 import { TenantValidationMiddleware } from '../../services/tenant-validation-middleware.service';
 
 /**
- * In-Memory Event Bus
+ * In-Memory Event Bus (with Firestore Persistence)
  * 
- * RxJS and Signals-based event bus implementation with tenant isolation.
- * Uses Subject for event streaming and Signals for state management.
+ * RxJS and Signals-based event bus implementation with:
+ * - Hybrid storage (in-memory cache + Firestore persistence)
+ * - Tenant isolation middleware (validates tenant_id on all events)
+ * - GitHub-style event sourcing (all events persisted)
+ * 
+ * Storage Strategy:
+ * - Write: Both in-memory (cache) and Firestore (persistence)
+ * - Read: In-memory first (fast), Firestore fallback (complete)
+ * - Cache: Recent 1000 events in memory (24h warmup)
  * 
  * Features:
  * - Reactive event streaming with RxJS
  * - Automatic retry with exponential backoff
- * - Event persistence via event store
+ * - Event persistence via HybridEventStore
  * - Declarative subscriptions with Signals
  * - Tenant isolation middleware (validates tenant_id on all events)
  * 
@@ -23,12 +30,18 @@ import { TenantValidationMiddleware } from '../../services/tenant-validation-mid
  * - Auto-injection from TenantContextService if missing
  * - Events without tenant context are rejected
  * - Superadmin can bypass with allowCrossTenant flag
+ * 
+ * Follows:
+ * - docs/⭐️/Global-Audit-Log-系統拆解與對齊方案.md (Event sourcing)
+ * - docs/⭐️/⭐️⭐️⭐️⭐️⭐️ROLE.md (GitHub alignment - persist all events)
+ * 
+ * @phase Phase 1.5 (Blocker Fix) - Firestore Event Persistence
  */
 @Injectable({
   providedIn: 'root'
 })
 export class InMemoryEventBus implements IEventBus {
-  private readonly eventStore = inject(InMemoryEventStore);
+  private readonly eventStore = inject(HybridEventStore);
   private readonly tenantMiddleware = inject(TenantValidationMiddleware);
   
   /** Main event stream */
