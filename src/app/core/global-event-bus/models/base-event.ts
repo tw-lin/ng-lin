@@ -23,7 +23,7 @@ export abstract class DomainEvent<TPayload = unknown> {
   abstract readonly eventType: string;
   
   /** Event payload - the actual data of what happened */
-  abstract readonly payload: TPayload;
+  readonly payload: TPayload;
   
   /** Metadata about the event */
   readonly metadata: Readonly<{
@@ -39,30 +39,62 @@ export abstract class DomainEvent<TPayload = unknown> {
   
   /**
    * Constructor for base event
-   * @param data Partial event data to initialize
+   * Supports two call patterns:
+   * 1. constructor(payload, metadata) - For event classes
+   * 2. constructor({ aggregateId, aggregateType, ...}) - For direct instantiation
    */
-  constructor(data: {
-    eventId?: string;
-    timestamp?: Date;
-    aggregateId: string;
-    aggregateType: string;
+  constructor(
+    payloadOrData: TPayload | {
+      eventId?: string;
+      timestamp?: Date;
+      aggregateId: string;
+      aggregateType: string;
+      metadata?: {
+        version?: string;
+        source?: string;
+        correlationId?: string;
+        causationId?: string;
+      };
+    },
     metadata?: {
+      aggregateId: string;
+      aggregateType: string;
+      aggregateVersion?: number;
       version?: string;
       source?: string;
       correlationId?: string;
       causationId?: string;
-    };
-  }) {
-    this.eventId = data.eventId ?? this.generateEventId();
-    this.timestamp = data.timestamp ?? new Date();
-    this.aggregateId = data.aggregateId;
-    this.aggregateType = data.aggregateType;
-    this.metadata = {
-      version: data.metadata?.version ?? '1.0',
-      source: data.metadata?.source ?? 'unknown',
-      correlationId: data.metadata?.correlationId,
-      causationId: data.metadata?.causationId
-    };
+    }
+  ) {
+    // Two-parameter pattern: constructor(payload, metadata)
+    if (metadata) {
+      this.payload = payloadOrData as TPayload;
+      this.aggregateId = metadata.aggregateId;
+      this.aggregateType = metadata.aggregateType;
+      this.eventId = this.generateEventId();
+      this.timestamp = new Date();
+      this.metadata = {
+        version: metadata.version ?? (metadata.aggregateVersion ? `${metadata.aggregateVersion}.0` : '1.0'),
+        source: metadata.source ?? 'unknown',
+        correlationId: metadata.correlationId,
+        causationId: metadata.causationId
+      };
+    }
+    // Single-parameter pattern: constructor(data)
+    else {
+      const data = payloadOrData as any;
+      this.payload = data.payload;
+      this.eventId = data.eventId ?? this.generateEventId();
+      this.timestamp = data.timestamp ?? new Date();
+      this.aggregateId = data.aggregateId;
+      this.aggregateType = data.aggregateType;
+      this.metadata = {
+        version: data.metadata?.version ?? '1.0',
+        source: data.metadata?.source ?? 'unknown',
+        correlationId: data.metadata?.correlationId,
+        causationId: data.metadata?.causationId
+      };
+    }
   }
   
   /**
