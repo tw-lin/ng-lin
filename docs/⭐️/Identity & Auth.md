@@ -201,6 +201,46 @@ src/app/
 │   │       ├── event-upcaster.base.ts
 │   │       └── version-migration.service.ts
 │   │
+│   ├── global-audit-log/                      # 審計日誌系統
+│   │   ├── services/
+│   │   │   ├── audit-log.service.ts         # 日誌收集與查詢
+│   │   │   └── audit-collector.service.ts   # 自動攔截關鍵操作
+│   │   ├── models/
+│   │   │   ├── audit-event.model.ts
+│   │   │   └── audit-level.enum.ts
+│   │   └── decorators/
+│   │       └── auditable.decorator.ts        # 方法裝飾器自動記錄
+│   │
+│   ├── notification/               # 通知系統
+│   │   ├── services/
+│   │   │   ├── notification.service.ts      # 通知分發
+│   │   │   ├── fcm.service.ts               # Firebase Cloud Messaging
+│   │   │   └── in-app-notification.service.ts
+│   │   ├── models/
+│   │   │   └── notification.model.ts
+│   │   └── components/
+│   │       └── notification-center/         # 全域通知中心 UI
+│   │
+│   ├── search/                     # 全域搜尋
+│   │   ├── services/
+│   │   │   ├── search.service.ts            # 統一搜尋入口
+│   │   │   └── search-indexer.service.ts    # Algolia/Typesense 整合
+│   │   └── models/
+│   │       └── search-result.model.ts
+│   │
+│   ├── rate-limit/                 # 流量控制
+│   │   ├── services/
+│   │   │   └── rate-limiter.service.ts      # 前端防抖 + 後端配額追蹤
+│   │   └── interceptors/
+│   │       └── rate-limit.interceptor.ts
+│   │
+│   ├── cache/                      # 租戶感知緩存
+│   │   ├── services/
+│   │   │   └── cache.service.ts             # IndexedDB/Memory Cache
+│   │   └── strategies/
+│   │       ├── tenant-cache-key.strategy.ts
+│   │       └── invalidation.strategy.ts
+│   │ 
 │   └── core.module.ts
 │
 ├── firebase/
