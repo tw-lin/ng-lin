@@ -14,3 +14,6 @@ export * from './user-events';
 
 // Blueprint Events
 export * from './blueprint-events';
+
+// Auth Events
+export * from './auth-events';
