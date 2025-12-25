@@ -10,3 +10,10 @@ export * from '../implementations/in-memory';
 
 // Export base consumer class
 export * from './event-consumer.base';
+
+// Core services (Phase 2)
+export * from './event-dispatcher.service';
+export * from './event-serializer.service';
+export * from './event-validator.service';
+export * from './retry-manager.service';
+export * from './dead-letter-queue.service';
