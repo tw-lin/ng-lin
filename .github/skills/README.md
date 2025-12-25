@@ -131,6 +131,45 @@ Implement WYSIWYG editor using ngx-tinymce:
 - Templates and code highlighting
 - Mobile responsive editor
 
+### 12. [angular-cdk](./angular-cdk/)
+**When to use**: Using Angular CDK utilities for advanced UI features
+
+Create components using Angular CDK:
+- Drag-and-drop with `CdkDragDrop`
+- Overlay service for tooltips/menus
+- Virtual scrolling for large lists
+- Accessibility (focus traps, ARIA)
+- Clipboard operations
+- Platform detection
+- Portal for dynamic content
+- Text field auto-sizing
+
+### 13. [delon-theme](./delon-theme/)
+**When to use**: Configuring application layout and theming
+
+Implement theming and layout using @delon/theme:
+- Layout configuration (side/top mode)
+- Menu service and navigation
+- Settings drawer for customization
+- Responsive design patterns
+- Theme color customization
+- Logo and branding
+- Header/sidebar components
+- Dark mode support
+
+### 14. [screenfull](./screenfull/)
+**When to use**: Implementing fullscreen functionality
+
+Add fullscreen capabilities using screenfull:
+- Toggle fullscreen mode
+- Fullscreen specific elements
+- Image/video fullscreen viewers
+- Presentation mode
+- Dashboard fullscreen view
+- Keyboard shortcuts (Escape to exit)
+- Browser compatibility handling
+- Mobile fullscreen support
+
 ## How Skills Work
 
 ### Automatic Loading
@@ -168,10 +207,12 @@ These skills are tailored for:
 ### Tech Stack
 - **Frontend**: Angular 20 + TypeScript 5.9
 - **UI Framework**: ng-alain 20.1 + ng-zorro-antd 20
-- **UI Components**: @delon/abc, @delon/form, @delon/auth, @delon/cache, @delon/chart
+- **UI Components**: @delon/abc, @delon/form, @delon/auth, @delon/cache, @delon/chart, @delon/theme
 - **State Management**: Angular Signals
 - **Reactive Programming**: RxJS 7.8
 - **Rich Text Editor**: ngx-tinymce 20
+- **UI Utilities**: @angular/cdk 20.x (drag-drop, overlay, virtual scroll)
+- **Fullscreen API**: screenfull 6.0
 - **Backend**: Firebase (Firestore, Auth, Storage, Functions)
 - **Architecture**: Three-layer (UI → Service → Repository)
 
@@ -347,6 +388,6 @@ To improve skills:
 ---
 
 **Last Updated**: 2025-12-25  
-**Skills Version**: 1.1.0  
-**Skills Count**: 11  
-**Compatible with**: Angular 20.3.x, ng-alain 20.1.x, Firebase 20.0.1, RxJS 7.8.x, ngx-tinymce 20.0.0
+**Skills Version**: 1.2.0  
+**Skills Count**: 14  
+**Compatible with**: Angular 20.3.x, ng-alain 20.1.x, Firebase 20.0.1, RxJS 7.8.x, ngx-tinymce 20.0.0, @angular/cdk 20.x, screenfull 6.0.x
