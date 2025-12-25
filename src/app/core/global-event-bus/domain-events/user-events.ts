@@ -85,7 +85,15 @@ export class UserUpdatedEvent extends DomainEvent<{
  * Event: User Login
  * 
  * Published when user successfully authenticates.
+ * 
+ * NOTE: This is a deprecated simplified version.
+ * For detailed auth events with provider info, session tracking, and security metadata,
+ * use UserLoginEvent from auth-events.ts (auth.user.login).
+ * 
+ * @deprecated Use UserLoginEvent from auth-events.ts for authentication tracking
  */
+// Commented out to avoid duplicate exports - use auth-events.ts version
+/*
 export class UserLoginEvent extends DomainEvent<{
   userId: string;
   provider: string;
@@ -113,12 +121,21 @@ export class UserLoginEvent extends DomainEvent<{
     this.payload = payload;
   }
 }
+*/
 
 /**
  * Event: User Logout
  * 
  * Published when user logs out.
+ * 
+ * NOTE: This is a deprecated simplified version.
+ * For detailed logout events with session duration and security context,
+ * use UserLogoutEvent from auth-events.ts (auth.user.logout).
+ * 
+ * @deprecated Use UserLogoutEvent from auth-events.ts for authentication tracking
  */
+// Commented out to avoid duplicate exports - use auth-events.ts version
+/*
 export class UserLogoutEvent extends DomainEvent<{
   userId: string;
 }> {
@@ -133,6 +150,7 @@ export class UserLogoutEvent extends DomainEvent<{
     this.payload = payload;
   }
 }
+*/
 
 /**
  * Event: User Deleted

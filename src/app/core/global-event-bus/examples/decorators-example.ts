@@ -19,22 +19,29 @@ interface Task {
   assigneeId?: string;
 }
 
-class TaskCreatedEvent extends DomainEvent {
-  readonly eventType = 'task.created' as const;
-  readonly payload: { task: Task };
+class TaskCreatedEvent extends DomainEvent<{ task: Task }> {
+  override readonly eventType = 'task.created' as const;
+  override readonly payload: { task: Task };
 
   constructor(task: Task) {
-    super();
+    super({ task }, {
+      aggregateId: task.id,
+      aggregateType: 'Task',
+      aggregateVersion: 1
+    });
     this.payload = { task };
   }
 }
 
-class TaskUpdatedEvent extends DomainEvent {
-  readonly eventType = 'task.updated' as const;
-  readonly payload: { task: Task; changes: Partial<Task> };
+class TaskUpdatedEvent extends DomainEvent<{ task: Task; changes: Partial<Task> }> {
+  override readonly eventType = 'task.updated' as const;
+  override readonly payload: { task: Task; changes: Partial<Task> };
 
   constructor(task: Task, changes: Partial<Task>) {
-    super();
+    super({ task, changes }, {
+      aggregateId: task.id,
+      aggregateType: 'Task'
+    });
     this.payload = { task, changes };
   }
 }
@@ -223,7 +230,8 @@ export class SearchIndexConsumer extends EventConsumer {
   @Subscribe('task.created', {
     retryPolicy: {
       maxAttempts: 3,
-      backoff: 'exponential'
+      backoff: 'exponential',
+      initialDelay: 1000  // Fixed: Added required initialDelay property
     }
   })
   @Retry({
