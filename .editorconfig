@@ -7,9 +7,11 @@ indent_style = space
 indent_size = 2
 insert_final_newline = true
 trim_trailing_whitespace = true
+end_of_line = lf
 
 [*.ts]
-quote_type = single
+# 編輯器不必強制單引號，交給 Prettier
+# quote_type = single
 
 [*.md]
 max_line_length = off

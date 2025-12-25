@@ -20,6 +20,9 @@ features/
 **Should not** include layout-only or purely generic UI pieces (place those in `shared/`).  
 **不應** 直接操作 Firestore（透過 `core/` repositories 或服務）。  
 **Should not** access Firestore directly (go through `core/` repositories or services).
+**不應** 處理認證 Token 或 Firebase SDK，登入/註冊請只呼叫 `core/auth` 提供的 `AuthFacade`。  
+**Should not** manage auth tokens or Firebase SDK; call `core/auth/AuthFacade` for login/sign-up flows.
 
 ### 現有功能模組 / Existing Feature Modules
 - `account/`：帳戶領域的可重用能力（profile / dashboard / settings），遵循 Platform-1 的進化版資料夾結構。
+- `blueprint/`：Blueprint 領域骨架，預留列表/詳情/成員等 slice，後續接上 @angular/fire DI 與 routes/blueprint。

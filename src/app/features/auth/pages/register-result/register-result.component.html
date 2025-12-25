@@ -1,0 +1,9 @@
+<nz-result
+  [nzStatus]="'success'"
+  [nzTitle]="'app.register-result.msg' | i18n"
+  [nzSubTitle]="'app.register-result.activation-email' | i18n: { email: params.email || 'admin@example.com' }"
+>
+  <div nz-result-extra>
+    <button nz-button [nzType]="'primary'" routerLink="/">{{ 'app.register-result.back-home' | i18n }}</button>
+  </div>
+</nz-result>

@@ -2,7 +2,7 @@
   "app": {
     "name": "GigHub",
     "description": "工地施工進度追蹤管理系統"
-  },    
+  },
   "menu": [
     {
       "text": "主導航",
@@ -14,7 +14,7 @@
           "text": "儀錶盤",
           "i18n": "menu.dashboard",
           "icon": "anticon-dashboard",
-          "link": "/dashboard/user",
+          "link": "/account/dashboard",
           "badge": 0
         },
         {
@@ -28,18 +28,23 @@
           "text": "個人設定",
           "i18n": "menu.settings",
           "icon": "anticon-setting",
-          "link": "/user/settings"
+          "link": "/account/settings"
         },
         {
           "text": "探索",
           "i18n": "menu.explore",
           "icon": "anticon-search",
           "link": "/explore"
+        },
+        {
+          "text": "AI 助理",
+          "i18n": "menu.ai_assistant",
+          "icon": "anticon-robot",
+          "link": "/ai-assistant"
         }
       ]
     }
   ],
-  
   "menus": {
     "user": [
       {
@@ -52,7 +57,7 @@
             "text": "儀錶盤",
             "i18n": "menu.dashboard",
             "icon": "anticon-dashboard",
-            "link": "/dashboard/user",
+            "link": "/account/dashboard",
             "badge": 0
           },
           {
@@ -63,16 +68,10 @@
             "badge": 0
           },
           {
-            "text": "個人待辦",
-            "i18n": "menu.user.todo",
-            "icon": "anticon-check-square",
-            "link": "/user/todo"
-          },
-          {
             "text": "個人設定",
             "i18n": "menu.settings",
             "icon": "anticon-setting",
-            "link": "/user/settings"
+            "link": "/account/settings"
           },
           {
             "text": "探索",
@@ -85,237 +84,6 @@
             "i18n": "menu.ai_assistant",
             "icon": "anticon-robot",
             "link": "/ai-assistant"
-          }
-        ]
-      },
-      {
-        "text": "系統管理",
-        "i18n": "menu.admin",
-        "group": true,
-        "hideInBreadcrumb": true,
-        "children": [
-          {
-            "text": "系統監控",
-            "i18n": "menu.admin.monitoring",
-            "icon": "anticon-monitor",
-            "link": "/admin/monitoring",
-            "badge": 0
-          }
-        ]
-      }
-    ],
-    "organization": [
-      {
-        "text": "組織導航",
-        "i18n": "menu.organization",
-        "group": true,
-        "hideInBreadcrumb": true,
-        "children": [
-          {
-            "text": "組織儀錶盤",
-            "i18n": "menu.dashboard",
-            "icon": "anticon-dashboard",
-            "link": "/dashboard/organization",
-            "badge": 0
-          },
-          {
-            "text": "組織藍圖",
-            "i18n": "menu.blueprint",
-            "icon": "anticon-project",
-            "link": "/blueprints/organization",
-            "badge": 0
-          },
-          {
-            "text": "組織排程",
-            "i18n": "menu.organization.schedule",
-            "icon": "anticon-calendar",
-            "link": "/organization/schedule"
-          },
-          {
-            "text": "倉儲",
-            "i18n": "menu.organization.repository",
-            "icon": "anticon-gold",
-            "link": "/organization/repository"
-          },
-          {
-            "text": "組織成員",
-            "i18n": "menu.organization.members",
-            "icon": "anticon-team",
-            "link": "/organization/members",
-            "badge": 0
-          },
-          {
-            "text": "團隊管理",
-            "i18n": "menu.organization.teams",
-            "icon": "anticon-usergroup-add",
-            "link": "/organization/teams"
-          },
-          {
-            "text": "夥伴管理",
-            "i18n": "menu.organization.partners",
-            "icon": "anticon-team",
-            "link": "/organization/partners"
-          },
-          {
-            "text": "組織設定",
-            "i18n": "menu.settings",
-            "icon": "anticon-setting",
-            "link": "/organization/settings"
-          },
-          {
-            "text": "AI 助理",
-            "i18n": "menu.ai_assistant",
-            "icon": "anticon-robot",
-            "link": "/ai-assistant"
-          }
-        ]
-      },
-      {
-        "text": "系統管理",
-        "i18n": "menu.admin",
-        "group": true,
-        "hideInBreadcrumb": true,
-        "children": [
-          {
-            "text": "系統監控",
-            "i18n": "menu.admin.monitoring",
-            "icon": "anticon-monitor",
-            "link": "/admin/monitoring",
-            "badge": 0
-          }
-        ]
-      }
-    ],
-    "team": [
-      {
-        "text": "團隊導航",
-        "i18n": "menu.team",
-        "group": true,
-        "hideInBreadcrumb": true,
-        "children": [
-          {
-            "text": "團隊工作臺",
-            "i18n": "menu.dashboard",
-            "icon": "anticon-dashboard",
-            "link": "/dashboard/team",
-            "badge": 0
-          },
-          {
-            "text": "團隊排程",
-            "i18n": "menu.team.schedule",
-            "icon": "anticon-calendar",
-            "link": "/team/schedule"
-          },
-          {
-            "text": "團隊成員",
-            "i18n": "menu.team.members",
-            "icon": "anticon-team",
-            "link": "/team/members"
-          },
-          {
-            "text": "團隊設定",
-            "i18n": "menu.team.settings",
-            "icon": "anticon-setting",
-            "link": "/team/settings"
-          },
-          {
-            "text": "AI 助理",
-            "i18n": "menu.ai_assistant",
-            "icon": "anticon-robot",
-            "link": "/ai-assistant"
-          }
-        ]
-      },
-      {
-        "text": "系統管理",
-        "i18n": "menu.admin",
-        "group": true,
-        "hideInBreadcrumb": true,
-        "children": [
-          {
-            "text": "系統監控",
-            "i18n": "menu.admin.monitoring",
-            "icon": "anticon-monitor",
-            "link": "/admin/monitoring",
-            "badge": 0
-          }
-        ]
-      }
-    ],
-    "partner": [
-      {
-        "text": "夥伴導航",
-        "i18n": "menu.partner",
-        "group": true,
-        "hideInBreadcrumb": true,
-        "children": [
-          {
-            "text": "夥伴工作臺",
-            "i18n": "menu.dashboard",
-            "icon": "anticon-dashboard",
-            "link": "/dashboard/partner",
-            "badge": 0
-          },
-          {
-            "text": "夥伴排程",
-            "i18n": "menu.partner.schedule",
-            "icon": "anticon-calendar",
-            "link": "/partner/schedule"
-          },
-          {
-            "text": "夥伴成員",
-            "i18n": "menu.partner.members",
-            "icon": "anticon-team",
-            "link": "/partner/members"
-          },
-          {
-            "text": "夥伴設定",
-            "i18n": "menu.partner.settings",
-            "icon": "anticon-setting",
-            "link": "/partner/settings"
-          },
-          {
-            "text": "AI 助理",
-            "i18n": "menu.ai_assistant",
-            "icon": "anticon-robot",
-            "link": "/ai-assistant"
-          }
-        ]
-      },
-      {
-        "text": "系統管理",
-        "i18n": "menu.admin",
-        "group": true,
-        "hideInBreadcrumb": true,
-        "children": [
-          {
-            "text": "系統監控",
-            "i18n": "menu.admin.monitoring",
-            "icon": "anticon-monitor",
-            "link": "/admin/monitoring",
-            "badge": 0
-          }
-        ]
-      }
-    ],
-    "bot": [
-      {
-        "text": "機器人導航",
-        "i18n": "menu.bot",
-        "group": true,
-        "hideInBreadcrumb": true,
-        "children": [
-          {
-            "text": "儀錶盤",
-            "i18n": "menu.dashboard",
-            "icon": "anticon-dashboard",
-            "children": [
-              {
-                "text": "機器人控制台",
-                "link": "/dashboard/monitor",
-                "i18n": "menu.dashboard.monitor"
-              }
-            ]
           }
         ]
       }

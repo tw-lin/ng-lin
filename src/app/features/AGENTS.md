@@ -1,45 +1,61 @@
-# Features Module Agent Guide
+# Features – AGENTS
 
-## Title + Scope
-Scope: Reusable, non-route feature modules under `src/app/features/` (e.g., module-manager or other cross-blueprint capabilities).
+# Features – AGENTS
 
-## Purpose / Responsibility
-Define boundaries for feature-level building blocks that are more opinionated than `shared/` but not tied to a single page route. Keep modules reusable, blueprint-aware, and lazy-load friendly.
+> **📍 Location**: `src/app/features/` - Business features  
+> **👆 Parent**: [`../AGENTS.md`](../AGENTS.md) - App root  
+> **🔍 Quick Tip**: Working in a specific feature? Read that feature's AGENTS.md first (account/blueprint/exception/social).
 
-## Hard Rules / Constraints
-- NO direct Firebase/Firestore access from components; data flows through services/repositories.
-- NO NgModules or `any` types; use standalone components, signals, and `inject()`.
-- NO coupling to layout or route-specific concerns; expose public interfaces instead.
-- Keep UI pieces reusable; avoid feature logic inside `shared/`.
+## Scope
+Business feature modules (`src/app/features/`). Business UI, flows, and feature-specific Firestore data layer.
 
-## Allowed / Expected Content
-- Reusable domain-oriented feature modules (services, stores, components) that can be consumed by multiple routes.
-- Blueprint-scoped services, guards, and facades that stay independent of specific pages.
-- Documentation and tests for the feature modules.
+## Purpose
+Implement business capabilities (account, blueprint, exceptions, social) with clear boundaries. Features own their UI and data layer, call core via facades/ports.
 
-## Structure / Organization
-- `src/app/features/<feature>/` with `components/`, `services/`, `stores/`, `models/`, and local README/AGENTS when needed.
-- Provide barrel exports for public APIs and keep internal helpers private to each feature folder.
+## Constraints (Must NOT)
+- ❌ Access Firebase SDK directly (use @angular/fire via DI)
+- ❌ Touch infrastructure (auth chain, DA_SERVICE_TOKEN, global interceptors)
+- ❌ Import from other features (use events/facades)
+- ❌ Put shared UI here (use `shared/`)
+- ❌ Use constructor injection (use `inject()`)
 
-## Integration / Dependencies
-- Use Angular DI with `inject()`, signals for state, and Result-pattern async handling.
-- Consume repositories from `core/` as needed; do not access Firestore directly from UI.
-- Maintain accessibility, OnPush change detection, and modern control-flow syntax.
+## Allowed Content
+- ✅ Feature pages and components (UI)
+- ✅ Feature services and facades (business logic)
+- ✅ Feature stores (signals-based state)
+- ✅ Feature models (domain types)
+- ✅ Firestore repositories for this feature (@angular/fire DI)
+- ✅ Feature routes and guards
 
-## Best Practices / Guidelines
-- Design for lazy loading and isolation; avoid feature-to-feature imports except via explicit public interfaces.
-- Keep services stateless when possible; use signals/stores for local state.
-- Validate inputs, prefer batch operations, and respect Firestore Security Rules.
+## Structure
+```
+features/
+├── account/                  # Account feature (see account/AGENTS.md)
+├── blueprint/                # Blueprint feature (see blueprint/AGENTS.md)
+├── exception/                # Exception pages (see exception/AGENTS.md)
+└── social/                   # Social feature (see social/AGENTS.md)
+```
 
-## Related Docs / References
-- `../AGENTS.md` (app entry guidance)
-- `../core/AGENTS.md`
-- `../shared/AGENTS.md`
-- `../../../Platform-1.md` (repository root architecture inspiration)
+## Dependencies
+**Depends on**: `core/` (facades, domain), `shared/` (UI components)  
+**Used by**: `routes/` (lazy loaded)
 
-## Metadata
-Version: 1.1.0  
-Status: Active  
-Audience: AI Coding Agents
+## Key Rules
+1. **Core vs Features**:
+   - **Core**: Platform infrastructure, global singletons, auth/permissions, @angular/fire/DA_SERVICE_TOKEN, pure domain rules
+   - **Features**: Business flows + UI, feature Firestore data layer via @angular/fire, call core APIs
+2. **Three layers**: UI → Feature service/store → Core facade/repo
+3. **No direct Firestore SDK**: Use @angular/fire injected services
+4. **DI**: Standalone + signals + `inject()`
+5. **No NgModules**: Use standalone components
+6. **Lazy load**: Features can be lazy-loaded, avoid circular imports
+7. **Events**: Features communicate via explicit interfaces or events
+
+## Related
+- `../core/AGENTS.md` - Core infrastructure
+- `../routes/AGENTS.md` - Routing layer
+- `account/AGENTS.md` - Account feature
+- `blueprint/AGENTS.md` - Blueprint feature
 
 ---
+Version: 1.2.0 | Updated: 2025-12-25 | Status: Active

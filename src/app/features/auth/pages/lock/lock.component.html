@@ -1,0 +1,17 @@
+<form nz-form [formGroup]="form" (ngSubmit)="submit()" role="form">
+  @if (error()) {
+  <div class="error">{{ error() }}</div>
+  }
+  <nz-form-item>
+    <nz-form-control [nzErrorTip]="'validation.password.required' | i18n">
+      <nz-input-group nzSize="large" nzPrefixIcon="lock">
+        <input nz-input type="password" formControlName="password" [placeholder]="'app.lock.password' | i18n" />
+      </nz-input-group>
+    </nz-form-control>
+  </nz-form-item>
+  <nz-form-item>
+    <button nz-button type="submit" nzType="primary" nzSize="large" [nzLoading]="loading()" nzBlock>
+      {{ 'app.lock.submit' | i18n }}
+    </button>
+  </nz-form-item>
+</form>

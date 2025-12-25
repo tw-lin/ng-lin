@@ -25,7 +25,7 @@
 
 import { Injectable, computed, inject, signal, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ContextType, Account, Organization, Team, Partner, Bot, FirebaseAuthService } from '@core';
+import { ContextType, Account, Organization, Team, Partner, Bot, AuthFacade } from '@core';
 import { OrganizationRepository, TeamRepository, PartnerRepository } from '@core/repositories';
 import { SettingsService } from '@delon/theme';
 import { combineLatest, of, switchMap, map, shareReplay, catchError, BehaviorSubject } from 'rxjs';
@@ -36,7 +36,7 @@ const STORAGE_KEY = 'workspace_context';
   providedIn: 'root'
 })
 export class WorkspaceContextService {
-  private readonly firebaseAuth = inject(FirebaseAuthService);
+  private readonly auth = inject(AuthFacade);
   private readonly organizationRepo = inject(OrganizationRepository);
   private readonly teamRepo = inject(TeamRepository);
   private readonly partnerRepo = inject(PartnerRepository);
@@ -58,7 +58,7 @@ export class WorkspaceContextService {
    * - shareReplay(1): Cache result, prevent duplicate requests
    * - catchError: Handle errors gracefully
    */
-  private readonly userData$ = combineLatest([this.firebaseAuth.user$, this.reloadTrigger$]).pipe(
+  private readonly userData$ = combineLatest([this.auth.user$, this.reloadTrigger$]).pipe(
     switchMap(([user]) => {
       if (!user) {
         console.log('[WorkspaceContextService] 👤 No user authenticated');

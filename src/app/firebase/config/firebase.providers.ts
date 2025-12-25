@@ -1,7 +1,9 @@
 import { Provider, EnvironmentProviders } from '@angular/core';
+import { provideAnalytics, getAnalytics, ScreenTrackingService, UserTrackingService } from '@angular/fire/analytics';
 import { provideFirebaseApp, initializeApp, getApp } from '@angular/fire/app';
 import { provideAppCheck, initializeAppCheck, ReCaptchaEnterpriseProvider } from '@angular/fire/app-check';
-import { provideAnalytics, getAnalytics, ScreenTrackingService, UserTrackingService } from '@angular/fire/analytics';
+import { provideAuth, getAuth } from '@angular/fire/auth';
+import { provideDatabase, getDatabase } from '@angular/fire/database';
 import {
   provideFirestore,
   initializeFirestore,
@@ -9,8 +11,6 @@ import {
   persistentMultipleTabManager,
   Firestore
 } from '@angular/fire/firestore';
-import { provideAuth, getAuth } from '@angular/fire/auth';
-import { provideDatabase, getDatabase } from '@angular/fire/database';
 import { provideFunctions, getFunctions } from '@angular/fire/functions';
 import { provideMessaging, getMessaging } from '@angular/fire/messaging';
 import { providePerformance, getPerformance } from '@angular/fire/performance';
@@ -36,12 +36,13 @@ export const firebaseProviders: Array<Provider | EnvironmentProviders> = [
   ScreenTrackingService,
   UserTrackingService,
   provideAuth(() => getAuth()),
-  provideFirestore((): Firestore =>
-    initializeFirestore(getApp(), {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager()
+  provideFirestore(
+    (): Firestore =>
+      initializeFirestore(getApp(), {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager()
+        })
       })
-    })
   ),
   provideDatabase(() => getDatabase()),
   provideFunctions(() => getFunctions(getApp(), 'asia-east1')),

@@ -1,0 +1,95 @@
+<div class="top">
+  <div class="header">
+    <div class="title">
+      <span class="main">{{ 'app.register.register' | i18n }}</span>
+      <span class="sub">{{ 'app.register.get-account' | i18n }}</span>
+    </div>
+  </div>
+</div>
+<div class="wrap">
+  <form nz-form [formGroup]="form" (ngSubmit)="submit()" role="form">
+    @if (error) {
+    <nz-alert [nzType]="'error'" [nzMessage]="error" [nzShowIcon]="true" class="mb-lg" />
+    }
+    <nz-form-item>
+      <nz-form-control [nzErrorTip]="'validation.email.required' | i18n">
+        <nz-input-group nzSize="large" nzPrefixIcon="mail">
+          <input nz-input formControlName="mail" placeholder="{{ 'app.register.email.placeholder' | i18n }}" />
+        </nz-input-group>
+      </nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-row [nzGutter]="8">
+        <nz-col [nzSpan]="12">
+          <nz-form-control [nzErrorTip]="'validation.password.required' | i18n">
+            <nz-input-group nzSize="large" nzPrefixIcon="lock">
+              <input
+                nz-input
+                type="password"
+                formControlName="password"
+                (ngModelChange)="type = 1"
+                [placeholder]="'app.register.password.placeholder' | i18n"
+              />
+            </nz-input-group>
+          </nz-form-control>
+        </nz-col>
+        <nz-col [nzSpan]="12">
+          <div
+            nz-popover
+            [nzPopoverVisible]="visible"
+            [nzPopoverOverlayStyle]="{ width: '240px' }"
+            nzPopoverPlacement="right"
+            nzPopoverTrigger="focus"
+            [nzPopoverContent]="passStrength"
+          >
+            <nz-form-control [nzErrorTip]="'validation.password.required' | i18n">
+              <nz-input-group nzSize="large" nzPrefixIcon="lock">
+                <input
+                  nz-input
+                  type="password"
+                  formControlName="confirm"
+                  [placeholder]="'app.register.confirm-password.placeholder' | i18n"
+                />
+              </nz-input-group>
+            </nz-form-control>
+          </div>
+        </nz-col>
+      </nz-row>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-row [nzGutter]="8">
+        <nz-col [nzSpan]="12">
+          <div class="hint">{{ 'app.register.password.strength.msg' | i18n }}</div>
+        </nz-col>
+        <nz-col [nzSpan]="12">
+          <nz-progress
+            [nzPercent]="progress"
+            [nzStatus]="passwordProgressMap[status]"
+            [nzStrokeWidth]="6"
+            [nzShowInfo]="false"
+          ></nz-progress>
+        </nz-col>
+      </nz-row>
+    </nz-form-item>
+    <nz-form-item>
+      <button nz-button type="submit" nzType="primary" nzSize="large" [nzLoading]="loading" nzBlock>
+        {{ 'app.register.register' | i18n }}
+      </button>
+      <p class="register-login">
+        <a routerLink="/passport/login">{{ 'app.register.sign-in' | i18n }}</a>
+      </p>
+    </nz-form-item>
+  </form>
+</div>
+
+<ng-template #passStrength>
+  <div class="success" [class.show]="status === 'ok'">
+    {{ 'app.register.password.strength.strong' | i18n }}
+  </div>
+  <div class="warning" [class.show]="status === 'pass'">
+    {{ 'app.register.password.strength.medium' | i18n }}
+  </div>
+  <div class="error" [class.show]="status === 'pool'">
+    {{ 'app.register.password.strength.short' | i18n }}
+  </div>
+</ng-template>

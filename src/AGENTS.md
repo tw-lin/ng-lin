@@ -1,64 +1,56 @@
 # Source Directory – AGENTS
 
-## Title + Scope
-Scope: This file defines how AI coding agents must treat the src/ directory and what is permitted inside it. It specifies responsibilities, boundaries, and forbidden actions for agents operating at the repository root level.
+## Scope
+Source root (`src/`) containing application bootstrap, Angular app, global styles/assets, environment config, and TypeScript definitions. Infrastructure layer only.
 
-## Purpose / Responsibility
-Purpose: The src/ directory is the root of all application source code. It contains application bootstrap and runtime entry, Angular application code, global styles and assets, environment configuration, and global TypeScript definitions. All business logic MUST live under src/app/. Agents should treat src/ as infrastructure, not domain. Responsibility: Ensure bootstrap files remain minimal and declarative, prevent business logic leakage into infrastructure files, and guide the agent to defer feature decisions to src/app/.
+## Purpose
+Define boundaries for src/ directory infrastructure. All business logic must live under `src/app/`. Bootstrap files remain minimal and declarative. Prevent business logic leakage into infrastructure.
 
-## Hard Rules / Constraints
-- NO UI components in this file or at src/ root. UI components belong under src/app/.
-- NO feature-specific business logic outside src/app/.
-- NO direct Firebase access outside repository adapters (repositories are the only layer allowed to access Firestore).
-- DO NOT add business logic to main.ts, index.html, or environment files.
-- DO NOT modify auto-generated files (e.g., style-icons-auto.ts) manually.
+## Constraints (Must NOT)
+- ❌ Create UI components at src/ root (belong under `src/app/`)
+- ❌ Add feature-specific business logic outside `src/app/`
+- ❌ Access Firebase directly outside repository adapters
+- ❌ Add business logic to `main.ts`, `index.html`, or environment files
+- ❌ Manually modify auto-generated files (e.g., `style-icons-auto.ts`)
+- ❌ Include API keys or secrets in frontend code
 
-## Allowed / Expected Content
-Allowed content under src/ (infrastructure-level):
-- Singleton services that are infrastructure-oriented (not feature behavior)
-- Global interceptors and cross-cutting concerns (logging, error handling, telemetry)
-- Global TypeScript declarations and typings that do NOT contain domain models
-- Global styles, assets, and environment configuration (no secrets)
-- Bootstrapping code that remains minimal and framework-agnostic
+## Allowed Content
+- ✅ Infrastructure-oriented singleton services
+- ✅ Global interceptors and cross-cutting concerns (logging, error handling)
+- ✅ Global TypeScript declarations (no domain models)
+- ✅ Global styles, assets, environment configuration
+- ✅ Minimal bootstrapping code (framework-agnostic)
 
-Expected agent behavior: Validate inputs, prefer composition over inheritance for shared utilities, and minimize surface area for changes.
+## Structure
+```
+src/
+├── app/                      # Angular application (see app/AGENTS.md)
+├── assets/                   # Static assets only
+├── environments/             # Environment config (no secrets)
+├── styles/                   # Global styles/themes
+├── main.ts                   # Bootstrap entry (minimal)
+├── app.config.ts             # App configuration
+└── index.html                # HTML entry
+```
 
-## Structure / Organization
-Recommended organization to reduce ad-hoc files and drift:
-- services/       # singleton infrastructure services
-- guards/         # global guards not tied to a single feature
-- interceptors/   # HTTP / cross-cutting interceptors (infrastructure-only)
-- assets/         # static assets: images, fonts, icons
-- environments/   # environment-specific configs (no secrets)
-- styles/         # global style themes and variables
+## Dependencies
+**Depends on**: Angular platform, TypeScript  
+**Used by**: `src/app/` (application layer)
 
-Notes: No business logic should exist outside src/app/. Keep file placement intentionally conservative.
+## Key Rules
+1. **Bootstrap minimal**: Keep `main.ts` and `app.config.ts` declarative only
+2. **Infrastructure only**: No feature imports or business logic
+3. **DI pattern**: Use `inject()` for dependency injection
+4. **Firebase access**: Only via @angular/fire adapters in `src/app/` repositories
+5. **No secrets**: Environment files must not contain API keys or credentials
+6. **Type safety**: Respect TypeScript strict mode and linting rules
+7. **Composition**: Prefer composition over inheritance for utilities
 
-## Integration / Dependencies
-Integration rules:
-- Use Angular DI only (inject() over constructor injection where repository conventions require it).
-- Use @angular/fire adapters where Firebase interaction is needed, but only within repository adapters under src/app/.
-- No feature-to-feature imports; modules communicate via explicit public interfaces or events.
-- Frontend must never contain API keys or call external AI services directly (AI calls via functions-ai and OCR via functions-ai-document only).
-
-## Best Practices / Guidelines
-- Prefer composition over inheritance for shared utilities and services.
-- Keep services stateless where possible; explicit state belongs to feature modules under src/app/.
-- Use bootstrapApplication() in main.ts and keep it minimal (no feature imports).
-- Respect TypeScript strict mode and linting rules defined in the repository.
-- Prefer batch writes for Firestore when applicable for cost control.
-
-## Related Docs / References
-- src/app/AGENTS.md  # Application-level agent rules
-- src/environments/AGENTS.md  # Environment configuration rules
-- docs/architecture/  # Architectural guidance
-- docs/security/  # Security guidance and Firestore rules
-
-## Metadata
-Version: 1.1.0
-Status: Active
-Audience: AI Coding Agents
+## Related
+- `app/AGENTS.md` - Application-level rules
+- `environments/AGENTS.md` - Environment configuration
+- `styles/AGENTS.md` - Global styles
+- `../docs/architecture/` - Architecture documentation
 
 ---
-
-Notes: This file replaces previous layouts and enforces a strict ordering of sections to make agent responsibilities and constraints explicit. Keep this file synchronized with other AGENTS.md files across the repo.
+Version: 1.2.0 | Updated: 2025-12-25 | Status: Active

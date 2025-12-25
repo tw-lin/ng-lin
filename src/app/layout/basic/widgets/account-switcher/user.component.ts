@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { FirebaseAuthService } from '@core';
+import { AuthFacade } from '@core';
 import { I18nPipe, SettingsService, User } from '@delon/theme';
 import { WorkspaceContextService } from '@shared';
 import { NzAvatarModule } from 'ng-zorro-antd/avatar';
@@ -47,7 +47,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
 export class HeaderUserComponent {
   private readonly settings = inject(SettingsService);
   private readonly router = inject(Router);
-  private readonly firebaseAuth = inject(FirebaseAuthService);
+  private readonly auth = inject(AuthFacade);
   private readonly workspaceContext = inject(WorkspaceContextService);
 
   // Use workspace context for label and icon (these change based on context)
@@ -61,7 +61,7 @@ export class HeaderUserComponent {
   }
 
   async logout(): Promise<void> {
-    await this.firebaseAuth.signOut();
-    // FirebaseAuthService already handles token clearing and navigation
+    await this.auth.signOut();
+    // AuthFacade (core/auth) already handles token clearing
   }
 }

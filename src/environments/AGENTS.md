@@ -1,64 +1,51 @@
 # Environments – AGENTS
 
-## Title + Scope
-Scope: Environment configuration guidance for the project, covering all files under src/environments/.
+## Scope
+Environment configuration under `src/environments/`. Build-time configuration, provider selection, and global toggles. No runtime logic or secrets.
 
-## Purpose / Responsibility
-Defines responsibilities and boundaries for files under src/environments/, ensuring build-time configuration stays minimal, type-safe, and free from secrets.
+## Purpose
+Define build-time environment configuration with type safety. Ensure consistent structure across dev/prod environments. Separate secrets from configuration.
 
-## Hard Rules / Constraints
-- NO UI components.
-- NO feature-specific logic.
-- NO direct Firebase access outside adapters.
-- Do not include secrets or runtime credentials in environment files.
-- Keep build replacements aligned across environments.
+## Constraints (Must NOT)
+- ❌ Include secrets, credentials, or API keys
+- ❌ Add runtime business logic
+- ❌ Create UI components
+- ❌ Access Firebase directly
+- ❌ Include feature-specific configuration
+- ❌ Use inconsistent structure across environments
 
-## Allowed / Expected Content
-- Build-time configuration and environment flags.
-- Provider selection and global toggles.
-- Singleton infrastructure services, global interceptors, and cross-cutting concerns when environment-scoped.
+## Allowed Content
+- ✅ Build-time configuration flags
+- ✅ Provider selection (prod vs dev)
+- ✅ Global feature toggles
+- ✅ Environment-specific endpoint URLs
+- ✅ Logging level configuration
 
-## Structure / Organization
-- environment.ts
-- environment.prod.ts
-- Optional supporting folders (services/, guards/, interceptors/) for environment-specific wiring only.
+## Structure
+```
+environments/
+├── environment.ts             # Development config
+├── environment.prod.ts        # Production config
+└── environment.interface.ts   # Shared type definition
+```
 
-## Integration / Dependencies
-- Angular DI only; prefer inject().
-- Uses @angular/fire adapters through approved repositories/services.
-- No feature-to-feature imports; use Angular build replacements for environment switching.
-- No runtime secrets or direct external AI calls.
+## Dependencies
+**Depends on**: Angular build system, TypeScript  
+**Used by**: `src/app/` (via Angular's build replacements)
 
-## Best Practices / Guidelines
-- Keep environments type-safe and structurally consistent.
-- Do not include secrets; inject sensitive values via deployment configuration.
-- Prefer composition over inheritance and keep services stateless.
-- Validate all environment-provided values at build or runtime.
+## Key Rules
+1. **Type safety**: All environments must conform to `Environment` interface
+2. **Development**: `production: false`, enable verbose logging, use dev endpoints
+3. **Production**: `production: true`, disable debugging, use prod endpoints, no mocks
+4. **Build integration**: Use `angular.json` fileReplacements for environment switching
+5. **No secrets**: Inject sensitive values via deployment config, never in code
+6. **Structural consistency**: All environment files must have identical structure
+7. **Validation**: Validate all environment values at build/runtime
 
-## Related Docs / References
-- ../shared/AGENTS.md
-- ../app/AGENTS.md
-- docs/architecture/
-- docs/security/
-
-## Metadata
-Version: 1.1.0
-Status: Active
-Audience: AI Coding Agents
-
----
-
-This document defines rules and boundaries for environment configuration in GigHub. It governs what may exist in `src/environments/` and how it is used at build time.
-
-## Details
-
-- The `environments/` directory contains build-time configuration only. It must not contain runtime logic or secrets.
-- environment.ts (Development): MUST set `production: false`; may enable verbose logging, mock providers/interceptors; must use non-production endpoints.
-- environment.prod.ts (Production): MUST set `production: true`; must use production endpoints; must disable mock providers/interceptors and debug logging.
-- Environment files MUST conform to a stable Environment interface and remain structurally consistent across environments.
-- Security: forbidden to include secrets, credentials, or environment-specific business logic. Sensitive values MUST be injected at build or runtime.
-- Build Integration: `angular.json` MUST define `fileReplacements` so production builds replace `environment.ts`.
+## Related
+- `../app/AGENTS.md` - Application configuration
+- `../app/firebase/AGENTS.md` - Firebase configuration
+- `../docs/security/` - Security guidelines
 
 ---
-
-**Last Updated**: 2025-12-21
+Version: 1.2.0 | Updated: 2025-12-25 | Status: Active

@@ -1,47 +1,57 @@
-# Account Feature Module Agent Guide
+# Account Feature – AGENTS
 
-## Title + Scope
-Scope: Account feature building blocks under `src/app/features/account/`, reused across routes without embedding page-specific logic.
+## Scope
+Account feature module (`src/app/features/account/`). Reusable account domain capabilities (profile, dashboard, settings) for routes to compose.
 
-## Purpose / Responsibility
-- Provide reusable account domain capabilities (profile, dashboard, settings) for routes to compose.
-- Keep UI pieces reusable; delegate data access to services that rely on `core` repositories.
-- Maintain separation of concerns to avoid tight coupling with layout or routing.
+## Purpose
+Provide account UI building blocks and services. Keep components reusable, delegate data access to services that wrap `core/` repositories.
 
-## Hard Rules / Constraints
-- NO direct Firestore/@angular/fire usage in components; go through injected services that wrap `core` repositories.
-- NO NgModules or `any` types; use standalone components, signals, and `inject()`.
-- NO cross-feature coupling; expose public APIs via local barrel exports (`index.ts`) when needed.
-- Avoid shared-level UI drift: generic UI belongs in `shared/`, not here.
+## Constraints (Must NOT)
+- ❌ Access Firestore/@angular/fire in components (use services)
+- ❌ Create tight coupling with layout or routing
+- ❌ Include generic UI (belongs in `shared/`)
+- ❌ Use NgModules or `any` types
+- ❌ Use constructor injection (use `inject()`)
 
-## Structure / Organization
-- `components/` reusable account UI pieces (standalone, OnPush, signals).
-- `services/` account domain services/facades consuming `core` repositories.
-- `stores/` signal-based state where local state is required.
-- `models/` account-specific types (domain models stay in `core/models`).
-- `profile/`, `dashboard/`, `settings/` folders for vertical slices; keep README/AGENTS locally if they grow.
+## Allowed Content
+- ✅ Account UI components (standalone, OnPush, signals)
+- ✅ Account services/facades (consume `core/` repositories)
+- ✅ Signal-based stores for local state
+- ✅ Account-specific types (domain models in `core/models/`)
+- ✅ Profile, dashboard, settings vertical slices
 
-## Integration / Dependencies
-- Consume data via `core` repositories/services; do not access Firestore directly.
-- Use signals for state; use Result-pattern async handling and `takeUntilDestroyed()` for observables.
-- Keep routing concerns in `routes/account/*`; this feature module should remain route-agnostic.
+## Structure
+```
+account/
+├── components/               # Reusable account UI
+├── services/                 # Account domain services
+├── stores/                   # Signal-based state
+├── models/                   # Account-specific types
+├── profile/                  # Profile feature
+├── dashboard/                # Dashboard feature
+├── settings/                 # Settings feature
+└── routes/                   # Account routes (see routes/AGENTS.md)
+```
 
-## Best Practices / Guidelines
-- Keep components small and single-purpose; favor composition.
-- Validate inputs and respect Firestore Security Rules via repository layer.
-- Design for lazy loading; avoid side effects in module entry points.
-- Maintain accessibility (a11y) and use modern Angular control flow.
+## Dependencies
+**Depends on**: `core/` (repositories, auth), `shared/` (UI components)  
+**Used by**: `routes/account/*` (route components)
 
-## Related Docs / References
-- `../AGENTS.md` (features root)
-- `../../AGENTS.md` (app entry)
-- `../../core/AGENTS.md`
-- `../../shared/AGENTS.md`
-- `../../../Platform-1.md` (reference architecture)
+## Key Rules
+1. **Route-agnostic**: Keep feature components independent of routes
+2. **Data via services**: Components call services, services use repositories
+3. **Signals**: Use signals for state management
+4. **Result pattern**: Use for async operations, `takeUntilDestroyed()` for observables
+5. **Composition**: Keep components small, single-purpose
+6. **Validation**: Validate inputs, respect Firestore Security Rules
+7. **Lazy loading**: Design for lazy loading, no side effects in entry points
+8. **Accessibility**: Maintain WCAG compliance, semantic HTML
 
-## Metadata
-Version: 1.1.0  
-Status: Active  
-Audience: AI Coding Agents
+## Related
+- `../AGENTS.md` - Features root
+- `../../core/AGENTS.md` - Core services
+- `../../shared/AGENTS.md` - Shared UI
+- `routes/AGENTS.md` - Account routes
 
 ---
+Version: 1.2.0 | Updated: 2025-12-25 | Status: Active

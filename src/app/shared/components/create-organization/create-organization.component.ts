@@ -12,7 +12,7 @@
 
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { FirebaseAuthService } from '@core';
+import { AuthFacade } from '@core';
 import { OrganizationRepository } from '@core/repositories';
 import { WorkspaceContextService } from '@shared';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -97,7 +97,7 @@ export class CreateOrganizationComponent {
   private readonly fb = inject(FormBuilder);
   private readonly workspaceContext = inject(WorkspaceContextService);
   private readonly organizationRepository = inject(OrganizationRepository);
-  private readonly firebaseAuth = inject(FirebaseAuthService);
+  private readonly auth = inject(AuthFacade);
   private readonly modal = inject(NzModalRef);
   private readonly msg = inject(NzMessageService);
 
@@ -117,7 +117,7 @@ export class CreateOrganizationComponent {
       return;
     }
 
-    const currentUser = this.firebaseAuth.currentUser;
+    const currentUser = this.auth.currentUser;
     if (!currentUser) {
       this.msg.error('請先登入');
       return;
@@ -126,11 +126,13 @@ export class CreateOrganizationComponent {
     this.loading.set(true);
     try {
       // Create organization in Firestore
+      const creatorId = currentUser.uid;
       const newOrg = await this.organizationRepository.create({
         name: this.form.value.name,
         description: this.form.value.description || null,
         logo_url: this.form.value.logo_url || null,
-        created_by: currentUser.uid
+        created_by: creatorId,
+        creator_id: creatorId
       });
 
       // Reload workspace data to include new organization

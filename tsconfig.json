@@ -38,29 +38,35 @@
       "@core/*": [
         "src/app/core/*"
       ],
+      "@core/account": [
+        "src/app/features/account/core"
+      ],
+      "@core/account/*": [
+        "src/app/features/account/core/*"
+      ],
       "@core/models": [
-        "src/app/core/account/models"
+        "src/app/features/account/core/models"
       ],
       "@core/models/*": [
-        "src/app/core/account/models/*"
+        "src/app/features/account/core/models/*"
       ],
       "@core/types": [
-        "src/app/core/account/types"
+        "src/app/features/account/core/types"
       ],
       "@core/types/*": [
-        "src/app/core/account/types/*"
+        "src/app/features/account/core/types/*"
       ],
       "@core/repositories": [
-        "src/app/core/account/repositories"
+        "src/app/features/account/core/repositories"
       ],
       "@core/stores": [
-        "src/app/core/account/stores"
+        "src/app/features/account/core/stores"
       ],
       "@core/domain": [
-        "src/app/core/account"
+        "src/app/features/account/core"
       ],
       "@core/domain/*": [
-        "src/app/core/account/*"
+        "src/app/features/account/core/*"
       ],
       "@core/data-access": [
         "src/app/core/data-access"
@@ -75,10 +81,10 @@
         "src/app/core/state/*"
       ],
       "@core/blueprint": [
-        "src/app/core/blueprint"
+        "src/app/features/blueprint/core"
       ],
       "@core/blueprint/*": [
-        "src/app/core/blueprint/*"
+        "src/app/features/blueprint/core/*"
       ],
       "@routes/*": [
         "src/app/routes/*"
