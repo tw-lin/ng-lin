@@ -32,7 +32,11 @@ export class UserRegisteredEvent extends DomainEvent<{
   user: User;
   provider: 'email' | 'google' | 'github' | 'anonymous';
 }> {
-  readonly eventType = 'user.registered' as const;
+  override readonly eventType = 'user.registered' as const;
+  override readonly payload: {
+    user: User;
+    provider: 'email' | 'google' | 'github' | 'anonymous';
+  };
 
   constructor(payload: {
     user: User;
@@ -43,6 +47,7 @@ export class UserRegisteredEvent extends DomainEvent<{
       aggregateType: 'User',
       aggregateVersion: 1
     });
+    this.payload = payload;
   }
 }
 
@@ -56,7 +61,12 @@ export class UserUpdatedEvent extends DomainEvent<{
   changes: Partial<User>;
   previousValues: Partial<User>;
 }> {
-  readonly eventType = 'user.updated' as const;
+  override readonly eventType = 'user.updated' as const;
+  override readonly payload: {
+    userId: string;
+    changes: Partial<User>;
+    previousValues: Partial<User>;
+  };
 
   constructor(payload: {
     userId: string;
@@ -67,6 +77,7 @@ export class UserUpdatedEvent extends DomainEvent<{
       aggregateId: payload.userId,
       aggregateType: 'User'
     });
+    this.payload = payload;
   }
 }
 
@@ -81,7 +92,13 @@ export class UserLoginEvent extends DomainEvent<{
   ipAddress?: string;
   userAgent?: string;
 }> {
-  readonly eventType = 'user.login' as const;
+  override readonly eventType = 'user.login' as const;
+  override readonly payload: {
+    userId: string;
+    provider: string;
+    ipAddress?: string;
+    userAgent?: string;
+  };
 
   constructor(payload: {
     userId: string;
@@ -93,6 +110,7 @@ export class UserLoginEvent extends DomainEvent<{
       aggregateId: payload.userId,
       aggregateType: 'User'
     });
+    this.payload = payload;
   }
 }
 
@@ -104,13 +122,15 @@ export class UserLoginEvent extends DomainEvent<{
 export class UserLogoutEvent extends DomainEvent<{
   userId: string;
 }> {
-  readonly eventType = 'user.logout' as const;
+  override readonly eventType = 'user.logout' as const;
+  override readonly payload: { userId: string };
 
   constructor(payload: { userId: string }) {
     super(payload, {
       aggregateId: payload.userId,
       aggregateType: 'User'
     });
+    this.payload = payload;
   }
 }
 
@@ -123,12 +143,14 @@ export class UserDeletedEvent extends DomainEvent<{
   userId: string;
   soft: boolean;
 }> {
-  readonly eventType = 'user.deleted' as const;
+  override readonly eventType = 'user.deleted' as const;
+  override readonly payload: { userId: string; soft: boolean };
 
   constructor(payload: { userId: string; soft: boolean }) {
     super(payload, {
       aggregateId: payload.userId,
       aggregateType: 'User'
     });
+    this.payload = payload;
   }
 }

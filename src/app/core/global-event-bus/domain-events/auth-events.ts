@@ -55,7 +55,7 @@ export interface UserLoginPayload {
  */
 export class UserLoginEvent extends DomainEvent<UserLoginPayload> {
   readonly eventType = 'auth.user.login';
-  readonly payload: UserLoginPayload;
+  override readonly payload: UserLoginPayload;
 
   constructor(payload: UserLoginPayload) {
     super({
@@ -101,7 +101,7 @@ export interface UserLogoutPayload {
  */
 export class UserLogoutEvent extends DomainEvent<UserLogoutPayload> {
   readonly eventType = 'auth.user.logout';
-  readonly payload: UserLogoutPayload;
+  override readonly payload: UserLogoutPayload;
 
   constructor(payload: UserLogoutPayload) {
     super({
@@ -150,7 +150,7 @@ export interface PasswordChangedPayload {
  */
 export class PasswordChangedEvent extends DomainEvent<PasswordChangedPayload> {
   readonly eventType = 'auth.password.changed';
-  readonly payload: PasswordChangedPayload;
+  override readonly payload: PasswordChangedPayload;
 
   constructor(payload: PasswordChangedPayload) {
     super({
@@ -192,7 +192,7 @@ export interface MFAEnabledPayload {
  */
 export class MFAEnabledEvent extends DomainEvent<MFAEnabledPayload> {
   readonly eventType = 'auth.mfa.enabled';
-  readonly payload: MFAEnabledPayload;
+  override readonly payload: MFAEnabledPayload;
 
   constructor(payload: MFAEnabledPayload) {
     super({
@@ -235,7 +235,7 @@ export interface MFADisabledPayload {
  */
 export class MFADisabledEvent extends DomainEvent<MFADisabledPayload> {
   readonly eventType = 'auth.mfa.disabled';
-  readonly payload: MFADisabledPayload;
+  override readonly payload: MFADisabledPayload;
 
   constructor(payload: MFADisabledPayload) {
     super({
@@ -279,7 +279,7 @@ export interface TokenRefreshedPayload {
  */
 export class TokenRefreshedEvent extends DomainEvent<TokenRefreshedPayload> {
   readonly eventType = 'auth.token.refreshed';
-  readonly payload: TokenRefreshedPayload;
+  override readonly payload: TokenRefreshedPayload;
 
   constructor(payload: TokenRefreshedPayload) {
     super({
@@ -326,7 +326,7 @@ export interface SessionExpiredPayload {
  */
 export class SessionExpiredEvent extends DomainEvent<SessionExpiredPayload> {
   readonly eventType = 'auth.session.expired';
-  readonly payload: SessionExpiredPayload;
+  override readonly payload: SessionExpiredPayload;
 
   constructor(payload: SessionExpiredPayload) {
     super({
@@ -384,7 +384,7 @@ export interface PermissionChangedPayload {
  */
 export class PermissionChangedEvent extends DomainEvent<PermissionChangedPayload> {
   readonly eventType = 'auth.permission.changed';
-  readonly payload: PermissionChangedPayload;
+  override readonly payload: PermissionChangedPayload;
 
   constructor(payload: PermissionChangedPayload) {
     super({
@@ -433,7 +433,7 @@ export interface RoleChangedPayload {
  */
 export class RoleChangedEvent extends DomainEvent<RoleChangedPayload> {
   readonly eventType = 'auth.role.changed';
-  readonly payload: RoleChangedPayload;
+  override readonly payload: RoleChangedPayload;
 
   constructor(payload: RoleChangedPayload) {
     super({
@@ -486,7 +486,7 @@ export interface LoginFailedPayload {
  */
 export class LoginFailedEvent extends DomainEvent<LoginFailedPayload> {
   readonly eventType = 'auth.login.failed';
-  readonly payload: LoginFailedPayload;
+  override readonly payload: LoginFailedPayload;
 
   constructor(payload: LoginFailedPayload) {
     super({
@@ -528,7 +528,7 @@ export interface EmailVerifiedPayload {
  */
 export class EmailVerifiedEvent extends DomainEvent<EmailVerifiedPayload> {
   readonly eventType = 'auth.email.verified';
-  readonly payload: EmailVerifiedPayload;
+  override readonly payload: EmailVerifiedPayload;
 
   constructor(payload: EmailVerifiedPayload) {
     super({

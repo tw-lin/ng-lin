@@ -49,7 +49,8 @@ export class TaskCreatedEvent extends DomainEvent<{
   task: Task;
   userId: string;
 }> {
-  readonly eventType = 'task.created' as const;
+  override readonly eventType = 'task.created' as const;
+  override readonly payload: { task: Task; userId: string };
 
   constructor(payload: { task: Task; userId: string }) {
     super(payload, {
@@ -57,6 +58,7 @@ export class TaskCreatedEvent extends DomainEvent<{
       aggregateType: 'Task',
       aggregateVersion: 1
     });
+    this.payload = payload;
   }
 }
 
@@ -71,7 +73,13 @@ export class TaskUpdatedEvent extends DomainEvent<{
   previousValues: Partial<Task>;
   userId: string;
 }> {
-  readonly eventType = 'task.updated' as const;
+  override readonly eventType = 'task.updated' as const;
+  override readonly payload: {
+    taskId: string;
+    changes: Partial<Task>;
+    previousValues: Partial<Task>;
+    userId: string;
+  };
 
   constructor(payload: {
     taskId: string;
@@ -83,6 +91,7 @@ export class TaskUpdatedEvent extends DomainEvent<{
       aggregateId: payload.taskId,
       aggregateType: 'Task'
     });
+    this.payload = payload;
   }
 }
 
@@ -97,7 +106,13 @@ export class TaskStatusChangedEvent extends DomainEvent<{
   newStatus: Task['status'];
   userId: string;
 }> {
-  readonly eventType = 'task.status.changed' as const;
+  override readonly eventType = 'task.status.changed' as const;
+  override readonly payload: {
+    taskId: string;
+    previousStatus: Task['status'];
+    newStatus: Task['status'];
+    userId: string;
+  };
 
   constructor(payload: {
     taskId: string;
@@ -109,6 +124,7 @@ export class TaskStatusChangedEvent extends DomainEvent<{
       aggregateId: payload.taskId,
       aggregateType: 'Task'
     });
+    this.payload = payload;
   }
 }
 
@@ -124,7 +140,14 @@ export class TaskAssignedEvent extends DomainEvent<{
   previousAssigneeId?: string;
   userId: string;
 }> {
-  readonly eventType = 'task.assigned' as const;
+  override readonly eventType = 'task.assigned' as const;
+  override readonly payload: {
+    taskId: string;
+    assigneeId: string;
+    assigneeType: 'user' | 'team' | 'partner';
+    previousAssigneeId?: string;
+    userId: string;
+  };
 
   constructor(payload: {
     taskId: string;
@@ -137,6 +160,7 @@ export class TaskAssignedEvent extends DomainEvent<{
       aggregateId: payload.taskId,
       aggregateType: 'Task'
     });
+    this.payload = payload;
   }
 }
 
@@ -151,7 +175,13 @@ export class TaskDeletedEvent extends DomainEvent<{
   soft: boolean;
   userId: string;
 }> {
-  readonly eventType = 'task.deleted' as const;
+  override readonly eventType = 'task.deleted' as const;
+  override readonly payload: {
+    taskId: string;
+    blueprintId: string;
+    soft: boolean;
+    userId: string;
+  };
 
   constructor(payload: {
     taskId: string;
@@ -163,6 +193,7 @@ export class TaskDeletedEvent extends DomainEvent<{
       aggregateId: payload.taskId,
       aggregateType: 'Task'
     });
+    this.payload = payload;
   }
 }
 
@@ -176,7 +207,12 @@ export class TaskCompletedEvent extends DomainEvent<{
   completedAt: Date;
   userId: string;
 }> {
-  readonly eventType = 'task.completed' as const;
+  override readonly eventType = 'task.completed' as const;
+  override readonly payload: {
+    taskId: string;
+    completedAt: Date;
+    userId: string;
+  };
 
   constructor(payload: {
     taskId: string;
@@ -187,5 +223,6 @@ export class TaskCompletedEvent extends DomainEvent<{
       aggregateId: payload.taskId,
       aggregateType: 'Task'
     });
+    this.payload = payload;
   }
 }
