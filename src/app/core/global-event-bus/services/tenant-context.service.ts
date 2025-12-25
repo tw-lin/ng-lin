@@ -1,11 +1,11 @@
 /**
  * Tenant Context Service - Unified Workspace & Tenant Management
- * 
+ *
  * Primary service for workspace management with built-in multi-tenant isolation
  * Replaces WorkspaceContextService with enhanced tenant-first architecture
- * 
+ *
  * Manages workspace context (user, organization, team, partner, bot) with automatic tenant isolation
- * 
+ *
  * Architecture:
  * - RxJS Pipeline: Handles ALL async operations (data loading, HTTP requests)
  * - Signals: Manages sync state only (context type, context ID, tenant ID)
@@ -36,8 +36,8 @@ import { Injectable, computed, inject, signal, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ContextType, Account, Organization, Team, Partner, Bot, AuthFacade } from '@core';
 import { OrganizationRepository, TeamRepository, PartnerRepository } from '@core/repositories';
-import { SettingsService } from '@delon/theme';
 import { FirebaseService } from '@core/services/firebase.service';
+import { SettingsService } from '@delon/theme';
 import { combineLatest, of, switchMap, map, shareReplay, catchError, BehaviorSubject } from 'rxjs';
 
 const STORAGE_KEY = 'workspace_context';
@@ -283,7 +283,7 @@ export class TenantContextService {
   /**
    * Current Tenant ID
    * Extracted from workspace context (User/Organization/Team/Partner/Bot)
-   * 
+   *
    * Tenant ID Mapping:
    * - User: user.uid
    * - Organization: organization.id
@@ -334,7 +334,7 @@ export class TenantContextService {
   /**
    * Is Superadmin
    * Superadmins can access all tenants (cross-tenant queries)
-   * 
+   *
    * TODO: Integrate with actual role/permission system
    * For now, check custom claim 'role' === 'superadmin' from Firebase Auth
    */
@@ -369,54 +369,64 @@ export class TenantContextService {
     switch (tenantType) {
       case ContextType.USER: {
         const user = this.currentUser();
-        return user ? {
-          tenantId,
-          tenantType,
-          tenantName: user.name || user.email || 'User'
-        } : null;
+        return user
+          ? {
+              tenantId,
+              tenantType,
+              tenantName: user.name || user.email || 'User'
+            }
+          : null;
       }
 
       case ContextType.ORGANIZATION: {
         const org = this.organizations().find(o => o.id === tenantId);
-        return org ? {
-          tenantId,
-          tenantType,
-          tenantName: org.name,
-          ownerId: org.created_by || org.creator_id
-        } : null;
+        return org
+          ? {
+              tenantId,
+              tenantType,
+              tenantName: org.name,
+              ownerId: org.created_by || org.creator_id
+            }
+          : null;
       }
 
       case ContextType.TEAM: {
         const contextId = this.contextId();
         const team = this.teams().find(t => t.id === contextId);
-        return team ? {
-          tenantId, // organization_id
-          tenantType,
-          tenantName: team.name,
-          parentOrgId: team.organization_id
-        } : null;
+        return team
+          ? {
+              tenantId, // organization_id
+              tenantType,
+              tenantName: team.name,
+              parentOrgId: team.organization_id
+            }
+          : null;
       }
 
       case ContextType.PARTNER: {
         const contextId = this.contextId();
         const partner = this.partners().find(p => p.id === contextId);
-        return partner ? {
-          tenantId, // organization_id
-          tenantType,
-          tenantName: partner.name,
-          parentOrgId: partner.organization_id
-        } : null;
+        return partner
+          ? {
+              tenantId, // organization_id
+              tenantType,
+              tenantName: partner.name,
+              parentOrgId: partner.organization_id
+            }
+          : null;
       }
 
       case ContextType.BOT: {
         const contextId = this.contextId();
         const bot = this.bots().find(b => b.id === contextId);
-        return bot ? {
-          tenantId, // organization_id
-          tenantType,
-          tenantName: bot.name,
-          parentOrgId: (bot as any).organization_id
-        } : null;
+        return bot
+          ? {
+              tenantId, // organization_id
+              tenantType,
+              tenantName: bot.name,
+              parentOrgId: (bot as any).organization_id
+            }
+          : null;
       }
 
       default:
@@ -445,16 +455,13 @@ export class TenantContextService {
   /**
    * Ensure Tenant ID Exists
    * Throws error if no tenant context is available
-   * 
+   *
    * Use this before any audit operation to ensure tenant isolation
    */
   ensureTenantId(): string {
     const tenantId = this.currentTenantId();
     if (!tenantId) {
-      throw new Error(
-        '[TenantContextService] No tenant context available. ' +
-        'User must be authenticated and have a workspace context.'
-      );
+      throw new Error('[TenantContextService] No tenant context available. ' + 'User must be authenticated and have a workspace context.');
     }
     return tenantId;
   }

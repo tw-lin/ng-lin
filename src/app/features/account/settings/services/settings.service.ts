@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
-import { AccountSettings } from '../models/account-settings.model';
+
 import { AccountSettingsFirestoreRepository } from './settings-firestore.repository';
+import { AccountSettings } from '../models/account-settings.model';
 
 @Injectable({ providedIn: 'root' })
 export class AccountSettingsService {

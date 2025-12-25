@@ -1,16 +1,17 @@
 /**
  * Activity Feed Consumer
- * 
+ *
  * Tracks user activity and updates activity feed for visibility.
- * 
+ *
  * @module Consumers/ActivityFeed
  */
 
 import { Injectable, inject, signal } from '@angular/core';
-import { EventConsumer } from '../services/event-consumer.base';
-import { Subscribe } from '../decorators/subscribe.decorator';
+
 import { EventHandler } from '../decorators/event-handler.decorator';
+import { Subscribe } from '../decorators/subscribe.decorator';
 import { DomainEvent } from '../models/base-event';
+import { EventConsumer } from '../services/event-consumer.base';
 
 /**
  * Activity item interface
@@ -27,10 +28,10 @@ interface ActivityItem {
 
 /**
  * Activity Feed Consumer
- * 
+ *
  * Priority: 5 (medium priority)
  * Tags: activity, feed, timeline
- * 
+ *
  * Captures domain events and creates activity feed entries for user timelines.
  */
 @Injectable({ providedIn: 'root' })
@@ -55,7 +56,7 @@ export class ActivityFeedConsumer extends EventConsumer {
   async handleTaskEvent(event: DomainEvent<any>): Promise<void> {
     const activity = this.createActivityItem(event, 'Task');
     this.addActivity(activity);
-    
+
     console.log('[ActivityFeedConsumer] Task activity:', activity.action);
   }
 
@@ -66,7 +67,7 @@ export class ActivityFeedConsumer extends EventConsumer {
   async handleUserEvent(event: DomainEvent<any>): Promise<void> {
     const activity = this.createActivityItem(event, 'User');
     this.addActivity(activity);
-    
+
     console.log('[ActivityFeedConsumer] User activity:', activity.action);
   }
 
@@ -77,20 +78,17 @@ export class ActivityFeedConsumer extends EventConsumer {
   async handleBlueprintEvent(event: DomainEvent<any>): Promise<void> {
     const activity = this.createActivityItem(event, 'Blueprint');
     this.addActivity(activity);
-    
+
     console.log('[ActivityFeedConsumer] Blueprint activity:', activity.action);
   }
 
   /**
    * Create activity item from domain event
    */
-  private createActivityItem(
-    event: DomainEvent<any>,
-    entityType: string
-  ): ActivityItem {
+  private createActivityItem(event: DomainEvent<any>, entityType: string): ActivityItem {
     const action = this.extractAction(event.eventType);
     const userId = this.extractUserId(event.payload);
-    
+
     return {
       id: event.eventId,
       userId,
@@ -124,11 +122,7 @@ export class ActivityFeedConsumer extends EventConsumer {
   /**
    * Generate human-readable description
    */
-  private generateDescription(
-    entityType: string,
-    action: string,
-    payload: any
-  ): string {
+  private generateDescription(entityType: string, action: string, payload: any): string {
     const templates: Record<string, string> = {
       'task.created': `Created task "${payload?.task?.title || 'Untitled'}"`,
       'task.updated': `Updated task`,
@@ -138,9 +132,9 @@ export class ActivityFeedConsumer extends EventConsumer {
       'user.login': `Logged in via ${payload?.provider || 'email'}`,
       'blueprint.created': `Created blueprint "${payload?.blueprint?.name || 'Untitled'}"`,
       'blueprint.published': `Published blueprint`,
-      'default': `${action} ${entityType.toLowerCase()}`
+      default: `${action} ${entityType.toLowerCase()}`
     };
-    
+
     const key = `${entityType.toLowerCase()}.${action}`;
     return templates[key] || templates['default'];
   }
@@ -153,7 +147,7 @@ export class ActivityFeedConsumer extends EventConsumer {
       const updated = [activity, ...activities];
       return updated.slice(0, 100); // Keep only recent 100
     });
-    
+
     // In production, persist to database
     // await this.activityRepository.create(activity);
   }
@@ -169,8 +163,6 @@ export class ActivityFeedConsumer extends EventConsumer {
    * Get activities for specific blueprint/project
    */
   getActivitiesForAggregate(aggregateId: string): ActivityItem[] {
-    return this._activities().filter(
-      a => a.metadata['aggregateId'] === aggregateId
-    );
+    return this._activities().filter(a => a.metadata['aggregateId'] === aggregateId);
   }
 }

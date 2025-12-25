@@ -13,8 +13,8 @@ import { NzStatisticModule } from 'ng-zorro-antd/statistic';
 import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { firstValueFrom } from 'rxjs';
-import { BlueprintFeatureService } from '../services/blueprint.service';
 
+import { BlueprintFeatureService } from '../services/blueprint.service';
 import { AcceptanceModuleViewComponent } from './modules/acceptance';
 import { AgreementModuleViewComponent } from './modules/agreement';
 import { AuditLogsComponent } from './modules/audit-logs';

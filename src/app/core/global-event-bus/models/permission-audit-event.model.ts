@@ -1,11 +1,11 @@
 /**
  * Permission Audit Event Model
- * 
+ *
  * 權限審計事件模型
  * - 追蹤所有權限與角色變更操作
  * - 支援 RBAC 審計追蹤
  * - 遵循 docs/⭐️/Identity & Auth.md 規範
- * 
+ *
  * @author Global Event Bus Team
  * @version 1.0.0
  */
@@ -217,10 +217,7 @@ export class PermissionAuditEventBuilder {
     domainEvent: any
   ): PermissionGrantedAuditEvent | PermissionRevokedAuditEvent | PermissionUpdatedAuditEvent {
     const payload = domainEvent.payload;
-    const diff = this.calculatePermissionDiff(
-      payload.previousPermissions || [],
-      payload.newPermissions || []
-    );
+    const diff = this.calculatePermissionDiff(payload.previousPermissions || [], payload.newPermissions || []);
 
     const baseEvent = {
       id: domainEvent.id,
@@ -296,14 +293,9 @@ export class PermissionAuditEventBuilder {
   /**
    * 從 RoleChangedEvent 建立審計事件
    */
-  static fromRoleChangedEvent(
-    domainEvent: any
-  ): RoleAssignedAuditEvent | RoleUnassignedAuditEvent | RoleUpdatedAuditEvent {
+  static fromRoleChangedEvent(domainEvent: any): RoleAssignedAuditEvent | RoleUnassignedAuditEvent | RoleUpdatedAuditEvent {
     const payload = domainEvent.payload;
-    const diff = this.calculateRoleDiff(
-      payload.previousRoles || [],
-      payload.newRoles || []
-    );
+    const diff = this.calculateRoleDiff(payload.previousRoles || [], payload.newRoles || []);
 
     const baseEvent = {
       id: domainEvent.id,
@@ -379,10 +371,7 @@ export class PermissionAuditEventBuilder {
   /**
    * 計算權限差異
    */
-  private static calculatePermissionDiff(
-    previous: string[],
-    current: string[]
-  ): PermissionChangeDiff {
+  private static calculatePermissionDiff(previous: string[], current: string[]): PermissionChangeDiff {
     const added = current.filter(p => !previous.includes(p));
     const removed = previous.filter(p => !current.includes(p));
     const unchanged = current.filter(p => previous.includes(p));
@@ -398,10 +387,7 @@ export class PermissionAuditEventBuilder {
   /**
    * 計算角色差異 (複用權限差異計算邏輯)
    */
-  private static calculateRoleDiff(
-    previous: string[],
-    current: string[]
-  ): PermissionChangeDiff {
+  private static calculateRoleDiff(previous: string[], current: string[]): PermissionChangeDiff {
     return this.calculatePermissionDiff(previous, current);
   }
 

@@ -1,16 +1,16 @@
 /**
  * Search Index Consumer
- * 
+ *
  * Updates search indices when domain events modify searchable entities.
- * 
+ *
  * @module Consumers/SearchIndexer
  */
 
 import { Injectable, inject, signal } from '@angular/core';
-import { EventConsumer } from '../services/event-consumer.base';
-import { Subscribe } from '../decorators/subscribe.decorator';
+
 import { EventHandler } from '../decorators/event-handler.decorator';
 import { Retry } from '../decorators/retry.decorator';
+import { Subscribe } from '../decorators/subscribe.decorator';
 import {
   TaskCreatedEvent,
   TaskUpdatedEvent,
@@ -19,6 +19,7 @@ import {
   BlueprintUpdatedEvent,
   BlueprintDeletedEvent
 } from '../domain-events';
+import { EventConsumer } from '../services/event-consumer.base';
 
 /**
  * Search document interface
@@ -36,10 +37,10 @@ interface SearchDocument {
 
 /**
  * Search Index Consumer
- * 
+ *
  * Priority: 50 (medium priority)
  * Tags: search, indexing, elasticsearch
- * 
+ *
  * Maintains search indices for full-text search functionality.
  */
 @Injectable({ providedIn: 'root' })
@@ -64,7 +65,7 @@ export class SearchIndexConsumer extends EventConsumer {
   @Retry({ maxAttempts: 3, backoff: 'exponential', initialDelay: 1000 })
   async handleTaskCreated(event: TaskCreatedEvent): Promise<void> {
     const { task } = event.payload;
-    
+
     const document: SearchDocument = {
       id: task.id,
       type: 'task',
@@ -79,7 +80,7 @@ export class SearchIndexConsumer extends EventConsumer {
         blueprintId: task.blueprintId
       }
     };
-    
+
     await this.indexDocument(document);
     console.log('[SearchIndexConsumer] Indexed task:', task.id);
   }
@@ -91,10 +92,10 @@ export class SearchIndexConsumer extends EventConsumer {
   @Retry({ maxAttempts: 3, backoff: 'exponential', initialDelay: 1000 })
   async handleTaskUpdated(event: TaskUpdatedEvent): Promise<void> {
     const { taskId, changes } = event.payload;
-    
+
     // Remove old document
     await this.removeDocument(taskId);
-    
+
     // Add updated document (simplified - in production, fetch full task)
     if (changes.title || changes.description) {
       const document: SearchDocument = {
@@ -107,7 +108,7 @@ export class SearchIndexConsumer extends EventConsumer {
         timestamp: new Date(),
         metadata: { ...changes }
       };
-      
+
       await this.indexDocument(document);
       console.log('[SearchIndexConsumer] Re-indexed task:', taskId);
     }
@@ -120,7 +121,7 @@ export class SearchIndexConsumer extends EventConsumer {
   @Retry({ maxAttempts: 2, backoff: 'linear', initialDelay: 500 })
   async handleTaskDeleted(event: TaskDeletedEvent): Promise<void> {
     const { taskId } = event.payload;
-    
+
     await this.removeDocument(taskId);
     console.log('[SearchIndexConsumer] Removed task from index:', taskId);
   }
@@ -132,7 +133,7 @@ export class SearchIndexConsumer extends EventConsumer {
   @Retry({ maxAttempts: 3, backoff: 'exponential', initialDelay: 1000 })
   async handleBlueprintCreated(event: BlueprintCreatedEvent): Promise<void> {
     const { blueprint } = event.payload;
-    
+
     const document: SearchDocument = {
       id: blueprint.id,
       type: 'blueprint',
@@ -147,7 +148,7 @@ export class SearchIndexConsumer extends EventConsumer {
         status: blueprint.status
       }
     };
-    
+
     await this.indexDocument(document);
     console.log('[SearchIndexConsumer] Indexed blueprint:', blueprint.id);
   }
@@ -159,9 +160,9 @@ export class SearchIndexConsumer extends EventConsumer {
   @Retry({ maxAttempts: 3, backoff: 'exponential', initialDelay: 1000 })
   async handleBlueprintUpdated(event: BlueprintUpdatedEvent): Promise<void> {
     const { blueprintId, changes } = event.payload;
-    
+
     await this.removeDocument(blueprintId);
-    
+
     if (changes.name || changes.description) {
       const document: SearchDocument = {
         id: blueprintId,
@@ -173,7 +174,7 @@ export class SearchIndexConsumer extends EventConsumer {
         timestamp: new Date(),
         metadata: { ...changes }
       };
-      
+
       await this.indexDocument(document);
       console.log('[SearchIndexConsumer] Re-indexed blueprint:', blueprintId);
     }
@@ -186,7 +187,7 @@ export class SearchIndexConsumer extends EventConsumer {
   @Retry({ maxAttempts: 2, backoff: 'linear', initialDelay: 500 })
   async handleBlueprintDeleted(event: BlueprintDeletedEvent): Promise<void> {
     const { blueprintId } = event.payload;
-    
+
     await this.removeDocument(blueprintId);
     console.log('[SearchIndexConsumer] Removed blueprint from index:', blueprintId);
   }
@@ -197,10 +198,10 @@ export class SearchIndexConsumer extends EventConsumer {
   private async indexDocument(document: SearchDocument): Promise<void> {
     // Add to in-memory index
     this._searchIndex.update(index => [...index, document]);
-    
+
     // Simulate indexing delay
     await new Promise(resolve => setTimeout(resolve, 50));
-    
+
     // In production, integrate with:
     // - Elasticsearch
     // - Algolia
@@ -217,12 +218,10 @@ export class SearchIndexConsumer extends EventConsumer {
    * Remove document from search index
    */
   private async removeDocument(documentId: string): Promise<void> {
-    this._searchIndex.update(index => 
-      index.filter(doc => doc.id !== documentId)
-    );
-    
+    this._searchIndex.update(index => index.filter(doc => doc.id !== documentId));
+
     await new Promise(resolve => setTimeout(resolve, 20));
-    
+
     // In production:
     // await this.elasticsearchClient.delete({
     //   index: 'documents',
@@ -235,7 +234,7 @@ export class SearchIndexConsumer extends EventConsumer {
    */
   search(query: string, type?: 'task' | 'blueprint' | 'user'): SearchDocument[] {
     const lowerQuery = query.toLowerCase();
-    
+
     return this._searchIndex().filter(doc => {
       const typeMatch = !type || doc.type === type;
       const contentMatch = doc.content.includes(lowerQuery);

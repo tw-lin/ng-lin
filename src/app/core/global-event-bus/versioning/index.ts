@@ -1,6 +1,6 @@
 /**
  * Versioning Module Exports
- * 
+ *
  * Public API for event versioning and migration functionality
  */
 

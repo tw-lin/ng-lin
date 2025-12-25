@@ -1,21 +1,19 @@
 /**
  * Auth & Audit Integration Example
- * 
+ *
  * 展示如何整合 Global Event Bus 與 Identity & Auth 系統
  * - 發布認證事件
  * - 自動審計記錄
  * - 即時統計與監控
  * - 異常檢測與告警
- * 
+ *
  * @author Global Event Bus Team
  * @version 1.0.0
  */
 
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
-import { IEventBus } from '../interfaces/event-bus.interface';
+
 import { EVENT_BUS } from '../constants/event-bus-tokens';
-import { AuthAuditService } from '../services/auth-audit.service';
-import { PermissionAuditService } from '../services/permission-audit.service';
 import {
   UserLoginEvent,
   UserLogoutEvent,
@@ -29,11 +27,14 @@ import {
   LoginFailedEvent,
   EmailVerifiedEvent
 } from '../domain-events/auth-events';
+import { IEventBus } from '../interfaces/event-bus.interface';
 import { AuditLevel, AuditCategory } from '../models/auth-audit-event.model';
+import { AuthAuditService } from '../services/auth-audit.service';
+import { PermissionAuditService } from '../services/permission-audit.service';
 
 /**
  * Auth Audit Integration Demo Component
- * 
+ *
  * 用途:
  * 1. 展示認證事件發布
  * 2. 即時審計統計展示
@@ -50,7 +51,7 @@ import { AuditLevel, AuditCategory } from '../models/auth-audit-event.model';
       <!-- Event Publishing Section -->
       <section class="event-publisher">
         <h2>發布認證事件</h2>
-        
+
         <div class="button-group">
           <button (click)="simulateLogin()">模擬登入</button>
           <button (click)="simulateLogout()">模擬登出</button>
@@ -66,48 +67,48 @@ import { AuditLevel, AuditCategory } from '../models/auth-audit-event.model';
       <!-- Auth Audit Statistics -->
       <section class="auth-stats">
         <h2>認證審計統計</h2>
-        
+
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-label">總事件數</div>
             <div class="stat-value">{{ authStatistics().totalEvents }}</div>
           </div>
-          
+
           <div class="stat-card">
             <div class="stat-label">成功登入</div>
             <div class="stat-value success">{{ authStatistics().successfulLogins }}</div>
           </div>
-          
+
           <div class="stat-card">
             <div class="stat-label">失敗登入</div>
             <div class="stat-value error">{{ authStatistics().failedLogins }}</div>
           </div>
-          
+
           <div class="stat-card">
             <div class="stat-label">登出次數</div>
             <div class="stat-value">{{ authStatistics().logouts }}</div>
           </div>
-          
+
           <div class="stat-card">
             <div class="stat-label">密碼變更</div>
             <div class="stat-value">{{ authStatistics().passwordChanges }}</div>
           </div>
-          
+
           <div class="stat-card">
             <div class="stat-label">MFA 啟用</div>
             <div class="stat-value">{{ authStatistics().mfaEnabled }}</div>
           </div>
-          
+
           <div class="stat-card">
             <div class="stat-label">MFA 停用</div>
             <div class="stat-value warning">{{ authStatistics().mfaDisabled }}</div>
           </div>
-          
+
           <div class="stat-card">
             <div class="stat-label">需要審查</div>
             <div class="stat-value critical">{{ authStatistics().requiresReview }}</div>
           </div>
-          
+
           <div class="stat-card">
             <div class="stat-label">嚴重事件</div>
             <div class="stat-value critical">{{ authStatistics().criticalEvents }}</div>
@@ -118,33 +119,33 @@ import { AuditLevel, AuditCategory } from '../models/auth-audit-event.model';
       <!-- Permission Audit Statistics -->
       <section class="permission-stats">
         <h2>權限審計統計</h2>
-        
+
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-label">總事件數</div>
             <div class="stat-value">{{ permissionStatistics().totalEvents }}</div>
           </div>
-          
+
           <div class="stat-card">
             <div class="stat-label">權限授予</div>
             <div class="stat-value success">{{ permissionStatistics().permissionsGranted }}</div>
           </div>
-          
+
           <div class="stat-card">
             <div class="stat-label">權限撤銷</div>
             <div class="stat-value warning">{{ permissionStatistics().permissionsRevoked }}</div>
           </div>
-          
+
           <div class="stat-card">
             <div class="stat-label">角色分配</div>
             <div class="stat-value success">{{ permissionStatistics().rolesAssigned }}</div>
           </div>
-          
+
           <div class="stat-card">
             <div class="stat-label">角色移除</div>
             <div class="stat-value warning">{{ permissionStatistics().rolesUnassigned }}</div>
           </div>
-          
+
           <div class="stat-card">
             <div class="stat-label">需要審查</div>
             <div class="stat-value critical">{{ permissionStatistics().requiresReview }}</div>
@@ -155,7 +156,7 @@ import { AuditLevel, AuditCategory } from '../models/auth-audit-event.model';
       <!-- Recent Auth Events -->
       <section class="recent-events">
         <h2>最近的認證事件 (最新 10 筆)</h2>
-        
+
         <table>
           <thead>
             <tr>
@@ -185,7 +186,7 @@ import { AuditLevel, AuditCategory } from '../models/auth-audit-event.model';
       <!-- Recent Permission Events -->
       <section class="recent-permissions">
         <h2>最近的權限變更 (最新 10 筆)</h2>
-        
+
         <table>
           <thead>
             <tr>
@@ -213,117 +214,121 @@ import { AuditLevel, AuditCategory } from '../models/auth-audit-event.model';
       </section>
     </div>
   `,
-  styles: [`
-    .auth-audit-demo {
-      padding: 20px;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+  styles: [
+    `
+      .auth-audit-demo {
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
 
-    h1 {
-      color: #333;
-      border-bottom: 2px solid #0078d4;
-      padding-bottom: 10px;
-    }
+      h1 {
+        color: #333;
+        border-bottom: 2px solid #0078d4;
+        padding-bottom: 10px;
+      }
 
-    h2 {
-      color: #555;
-      margin-top: 30px;
-    }
+      h2 {
+        color: #555;
+        margin-top: 30px;
+      }
 
-    .button-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin: 20px 0;
-    }
+      .button-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 20px 0;
+      }
 
-    button {
-      padding: 10px 20px;
-      background: #0078d4;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background 0.2s;
-    }
+      button {
+        padding: 10px 20px;
+        background: #0078d4;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.2s;
+      }
 
-    button:hover {
-      background: #005a9e;
-    }
+      button:hover {
+        background: #005a9e;
+      }
 
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin: 20px 0;
-    }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+      }
 
-    .stat-card {
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 15px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+      .stat-card {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
 
-    .stat-label {
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 8px;
-    }
+      .stat-label {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 8px;
+      }
 
-    .stat-value {
-      font-size: 28px;
-      font-weight: bold;
-      color: #333;
-    }
+      .stat-value {
+        font-size: 28px;
+        font-weight: bold;
+        color: #333;
+      }
 
-    .stat-value.success {
-      color: #28a745;
-    }
+      .stat-value.success {
+        color: #28a745;
+      }
 
-    .stat-value.warning {
-      color: #ffc107;
-    }
+      .stat-value.warning {
+        color: #ffc107;
+      }
 
-    .stat-value.error, .stat-value.critical {
-      color: #dc3545;
-    }
+      .stat-value.error,
+      .stat-value.critical {
+        color: #dc3545;
+      }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-      background: white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
 
-    th {
-      background: #f8f9fa;
-      padding: 12px;
-      text-align: left;
-      font-weight: 600;
-      border-bottom: 2px solid #dee2e6;
-    }
+      th {
+        background: #f8f9fa;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+      }
 
-    td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #dee2e6;
-    }
+      td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #dee2e6;
+      }
 
-    tr:hover {
-      background: #f8f9fa;
-    }
+      tr:hover {
+        background: #f8f9fa;
+      }
 
-    tr.warning {
-      background: #fff3cd;
-    }
+      tr.warning {
+        background: #fff3cd;
+      }
 
-    tr.critical, tr.error {
-      background: #f8d7da;
-    }
-  `]
+      tr.critical,
+      tr.error {
+        background: #f8d7da;
+      }
+    `
+  ]
 })
 export class AuthAuditDemoComponent implements OnInit {
   private eventBus = inject(EVENT_BUS);

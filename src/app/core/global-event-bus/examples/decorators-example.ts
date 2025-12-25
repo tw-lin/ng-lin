@@ -1,13 +1,14 @@
 /**
  * 進階裝飾器使用範例
- * 
+ *
  * 展示 @EventHandler, @Retry, @Subscribe 的組合使用方式
  */
 
 import { Injectable } from '@angular/core';
-import { EventConsumer } from '../services/event-consumer.base';
+
 import { EventHandler, Retry, Subscribe } from '../decorators';
 import { DomainEvent } from '../models';
+import { EventConsumer } from '../services/event-consumer.base';
 
 // ============================================================================
 // 範例 1: 基本的事件處理器
@@ -24,11 +25,14 @@ class TaskCreatedEvent extends DomainEvent<{ task: Task }> {
   override readonly payload: { task: Task };
 
   constructor(task: Task) {
-    super({ task }, {
-      aggregateId: task.id,
-      aggregateType: 'Task',
-      aggregateVersion: 1
-    });
+    super(
+      { task },
+      {
+        aggregateId: task.id,
+        aggregateType: 'Task',
+        aggregateVersion: 1
+      }
+    );
     this.payload = { task };
   }
 }
@@ -38,17 +42,20 @@ class TaskUpdatedEvent extends DomainEvent<{ task: Task; changes: Partial<Task> 
   override readonly payload: { task: Task; changes: Partial<Task> };
 
   constructor(task: Task, changes: Partial<Task>) {
-    super({ task, changes }, {
-      aggregateId: task.id,
-      aggregateType: 'Task'
-    });
+    super(
+      { task, changes },
+      {
+        aggregateId: task.id,
+        aggregateType: 'Task'
+      }
+    );
     this.payload = { task, changes };
   }
 }
 
 /**
  * 通知消費者
- * 
+ *
  * 使用 @EventHandler 標記為事件處理器，設定優先級和標籤
  */
 @EventHandler({
@@ -60,7 +67,6 @@ class TaskUpdatedEvent extends DomainEvent<{ task: Task; changes: Partial<Task> 
 })
 @Injectable({ providedIn: 'root' })
 export class NotificationConsumer extends EventConsumer {
-  
   /**
    * 處理任務建立事件
    * 使用 @Subscribe 自動訂閱，並配置重試策略
@@ -74,12 +80,9 @@ export class NotificationConsumer extends EventConsumer {
   })
   async handleTaskCreated(event: TaskCreatedEvent): Promise<void> {
     console.log('📧 發送任務建立通知:', event.payload.task.title);
-    
+
     // 模擬發送電子郵件
-    await this.sendEmail(
-      event.payload.task.assigneeId,
-      `新任務: ${event.payload.task.title}`
-    );
+    await this.sendEmail(event.payload.task.assigneeId, `新任務: ${event.payload.task.title}`);
   }
 
   /**
@@ -88,11 +91,8 @@ export class NotificationConsumer extends EventConsumer {
   @Subscribe('task.updated')
   async handleTaskUpdated(event: TaskUpdatedEvent): Promise<void> {
     console.log('📧 發送任務更新通知:', event.payload.task.title);
-    
-    await this.sendEmail(
-      event.payload.task.assigneeId,
-      `任務更新: ${event.payload.task.title}`
-    );
+
+    await this.sendEmail(event.payload.task.assigneeId, `任務更新: ${event.payload.task.title}`);
   }
 
   /**
@@ -124,11 +124,11 @@ export class NotificationConsumer extends EventConsumer {
 
 /**
  * 稽核日誌消費者
- * 
+ *
  * 設定高優先級以確保在其他處理器之前執行
  */
 @EventHandler({
-  priority: 100,  // 最高優先級
+  priority: 100, // 最高優先級
   tags: ['audit', 'compliance'],
   description: '記錄所有事件到稽核日誌',
   group: 'audit',
@@ -136,7 +136,6 @@ export class NotificationConsumer extends EventConsumer {
 })
 @Injectable({ providedIn: 'root' })
 export class AuditLogConsumer extends EventConsumer {
-  
   /**
    * 訂閱所有事件（使用通配符）
    */
@@ -152,7 +151,7 @@ export class AuditLogConsumer extends EventConsumer {
   }
 
   @Retry({
-    maxAttempts: 10,  // 稽核日誌很重要，多次重試
+    maxAttempts: 10, // 稽核日誌很重要，多次重試
     backoff: 'linear',
     initialDelay: 2000
   })
@@ -168,26 +167,25 @@ export class AuditLogConsumer extends EventConsumer {
 
 /**
  * 分析消費者
- * 
+ *
  * 設定低優先級，在其他關鍵處理器之後執行
  */
 @EventHandler({
-  priority: 1,  // 低優先級
+  priority: 1, // 低優先級
   tags: ['analytics', 'metrics'],
   description: '收集事件統計資訊',
   group: 'analytics'
 })
 @Injectable({ providedIn: 'root' })
 export class AnalyticsConsumer extends EventConsumer {
-  
   private eventCounts = new Map<string, number>();
 
-  @Subscribe('task.*')  // 訂閱所有 task 事件
+  @Subscribe('task.*') // 訂閱所有 task 事件
   async handleTaskEvents(event: DomainEvent): Promise<void> {
     // 更新統計
     const count = this.eventCounts.get(event.eventType) || 0;
     this.eventCounts.set(event.eventType, count + 1);
-    
+
     console.log('📊 事件統計更新:', {
       eventType: event.eventType,
       count: count + 1
@@ -212,7 +210,7 @@ export class AnalyticsConsumer extends EventConsumer {
 
 /**
  * 搜尋索引消費者
- * 
+ *
  * 展示如何組合使用所有裝飾器
  */
 @EventHandler({
@@ -223,7 +221,6 @@ export class AnalyticsConsumer extends EventConsumer {
 })
 @Injectable({ providedIn: 'root' })
 export class SearchIndexConsumer extends EventConsumer {
-  
   /**
    * 建立索引 - 使用重試確保可靠性
    */
@@ -231,17 +228,17 @@ export class SearchIndexConsumer extends EventConsumer {
     retryPolicy: {
       maxAttempts: 3,
       backoff: 'exponential',
-      initialDelay: 1000  // Fixed: Added required initialDelay property
+      initialDelay: 1000 // Fixed: Added required initialDelay property
     }
   })
   @Retry({
-    maxAttempts: 5,  // 額外的方法級別重試
+    maxAttempts: 5, // 額外的方法級別重試
     backoff: 'exponential',
     initialDelay: 1000
   })
   async indexTask(event: TaskCreatedEvent): Promise<void> {
     console.log('🔍 建立搜尋索引:', event.payload.task.title);
-    
+
     await this.addToSearchIndex({
       id: event.payload.task.id,
       title: event.payload.task.title,
@@ -259,11 +256,8 @@ export class SearchIndexConsumer extends EventConsumer {
   })
   async updateIndex(event: TaskUpdatedEvent): Promise<void> {
     console.log('🔍 更新搜尋索引:', event.payload.task.title);
-    
-    await this.updateSearchIndex(
-      event.payload.task.id,
-      event.payload.changes
-    );
+
+    await this.updateSearchIndex(event.payload.task.id, event.payload.changes);
   }
 
   /**
@@ -278,7 +272,7 @@ export class SearchIndexConsumer extends EventConsumer {
   async removeIndex(event: DomainEvent): Promise<void> {
     const taskId = event.payload?.['taskId'] as string;
     console.log('🔍 刪除搜尋索引:', taskId);
-    
+
     await this.removeFromSearchIndex(taskId);
   }
 

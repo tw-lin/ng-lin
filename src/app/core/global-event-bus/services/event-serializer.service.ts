@@ -1,10 +1,7 @@
 import { Injectable } from '@angular/core';
+
+import { SerializationError, EventDeserializationError, InvalidJsonError } from '../errors/serialization.error';
 import { DomainEvent } from '../models/base-event';
-import {
-  SerializationError,
-  EventDeserializationError,
-  InvalidJsonError,
-} from '../errors/serialization.error';
 
 // Create aliases for backward compatibility
 const DeserializationError = EventDeserializationError;
@@ -71,10 +68,7 @@ export class EventSerializerService {
    * @throws DeserializationError if deserialization fails
    * @throws InvalidEventFormatError if data doesn't match expected structure
    */
-  deserialize<T extends DomainEvent>(
-    json: string,
-    EventClass?: new (...args: any[]) => T
-  ): T {
+  deserialize<T extends DomainEvent>(json: string, EventClass?: new (...args: any[]) => T): T {
     try {
       const parsed = JSON.parse(json, this.reviver);
 
@@ -88,10 +82,7 @@ export class EventSerializerService {
 
       return parsed as T;
     } catch (error) {
-      if (
-        error instanceof InvalidEventFormatError ||
-        error instanceof DeserializationError
-      ) {
+      if (error instanceof InvalidEventFormatError || error instanceof DeserializationError) {
         throw error;
       }
 
@@ -113,10 +104,7 @@ export class EventSerializerService {
   /**
    * Deserialize event from Buffer
    */
-  deserializeFromBuffer<T extends DomainEvent>(
-    buffer: Uint8Array,
-    EventClass?: new (...args: any[]) => T
-  ): T {
+  deserializeFromBuffer<T extends DomainEvent>(buffer: Uint8Array, EventClass?: new (...args: any[]) => T): T {
     const json = new TextDecoder().decode(buffer);
     return this.deserialize(json, EventClass);
   }
@@ -130,7 +118,7 @@ export class EventSerializerService {
     if (value instanceof Date) {
       return {
         __type: 'Date',
-        value: value.toISOString(),
+        value: value.toISOString()
       };
     }
 
@@ -138,7 +126,7 @@ export class EventSerializerService {
     if (value instanceof Map) {
       return {
         __type: 'Map',
-        value: Array.from(value.entries()),
+        value: Array.from(value.entries())
       };
     }
 
@@ -146,7 +134,7 @@ export class EventSerializerService {
     if (value instanceof Set) {
       return {
         __type: 'Set',
-        value: Array.from(value),
+        value: Array.from(value)
       };
     }
 
@@ -189,54 +177,36 @@ export class EventSerializerService {
    */
   private validateEventStructure(data: any): void {
     if (!data || typeof data !== 'object') {
-      throw new InvalidJsonError(
-        JSON.stringify(data),
-        new Error('Event data must be a non-null object')
-      );
+      throw new InvalidJsonError(JSON.stringify(data), new Error('Event data must be a non-null object'));
     }
 
     const required = ['eventId', 'eventType', 'timestamp'];
     for (const field of required) {
       if (!(field in data)) {
-        throw new InvalidJsonError(
-          JSON.stringify(data),
-          new Error(`Missing required field: ${field}`)
-        );
+        throw new InvalidJsonError(JSON.stringify(data), new Error(`Missing required field: ${field}`));
       }
     }
 
     // Validate eventId is string
     if (typeof data['eventId'] !== 'string') {
-      throw new InvalidJsonError(
-        JSON.stringify(data),
-        new Error('eventId must be a string')
-      );
+      throw new InvalidJsonError(JSON.stringify(data), new Error('eventId must be a string'));
     }
 
     // Validate eventType is string
     if (typeof data['eventType'] !== 'string') {
-      throw new InvalidJsonError(
-        JSON.stringify(data),
-        new Error('eventType must be a string')
-      );
+      throw new InvalidJsonError(JSON.stringify(data), new Error('eventType must be a string'));
     }
 
     // Validate timestamp (should be Date object after reviver)
     if (!(data['timestamp'] instanceof Date)) {
-      throw new InvalidJsonError(
-        JSON.stringify(data),
-        new Error('timestamp must be a Date object')
-      );
+      throw new InvalidJsonError(JSON.stringify(data), new Error('timestamp must be a Date object'));
     }
   }
 
   /**
    * Validate event matches expected type
    */
-  private validateEventType<T extends DomainEvent>(
-    data: any,
-    EventClass: new (...args: any[]) => T
-  ): void {
+  private validateEventType<T extends DomainEvent>(data: any, EventClass: new (...args: any[]) => T): void {
     // Create a temporary instance to get the expected eventType
     // Note: This assumes EventClass has a default constructor or handles missing args
     // For stricter validation, we could require EventClass to have a static eventType property

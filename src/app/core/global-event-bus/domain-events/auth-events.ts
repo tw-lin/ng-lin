@@ -1,11 +1,11 @@
 /**
  * Auth Domain Events
- * 
+ *
  * 身份認證領域事件定義
  * - 遵循 docs/Global Event Bus.md 規範
  * - 整合 docs/⭐️/Identity & Auth.md 認證系統
  * - 支援 Global Audit Log 自動審計
- * 
+ *
  * @author Global Event Bus Team
  * @version 1.0.0
  */
@@ -42,11 +42,11 @@ export interface UserLoginPayload {
 
 /**
  * 用戶登入事件
- * 
+ *
  * 觸發時機:
  * - Firebase Auth 成功認證後
  * - AuthService.login() 成功
- * 
+ *
  * 消費者:
  * - AuthAuditService (記錄登入審計)
  * - NotificationConsumer (發送登入通知)
@@ -92,7 +92,7 @@ export interface UserLogoutPayload {
 
 /**
  * 用戶登出事件
- * 
+ *
  * 觸發時機:
  * - 用戶手動登出
  * - Session 逾時
@@ -138,12 +138,12 @@ export interface PasswordChangedPayload {
 
 /**
  * 密碼變更事件
- * 
+ *
  * 觸發時機:
  * - 用戶修改密碼
  * - 管理員重置密碼
  * - 忘記密碼流程
- * 
+ *
  * 安全考量:
  * - 不記錄密碼內容
  * - 記錄變更方式與 IP
@@ -185,7 +185,7 @@ export interface MFAEnabledPayload {
 
 /**
  * MFA 啟用事件
- * 
+ *
  * 觸發時機:
  * - 用戶首次設定 MFA
  * - MFA 重新配置
@@ -227,7 +227,7 @@ export interface MFADisabledPayload {
 
 /**
  * MFA 禁用事件
- * 
+ *
  * 觸發時機:
  * - 用戶停用 MFA
  * - 管理員停用 MFA
@@ -272,7 +272,7 @@ export interface TokenRefreshedPayload {
 
 /**
  * Token 刷新事件
- * 
+ *
  * 觸發時機:
  * - 自動 Token 刷新 (TokenRefreshInterceptor)
  * - 手動 Token 刷新
@@ -318,7 +318,7 @@ export interface SessionExpiredPayload {
 
 /**
  * Session 過期事件
- * 
+ *
  * 觸發時機:
  * - Session 逾時
  * - 長時間無活動
@@ -371,12 +371,12 @@ export interface PermissionChangedPayload {
 
 /**
  * 權限變更事件
- * 
+ *
  * 觸發時機:
  * - 授予新權限
  * - 撤銷權限
  * - 更新權限
- * 
+ *
  * 消費者:
  * - PermissionAuditService (記錄權限審計)
  * - PermissionCacheService (清除權限快取)
@@ -425,7 +425,7 @@ export interface RoleChangedPayload {
 
 /**
  * 角色變更事件
- * 
+ *
  * 觸發時機:
  * - 分配新角色
  * - 移除角色
@@ -472,13 +472,13 @@ export interface LoginFailedPayload {
 
 /**
  * 登入失敗事件
- * 
+ *
  * 觸發時機:
  * - 密碼錯誤
  * - 帳戶被鎖定
  * - MFA 驗證失敗
  * - Email 未驗證
- * 
+ *
  * 安全用途:
  * - 暴力破解檢測
  * - 異常登入監控
@@ -521,7 +521,7 @@ export interface EmailVerifiedPayload {
 
 /**
  * Email 驗證完成事件
- * 
+ *
  * 觸發時機:
  * - 用戶點擊驗證連結
  * - 用戶輸入驗證碼

@@ -1,9 +1,10 @@
 import { inject, Injectable } from '@angular/core';
-import { AccountProfile } from '../models/account-profile.model';
+
 import { AccountDashboard } from '../dashboard/models/account-dashboard.model';
-import { AccountSettings } from '../settings/models/account-settings.model';
-import { AccountProfileService } from '../profile/services/profile.service';
 import { AccountDashboardService } from '../dashboard/services/dashboard.service';
+import { AccountProfile } from '../models/account-profile.model';
+import { AccountProfileService } from '../profile/services/profile.service';
+import { AccountSettings } from '../settings/models/account-settings.model';
 import { AccountSettingsService } from '../settings/services/settings.service';
 
 /**

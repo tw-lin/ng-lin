@@ -1,6 +1,6 @@
 /**
  * Event Bus Error Classes
- * 
+ *
  * Custom error types for event bus operations.
  */
 
@@ -48,7 +48,7 @@ export class EventNotFoundError extends EventBusError {
   constructor(eventId: string, context?: Record<string, any>) {
     super(`Event not found: ${eventId}`, 'EVENT_NOT_FOUND', {
       ...context,
-      eventId,
+      eventId
     });
     this.name = 'EventNotFoundError';
     Object.setPrototypeOf(this, EventNotFoundError.prototype);
@@ -60,11 +60,7 @@ export class EventNotFoundError extends EventBusError {
  */
 export class EventStoreFullError extends EventBusError {
   constructor(maxEvents: number, context?: Record<string, any>) {
-    super(
-      `Event store is full (max: ${maxEvents} events)`,
-      'EVENT_STORE_FULL',
-      { ...context, maxEvents }
-    );
+    super(`Event store is full (max: ${maxEvents} events)`, 'EVENT_STORE_FULL', { ...context, maxEvents });
     this.name = 'EventStoreFullError';
     Object.setPrototypeOf(this, EventStoreFullError.prototype);
   }
@@ -86,11 +82,7 @@ export class InvalidEventError extends EventBusError {
  */
 export class DuplicateSubscriptionError extends EventBusError {
   constructor(subscriptionId: string, context?: Record<string, any>) {
-    super(
-      `Subscription already exists: ${subscriptionId}`,
-      'DUPLICATE_SUBSCRIPTION',
-      { ...context, subscriptionId }
-    );
+    super(`Subscription already exists: ${subscriptionId}`, 'DUPLICATE_SUBSCRIPTION', { ...context, subscriptionId });
     this.name = 'DuplicateSubscriptionError';
     Object.setPrototypeOf(this, DuplicateSubscriptionError.prototype);
   }
@@ -101,11 +93,7 @@ export class DuplicateSubscriptionError extends EventBusError {
  */
 export class SubscriptionNotFoundError extends EventBusError {
   constructor(subscriptionId: string, context?: Record<string, any>) {
-    super(
-      `Subscription not found: ${subscriptionId}`,
-      'SUBSCRIPTION_NOT_FOUND',
-      { ...context, subscriptionId }
-    );
+    super(`Subscription not found: ${subscriptionId}`, 'SUBSCRIPTION_NOT_FOUND', { ...context, subscriptionId });
     this.name = 'SubscriptionNotFoundError';
     Object.setPrototypeOf(this, SubscriptionNotFoundError.prototype);
   }
@@ -127,11 +115,7 @@ export class EventBusNotInitializedError extends EventBusError {
  */
 export class EventBusAlreadyInitializedError extends EventBusError {
   constructor(context?: Record<string, any>) {
-    super(
-      'Event bus already initialized',
-      'EVENT_BUS_ALREADY_INITIALIZED',
-      context
-    );
+    super('Event bus already initialized', 'EVENT_BUS_ALREADY_INITIALIZED', context);
     this.name = 'EventBusAlreadyInitializedError';
     Object.setPrototypeOf(this, EventBusAlreadyInitializedError.prototype);
   }

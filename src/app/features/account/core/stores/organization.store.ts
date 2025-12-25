@@ -1,16 +1,16 @@
 /**
  * Organization Store
- * 
+ *
  * Three-Layer Architecture:
  * UI (Component) → State Management (Store) → Data Access (Repository)
- * 
+ *
  * This store manages organization state and coordinates repository operations.
  */
 
 import { Injectable, inject, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
-import { OrganizationRepository } from '@core/account/repositories';
 import { Organization } from '@core/account/models';
+import { OrganizationRepository } from '@core/account/repositories';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -61,7 +61,7 @@ export class OrganizationStore {
 
     try {
       await this.repository.update(organizationId, updates);
-      
+
       // Update local state
       const current = this._currentOrganization();
       if (current && current.id === organizationId) {

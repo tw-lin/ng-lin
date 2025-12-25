@@ -5,5 +5,5 @@ export const COLLECTION_NAMES = {
   ACCOUNT_DASHBOARDS: 'accountDashboards',
   ACCOUNT_SETTINGS: 'accountSettings',
   BLUEPRINTS: 'blueprints',
-  USERS: 'users',
+  USERS: 'users'
 } as const;

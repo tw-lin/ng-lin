@@ -2,17 +2,17 @@ import { Injectable, signal } from '@angular/core';
 
 /**
  * Correlation Tracker Utility Service
- * 
+ *
  * Manages correlation IDs for tracing related events across async operations.
  * Uses AsyncLocalStorage pattern for thread-local context.
- * 
+ *
  * @example
  * ```typescript
  * const tracker = inject(CorrelationTrackerUtil);
- * 
+ *
  * // Create correlation context
  * const correlationId = tracker.createContext();
- * 
+ *
  * // Run operations in context
  * await tracker.runInContext(correlationId, async () => {
  *   await eventBus.publish(event); // Auto-injected correlationId
@@ -29,7 +29,7 @@ export class CorrelationTrackerUtil {
    * Generate a new correlation ID (UUID v4)
    */
   generateCorrelationId(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
       const r = (Math.random() * 16) | 0;
       const v = c === 'x' ? r : (r & 0x3) | 0x8;
       return v.toString(16);

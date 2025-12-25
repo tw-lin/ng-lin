@@ -8,6 +8,7 @@
  */
 
 import { inject, Injectable } from '@angular/core';
+
 import { AIRepository } from '../../data-access/ai/ai.repository';
 import {
   AIGenerateTextRequest,

@@ -1,6 +1,6 @@
 /**
  * Event Envelope Model
- * 
+ *
  * Wraps domain events with retry tracking and error information.
  * Used internally by event bus for reliable delivery.
  */
@@ -9,7 +9,7 @@ import { DomainEvent } from './base-event';
 
 /**
  * Event envelope
- * 
+ *
  * Wraps a domain event with metadata for retry and error tracking.
  * Used internally by the event bus infrastructure.
  */
@@ -49,14 +49,7 @@ export class EventEnvelope<T extends DomainEvent = DomainEvent> {
    */
   readonly originalEventType: string;
 
-  constructor(params: {
-    event: T;
-    retryCount?: number;
-    lastAttempt?: Date;
-    error?: Error;
-    createdAt?: Date;
-    isDeadLetter?: boolean;
-  }) {
+  constructor(params: { event: T; retryCount?: number; lastAttempt?: Date; error?: Error; createdAt?: Date; isDeadLetter?: boolean }) {
     this.event = params.event;
     this.retryCount = params.retryCount ?? 0;
     this.lastAttempt = params.lastAttempt;
@@ -72,7 +65,7 @@ export class EventEnvelope<T extends DomainEvent = DomainEvent> {
   static create<T extends DomainEvent>(event: T): EventEnvelope<T> {
     return new EventEnvelope({ event });
   }
-  
+
   /**
    * Alias for create (for backward compatibility)
    */
@@ -90,7 +83,7 @@ export class EventEnvelope<T extends DomainEvent = DomainEvent> {
       lastAttempt: new Date(),
       error,
       createdAt: this.createdAt,
-      isDeadLetter: this.isDeadLetter,
+      isDeadLetter: this.isDeadLetter
     });
   }
 
@@ -104,7 +97,7 @@ export class EventEnvelope<T extends DomainEvent = DomainEvent> {
       lastAttempt: new Date(),
       error,
       createdAt: this.createdAt,
-      isDeadLetter: true,
+      isDeadLetter: true
     });
   }
 
@@ -140,14 +133,16 @@ export class EventEnvelope<T extends DomainEvent = DomainEvent> {
       event: this.event,
       retryCount: this.retryCount,
       lastAttempt: this.lastAttempt?.toISOString(),
-      error: this.error ? {
-        name: this.error.name,
-        message: this.error.message,
-        stack: this.error.stack,
-      } : undefined,
+      error: this.error
+        ? {
+            name: this.error.name,
+            message: this.error.message,
+            stack: this.error.stack
+          }
+        : undefined,
       createdAt: this.createdAt.toISOString(),
       isDeadLetter: this.isDeadLetter,
-      originalEventType: this.originalEventType,
+      originalEventType: this.originalEventType
     };
   }
 
@@ -155,10 +150,12 @@ export class EventEnvelope<T extends DomainEvent = DomainEvent> {
    * Create from JSON (for deserialization)
    */
   static fromJSON<T extends DomainEvent>(json: Record<string, any>): EventEnvelope<T> {
-    const error = json['error'] ? Object.assign(new Error(json['error']['message']), {
-      name: json['error']['name'],
-      stack: json['error']['stack'],
-    }) : undefined;
+    const error = json['error']
+      ? Object.assign(new Error(json['error']['message']), {
+          name: json['error']['name'],
+          stack: json['error']['stack']
+        })
+      : undefined;
 
     return new EventEnvelope({
       event: json['event'] as T,
@@ -166,7 +163,7 @@ export class EventEnvelope<T extends DomainEvent = DomainEvent> {
       lastAttempt: json['lastAttempt'] ? new Date(json['lastAttempt']) : undefined,
       error,
       createdAt: new Date(json['createdAt']),
-      isDeadLetter: json['isDeadLetter'],
+      isDeadLetter: json['isDeadLetter']
     });
   }
 }

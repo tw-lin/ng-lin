@@ -1,9 +1,9 @@
 /**
  * Global Event Bus Public API
- * 
+ *
  * Complete enterprise-grade event bus implementation following GitHub architecture.
  * Supports multiple backends (in-memory, Firebase, Supabase, Kafka).
- * 
+ *
  * Phase 5: Domain Integration
  * - Domain event definitions for core entities
  * - Production-ready consumer implementations

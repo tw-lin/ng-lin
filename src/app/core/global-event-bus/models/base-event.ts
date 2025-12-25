@@ -1,30 +1,30 @@
 /**
  * Base Domain Event
- * 
+ *
  * All events in the system extend from this base class.
  * Events are immutable records of something that happened in the system.
- * 
+ *
  * @template TPayload - Type of the event payload
  */
 export abstract class DomainEvent<TPayload = unknown> {
   /** Unique identifier for this event */
   readonly eventId: string;
-  
+
   /** When the event occurred */
   readonly timestamp: Date;
-  
+
   /** ID of the aggregate (entity) that this event relates to */
   readonly aggregateId: string;
-  
+
   /** Type of the aggregate (e.g., 'issue', 'pull_request', 'repository') */
   readonly aggregateType: string;
-  
+
   /** Event type identifier (e.g., 'issues.opened', 'pull_request.merged') */
   abstract readonly eventType: string;
-  
+
   /** Event payload - the actual data of what happened */
   readonly payload: TPayload;
-  
+
   /** Metadata about the event */
   readonly metadata: Readonly<{
     /** Event schema version for backward compatibility */
@@ -36,7 +36,7 @@ export abstract class DomainEvent<TPayload = unknown> {
     /** ID of the event that caused this event */
     readonly causationId?: string;
   }>;
-  
+
   /**
    * Constructor for base event
    * Supports two call patterns:
@@ -44,18 +44,20 @@ export abstract class DomainEvent<TPayload = unknown> {
    * 2. constructor({ aggregateId, aggregateType, ...}) - For direct instantiation
    */
   constructor(
-    payloadOrData: TPayload | {
-      eventId?: string;
-      timestamp?: Date;
-      aggregateId: string;
-      aggregateType: string;
-      metadata?: {
-        version?: string;
-        source?: string;
-        correlationId?: string;
-        causationId?: string;
-      };
-    },
+    payloadOrData:
+      | TPayload
+      | {
+          eventId?: string;
+          timestamp?: Date;
+          aggregateId: string;
+          aggregateType: string;
+          metadata?: {
+            version?: string;
+            source?: string;
+            correlationId?: string;
+            causationId?: string;
+          };
+        },
     metadata?: {
       aggregateId: string;
       aggregateType: string;
@@ -96,7 +98,7 @@ export abstract class DomainEvent<TPayload = unknown> {
       };
     }
   }
-  
+
   /**
    * Generate a unique event ID
    * Uses timestamp + random string for uniqueness
@@ -106,7 +108,7 @@ export abstract class DomainEvent<TPayload = unknown> {
     const random = Math.random().toString(36).substring(2, 15);
     return `evt_${timestamp}_${random}`;
   }
-  
+
   /**
    * Get a string representation of the event
    */

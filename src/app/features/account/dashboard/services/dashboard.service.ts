@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
-import { AccountDashboard } from '../models/account-dashboard.model';
+
 import { AccountDashboardFirestoreRepository } from './dashboard-firestore.repository';
+import { AccountDashboard } from '../models/account-dashboard.model';
 
 @Injectable({ providedIn: 'root' })
 export class AccountDashboardService {

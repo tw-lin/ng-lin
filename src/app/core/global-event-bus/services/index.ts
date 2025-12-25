@@ -1,6 +1,6 @@
 /**
  * Public API for event bus services
- * 
+ *
  * NOTE: InMemoryEventBus and InMemoryEventStore are re-exported from implementations
  * for backwards compatibility. New code should import from implementations/in-memory.
  */

@@ -1,8 +1,8 @@
 /**
  * Task Domain Events
- * 
+ *
  * Defines all events related to task lifecycle and operations.
- * 
+ *
  * @module DomainEvents/Task
  */
 
@@ -28,9 +28,9 @@ export interface Task {
 
 /**
  * Event: Task Created
- * 
+ *
  * Published when a new task is created in the system.
- * 
+ *
  * @example
  * ```typescript
  * const event = new TaskCreatedEvent({
@@ -64,7 +64,7 @@ export class TaskCreatedEvent extends DomainEvent<{
 
 /**
  * Event: Task Updated
- * 
+ *
  * Published when task properties are modified.
  */
 export class TaskUpdatedEvent extends DomainEvent<{
@@ -81,12 +81,7 @@ export class TaskUpdatedEvent extends DomainEvent<{
     userId: string;
   };
 
-  constructor(payload: {
-    taskId: string;
-    changes: Partial<Task>;
-    previousValues: Partial<Task>;
-    userId: string;
-  }) {
+  constructor(payload: { taskId: string; changes: Partial<Task>; previousValues: Partial<Task>; userId: string }) {
     super(payload, {
       aggregateId: payload.taskId,
       aggregateType: 'Task'
@@ -97,7 +92,7 @@ export class TaskUpdatedEvent extends DomainEvent<{
 
 /**
  * Event: Task Status Changed
- * 
+ *
  * Published when task status transitions.
  */
 export class TaskStatusChangedEvent extends DomainEvent<{
@@ -114,12 +109,7 @@ export class TaskStatusChangedEvent extends DomainEvent<{
     userId: string;
   };
 
-  constructor(payload: {
-    taskId: string;
-    previousStatus: Task['status'];
-    newStatus: Task['status'];
-    userId: string;
-  }) {
+  constructor(payload: { taskId: string; previousStatus: Task['status']; newStatus: Task['status']; userId: string }) {
     super(payload, {
       aggregateId: payload.taskId,
       aggregateType: 'Task'
@@ -130,7 +120,7 @@ export class TaskStatusChangedEvent extends DomainEvent<{
 
 /**
  * Event: Task Assigned
- * 
+ *
  * Published when task is assigned to a user, team, or partner.
  */
 export class TaskAssignedEvent extends DomainEvent<{
@@ -166,7 +156,7 @@ export class TaskAssignedEvent extends DomainEvent<{
 
 /**
  * Event: Task Deleted
- * 
+ *
  * Published when task is deleted (soft or hard delete).
  */
 export class TaskDeletedEvent extends DomainEvent<{
@@ -183,12 +173,7 @@ export class TaskDeletedEvent extends DomainEvent<{
     userId: string;
   };
 
-  constructor(payload: {
-    taskId: string;
-    blueprintId: string;
-    soft: boolean;
-    userId: string;
-  }) {
+  constructor(payload: { taskId: string; blueprintId: string; soft: boolean; userId: string }) {
     super(payload, {
       aggregateId: payload.taskId,
       aggregateType: 'Task'
@@ -199,7 +184,7 @@ export class TaskDeletedEvent extends DomainEvent<{
 
 /**
  * Event: Task Completed
- * 
+ *
  * Published when task is marked as completed.
  */
 export class TaskCompletedEvent extends DomainEvent<{
@@ -214,11 +199,7 @@ export class TaskCompletedEvent extends DomainEvent<{
     userId: string;
   };
 
-  constructor(payload: {
-    taskId: string;
-    completedAt: Date;
-    userId: string;
-  }) {
+  constructor(payload: { taskId: string; completedAt: Date; userId: string }) {
     super(payload, {
       aggregateId: payload.taskId,
       aggregateType: 'Task'

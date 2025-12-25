@@ -1,6 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { collection, doc, getDoc, setDoc } from '@angular/fire/firestore';
-import { Firestore } from '@angular/fire/firestore';
+import { collection, doc, getDoc, setDoc, Firestore } from '@angular/fire/firestore';
 
 import { COLLECTION_NAMES } from '../../../../firebase/constants/collection-names.const';
 import { buildConverter } from '../../../../firebase/utils/firestore-converter.util';
@@ -13,21 +12,21 @@ export class AccountDashboardFirestoreRepository {
 
   private readonly collectionRef = collection(this.firestore, COLLECTION_NAMES.ACCOUNT_DASHBOARDS).withConverter(
     buildConverter<AccountDashboardFirestore>(
-      (data) => ({
+      data => ({
         id: data['id'] as string,
         namespacePath: data['namespacePath'] as string,
         summary: data['summary'] as string | undefined,
         recentActivity: (data['recentActivity'] as string[] | undefined) ?? [],
-        updatedAt: toDateOrNull(data['updatedAt']),
+        updatedAt: toDateOrNull(data['updatedAt'])
       }),
-      (value) => ({
+      value => ({
         id: value.id,
         namespacePath: value.namespacePath,
         summary: value.summary ?? null,
         recentActivity: value.recentActivity ?? [],
-        updatedAt: value.updatedAt ?? null,
-      }),
-    ),
+        updatedAt: value.updatedAt ?? null
+      })
+    )
   );
 
   async getById(dashboardId: string): Promise<AccountDashboard | null> {
@@ -39,14 +38,14 @@ export class AccountDashboardFirestoreRepository {
       namespacePath: data.namespacePath,
       summary: data.summary ?? undefined,
       recentActivity: data.recentActivity ?? [],
-      updatedAt: data.updatedAt ?? undefined,
+      updatedAt: data.updatedAt ?? undefined
     };
   }
 
   async upsert(dashboard: AccountDashboard): Promise<void> {
     await setDoc(doc(this.collectionRef, dashboard.id), {
       ...dashboard,
-      updatedAt: new Date(),
+      updatedAt: new Date()
     });
   }
 }

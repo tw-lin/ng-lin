@@ -1,11 +1,11 @@
 /**
  * Auth Audit Event Model
- * 
+ *
  * 認證審計事件模型
  * - 用於追蹤所有認證相關操作
  * - 支援 Global Audit Log 系統
  * - 遵循 docs/⭐️/Identity & Auth.md 規範
- * 
+ *
  * @author Global Event Bus Team
  * @version 1.0.0
  */
@@ -225,17 +225,14 @@ export interface EmailVerifiedAuditEvent extends AuthAuditEvent {
 
 /**
  * 審計事件建構器
- * 
+ *
  * 用於從 DomainEvent 建立 AuthAuditEvent
  */
 export class AuthAuditEventBuilder {
   /**
    * 從 DomainEvent 建立審計事件
    */
-  static fromDomainEvent(
-    domainEvent: any,
-    additionalContext?: Partial<AuthAuditEvent>
-  ): AuthAuditEvent {
+  static fromDomainEvent(domainEvent: any, additionalContext?: Partial<AuthAuditEvent>): AuthAuditEvent {
     const baseEvent: AuthAuditEvent = {
       id: domainEvent.id,
       eventType: domainEvent.type,

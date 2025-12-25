@@ -1,21 +1,21 @@
 /**
  * Organization Member Store
- * 
+ *
  * Three-Layer Architecture:
  * UI (Component) → State Management (Store) → Data Access (Repository)
- * 
+ *
  * This store manages organization member state and coordinates repository operations.
  */
 
 import { Injectable, inject, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
-import { 
-  OrganizationMemberRepository, 
+import { OrganizationMember, NotificationType, InvitationStatus } from '@core';
+import {
+  OrganizationMemberRepository,
   OrganizationInvitationRepository,
   NotificationRepository,
-  AccountRepository 
+  AccountRepository
 } from '@core/repositories';
-import { OrganizationMember, NotificationType, InvitationStatus } from '@core';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -46,7 +46,7 @@ export class OrganizationMemberStore {
   async loadMembers(organizationId: string): Promise<void> {
     this._loading.set(true);
     this._error.set(null);
-    
+
     try {
       const members = await firstValueFrom(this.memberRepository.findByOrganization(organizationId));
       this._members.set(members);
@@ -79,7 +79,7 @@ export class OrganizationMemberStore {
 
       // Check if account exists and send notification
       const account = await this.accountRepository.findByEmail(email);
-      
+
       if (account) {
         // Send notification to existing user
         await this.notificationRepository.create({
@@ -101,7 +101,6 @@ export class OrganizationMemberStore {
         created_at: new Date().toISOString(),
         read: false
       });
-
     } catch (error: unknown) {
       const errorMsg = error instanceof Error ? error.message : '邀請送出失敗，請稍後再試';
       this._inviteError.set(errorMsg);

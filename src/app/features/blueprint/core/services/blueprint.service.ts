@@ -2,11 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { Blueprint, BlueprintQueryOptions, BlueprintRole, CreateBlueprintRequest, OwnerType, UpdateBlueprintRequest } from '@core';
 import { BlueprintMemberRepository, BlueprintRepository } from '@core/blueprint/repositories';
-import { AuditLogsService, AuditEventType, AuditCategory, AuditSeverity, ActorType, AuditStatus } from '../../routes/modules/audit-logs';
 import { Observable } from 'rxjs';
 
 import { BlueprintCreateSchema, BlueprintUpdateSchema } from './blueprint-validation-schemas';
 import { ValidationService } from './validation.service';
+import { AuditLogsService, AuditEventType, AuditCategory, AuditSeverity, ActorType, AuditStatus } from '../../routes/modules/audit-logs';
 
 @Injectable({
   providedIn: 'root'

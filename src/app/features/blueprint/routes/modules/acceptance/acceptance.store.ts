@@ -1,16 +1,17 @@
 /**
  * Acceptance Store
- * 
+ *
  * Three-Layer Architecture:
  * UI (Component) → State Management (Store) → Data Access (Repository)
- * 
+ *
  * This store manages acceptance record state and coordinates repository operations.
  */
 
 import { Injectable, inject, signal } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
-import { AcceptanceRepository } from '../acceptance.repository';
+
 import { AcceptanceRecord } from '../acceptance.model';
+import { AcceptanceRepository } from '../acceptance.repository';
 
 @Injectable({
   providedIn: 'root'
@@ -54,7 +55,7 @@ export class AcceptanceStore {
   async deleteRecord(blueprintId: string, recordId: string): Promise<void> {
     try {
       await this.repository.delete(blueprintId, recordId);
-      
+
       // Update local state
       this._records.update(records => records.filter(r => r.id !== recordId));
     } catch (error) {

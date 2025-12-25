@@ -1,9 +1,9 @@
 /**
  * Event Handler Interface
- * 
+ *
  * Defines the signature for event handler functions.
  * Handlers can be synchronous or asynchronous.
- * 
+ *
  * @template T - The type of DomainEvent this handler processes
  */
 
@@ -11,25 +11,20 @@ import { DomainEvent } from '../models/base-event';
 
 /**
  * Event handler function type
- * 
+ *
  * @param event - The domain event to handle
  * @returns Promise<void> for async handlers, void for sync handlers
  */
-export type EventHandler<T extends DomainEvent = DomainEvent> = (
-  event: T
-) => Promise<void> | void;
+export type EventHandler<T extends DomainEvent = DomainEvent> = (event: T) => Promise<void> | void;
 
 /**
  * Event handler with error handling
- * 
+ *
  * @param event - The domain event to handle
  * @param error - Optional error from previous attempt
  * @returns Promise<void>
  */
-export type EventHandlerWithError<T extends DomainEvent = DomainEvent> = (
-  event: T,
-  error?: Error
-) => Promise<void>;
+export type EventHandlerWithError<T extends DomainEvent = DomainEvent> = (event: T, error?: Error) => Promise<void>;
 
 /**
  * Event handler metadata

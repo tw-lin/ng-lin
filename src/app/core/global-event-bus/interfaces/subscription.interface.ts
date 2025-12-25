@@ -1,6 +1,6 @@
 /**
  * Subscription Interface
- * 
+ *
  * Represents an active subscription to events.
  * Provides methods to manage the subscription lifecycle.
  */
@@ -9,7 +9,7 @@ import { EventHandler, SubscribeOptions } from './event-handler.interface';
 
 /**
  * Subscription interface
- * 
+ *
  * Represents a subscription to a specific event type.
  * Can be unsubscribed to stop receiving events.
  */
