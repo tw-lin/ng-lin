@@ -1,3 +1,143 @@
+/**
+ * @module EnhancedEventBusService
+ * @description
+ * Enhanced Event Bus Service - Blueprint-scoped event publishing and subscription system
+ * 強化的事件匯流排服務 - 藍圖範圍的事件發布與訂閱系統
+ *
+ * ## Purpose
+ * Provides a centralized, type-safe event bus for Blueprint module communication with advanced
+ * features like event prioritization, validation, logging, and subscription management. Enables
+ * loosely coupled architecture by allowing modules to communicate via events without direct dependencies.
+ *
+ * ## Key Features
+ * - **Unified Event Types**: SystemEventType enum for consistent event naming
+ * - **Event Priority**: Support for HIGH, MEDIUM, LOW priority levels
+ * - **Event Validation**: Automatic validation of event structure and required fields
+ * - **Complete Event Logging**: In-memory event log (max 1000 entries) with search/filter
+ * - **Subscription Management**: Automatic cleanup, unsubscribe tracking
+ * - **Event Throttling**: Prevents event flooding (50ms throttle per event type)
+ * - **Serialization/Deserialization**: JSON-safe event persistence support
+ * - **Type Safety**: Strongly-typed events with TypeScript interfaces
+ * - **Signal Integration**: Event count signals for reactive UI updates
+ *
+ * ## Event Structure
+ * ```typescript
+ * interface EnhancedBlueprintEvent {
+ *   type: SystemEventType                // Event type (task.created, module.updated, etc.)
+ *   blueprintId: string                  // Blueprint context
+ *   timestamp: Date                      // Event timestamp
+ *   actor: EventActor                    // Who triggered the event
+ *   data: Record<string, any>            // Event payload
+ *   priority?: EventPriority             // HIGH | MEDIUM | LOW (default: MEDIUM)
+ *   metadata?: EventMetadata             // Optional metadata (tags, correlation ID)
+ * }
+ * ```
+ *
+ * ## Event Types (SystemEventType)
+ * - **Task Events**: TASK_CREATED, TASK_UPDATED, TASK_DELETED, TASK_COMPLETED
+ * - **Module Events**: MODULE_ADDED, MODULE_REMOVED, MODULE_UPDATED
+ * - **Blueprint Events**: BLUEPRINT_CREATED, BLUEPRINT_UPDATED, BLUEPRINT_ARCHIVED
+ * - **Permission Events**: PERMISSION_GRANTED, PERMISSION_REVOKED
+ * - **System Events**: ERROR_OCCURRED, WARNING_ISSUED, INFO_LOGGED
+ *
+ * ## Architecture Patterns
+ * - **Observer Pattern**: Pub/Sub for decoupled communication
+ * - **Singleton Service**: providedIn: 'root' for global event bus
+ * - **RxJS Subjects**: Underlying event stream with filter operators
+ * - **Dependency Injection**: inject() function (Angular 20+)
+ * - **Signal Integration**: Reactive counters for UI binding
+ *
+ * ## Event Flow
+ * ```
+ * Publisher → emitEvent() → Validation → Throttle Check → Subject.next()
+ *                                                              ↓
+ * Subscriber ← filter(type) ← RxJS Observable ← Subject ← Event Log
+ * ```
+ *
+ * ## Event Logging
+ * - Maintains in-memory log of last 1000 events
+ * - Supports filtering by type, blueprintId, actor, timestamp
+ * - Provides event replay capability for debugging
+ * - Auto-rotates log when max size reached
+ *
+ * ## Event Throttling
+ * Prevents event flooding by throttling rapid events of the same type:
+ * - Throttle window: 50ms per event type
+ * - Drops duplicate events within throttle window
+ * - Useful for high-frequency events (mouse moves, scroll, etc.)
+ *
+ * ## Subscription Management
+ * ```typescript
+ * // Subscribe to specific event type
+ * const unsubscribe = this.eventBus.onEvent(
+ *   SystemEventType.TASK_COMPLETED,
+ *   (event) => console.log('Task completed:', event.data)
+ * )
+ * 
+ * // Subscribe with options
+ * const unsubscribe = this.eventBus.onEvent(
+ *   SystemEventType.MODULE_UPDATED,
+ *   (event) => handleUpdate(event),
+ *   { priority: EventPriority.HIGH, blueprintId: 'bp-123' }
+ * )
+ * 
+ * // Cleanup
+ * unsubscribe()
+ * ```
+ *
+ * ## Event Priority Handling
+ * - **HIGH**: Critical events (errors, security alerts) - processed immediately
+ * - **MEDIUM**: Normal events (user actions, data updates) - standard queue
+ * - **LOW**: Background events (analytics, logging) - deferred processing
+ *
+ * ## Performance Considerations
+ * - Event log limited to 1000 entries to prevent memory leaks
+ * - Throttling prevents event storms (50ms window per type)
+ * - Subscription cleanup prevents memory leaks
+ * - RxJS operators for efficient filtering
+ *
+ * ## Integration with Global Event Bus
+ * This Blueprint-scoped event bus can forward critical events to the Global Event Bus
+ * (BlueprintEventBus) for cross-blueprint communication and audit logging.
+ *
+ * @example Basic Usage
+ * ```typescript
+ * // Emit event
+ * this.eventBus.emitEvent({
+ *   type: SystemEventType.TASK_COMPLETED,
+ *   blueprintId: 'bp-123',
+ *   timestamp: new Date(),
+ *   actor: { userId: 'user-1', userName: 'John', role: 'admin' },
+ *   data: { taskId: 'task-456', result: 'success' }
+ * })
+ * 
+ * // Subscribe
+ * const unsubscribe = this.eventBus.onEvent(
+ *   SystemEventType.TASK_COMPLETED,
+ *   (event) => this.handleTaskCompleted(event)
+ * )
+ * 
+ * // Cleanup on destroy
+ * ngOnDestroy() {
+ *   unsubscribe()
+ * }
+ * ```
+ *
+ * @see {@link https://github.com/ac484/ng-lin/blob/main/docs/⭐️/Global Event Bus.md | Global Event Bus Documentation}
+ * @see {@link https://github.com/ac484/ng-lin/blob/main/docs/⭐️/整體架構設計.md | Overall Architecture Design}
+ * 
+ * @remarks
+ * **Relationship to Global Event Bus**: This EnhancedEventBusService is Blueprint-scoped for
+ * intra-blueprint communication. For cross-blueprint events and audit logging, use the Global
+ * Event Bus (BlueprintEventBus). Critical events may be forwarded to both systems.
+ * 
+ * **Future Enhancements**:
+ * - Event persistence to Firestore for replay/debugging
+ * - Event versioning for backward compatibility
+ * - Event batching for performance optimization
+ * - Event metrics and analytics dashboard
+ */
+
 import { Injectable, signal, WritableSignal } from '@angular/core';
 import { Subject, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';

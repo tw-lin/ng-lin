@@ -1,3 +1,76 @@
+/**
+ * @module BlueprintListComponent
+ * @description
+ * Blueprint List Component - Master list view for managing user and organization blueprints
+ * 藍圖列表元件 - 用戶與組織藍圖的主列表視圖
+ *
+ * ## Purpose
+ * Provides a comprehensive list view of all blueprints accessible to the current user, with advanced
+ * filtering, search, and management capabilities. Supports both personal (user-owned) and shared
+ * (organization/team-owned) blueprints with appropriate permission controls.
+ *
+ * ## Key Features
+ * - **Smart Table Display**: ng-alain ST component with expandable rows for secondary information
+ * - **Multi-Context Support**: Displays blueprints from User, Organization, Team contexts
+ * - **Real-Time Search**: Debounced search (300ms) for responsive filtering
+ * - **Status Filtering**: Filter by status (active, draft, archived)
+ * - **Quick Statistics**: Summary cards showing active, draft, and archived counts
+ * - **Expandable Details**: Inline expansion for dates, budget, module counts
+ * - **Bulk Operations**: Select multiple blueprints for batch actions
+ * - **Navigation**: Quick access to blueprint detail and designer views
+ *
+ * ## Architecture Patterns
+ * - **State Management**: AsyncState pattern with Signals for reactive updates
+ * - **Change Detection**: OnPush strategy for optimal performance
+ * - **Dependency Injection**: inject() function (Angular 20+)
+ * - **Three-Layer**: UI → BlueprintFeatureService → Repository
+ * - **Multi-Tenancy**: Workspace-aware filtering via WorkspaceContextService
+ *
+ * ## State Management
+ * ```typescript
+ * // AsyncState pattern for loading states
+ * blueprintsState = createAsyncArrayState<Blueprint>()
+ * 
+ * // Computed filters
+ * filteredBlueprints = computed(() => {
+ *   const blueprints = this.blueprintsState.data()
+ *   const status = this.selectedStatus()
+ *   const searchTerm = this.searchTerm()
+ *   return blueprints.filter(bp => matches(bp, status, searchTerm))
+ * })
+ * ```
+ *
+ * ## Multi-Tenancy Context
+ * Blueprints displayed depend on active workspace context:
+ * - **User Context**: Personal blueprints (ownerType: 'user', ownerId: userId)
+ * - **Organization Context**: Organization blueprints (ownerType: 'organization', ownerId: orgId)
+ * - **Team Context**: Team-accessible blueprints (ownerType: 'team', ownerId: teamId)
+ *
+ * ## Performance Optimizations
+ * - OnPush change detection reduces unnecessary re-renders
+ * - Debounced search (300ms) prevents excessive filtering
+ * - Virtual scrolling for large blueprint lists (via ST component)
+ * - Lazy loading of expandable row details
+ * - Signal-based computed properties for efficient reactivity
+ *
+ * @example Route Configuration
+ * ```typescript
+ * {
+ *   path: 'blueprints',
+ *   component: BlueprintListComponent,
+ *   data: { title: '藍圖列表', guard: 'canReadBlueprint' }
+ * }
+ * ```
+ *
+ * @see {@link https://github.com/ac484/ng-lin/blob/main/docs/⭐️/整體架構設計.md | Overall Architecture Design}
+ * @see {@link https://github.com/ac484/ng-lin/blob/main/.github/instructions/ng-gighub-architecture.instructions.md | Architecture Guidelines}
+ * 
+ * @remarks
+ * This component uses ng-alain's ST (Simple Table) component for high-performance table rendering
+ * with built-in features like sorting, filtering, pagination, and expandable rows. The ST component
+ * is optimized for large datasets and provides a consistent UX across the application.
+ */
+
 import { Component, OnInit, inject, effect, computed, signal, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -13,24 +86,6 @@ import { NzStatisticModule } from 'ng-zorro-antd/statistic';
 import { firstValueFrom, Subject, debounceTime } from 'rxjs';
 
 import { BlueprintFeatureService } from '../services/blueprint.service';
-
-/**
- * Blueprint List Component
- * 藍圖列表元件 - 顯示使用者的所有藍圖
- *
- * Features:
- * - Display blueprints in ST table
- * - Filter by status
- * - Create new blueprint
- * - Navigate to detail
- * - Expandable rows for secondary information
- *
- * ✅ Modernized with AsyncState pattern
- * ✅ OnPush change detection for optimal performance
- * ✅ Debounced search (300ms) for better UX and performance
- * ✅ Signal-based reactive filtering
- * ✅ Expandable rows for secondary fields (dates, budget, modules)
- */
 @Component({
   selector: 'app-blueprint-list',
   standalone: true,

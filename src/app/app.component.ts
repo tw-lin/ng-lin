@@ -1,3 +1,34 @@
+/**
+ * Root Application Component
+ * 
+ * @module AppComponent
+ * @description
+ * Main application shell component for the ng-lin construction site progress tracking system.
+ * Implements Angular 20 standalone component architecture with OnPush change detection.
+ * 
+ * Responsibilities:
+ * 1. Router outlet container for feature modules
+ * 2. Navigation event handling (route changes, errors, lazy loading)
+ * 3. Application preloader management
+ * 4. Page title synchronization
+ * 5. Framework version tracking (ng-alain, ng-zorro-antd)
+ * 
+ * Architecture Patterns:
+ * - Standalone component (no NgModule)
+ * - OnPush change detection for optimal performance
+ * - inject() dependency injection (Angular 20+)
+ * - Minimal template (single router-outlet)
+ * 
+ * Framework Versions:
+ * - ng-alain: 20.1.x
+ * - ng-zorro-antd: 20.3.x
+ * - Angular: 20.x
+ * 
+ * @see {@link ./app.config.ts} for application configuration
+ * @see {@link ./features/routes.ts} for route definitions
+ * @see {@link docs/⭐️/ARCHITECTURAL_ANALYSIS_REPORT.md} for architecture analysis
+ */
+
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { NavigationEnd, NavigationError, RouteConfigLoadStart, Router, RouterOutlet } from '@angular/router';
 import { TitleService, VERSION as VERSION_ALAIN, stepPreloader } from '@delon/theme';

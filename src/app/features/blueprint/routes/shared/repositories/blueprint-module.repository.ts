@@ -1,11 +1,141 @@
 /**
- * Blueprint Module Repository
- *
- * Manages CRUD operations for blueprint module subcollection in Firestore.
- * Collection path: blueprints/{blueprintId}/modules/{moduleId}
- *
- * @author GigHub Development Team
- * @date 2025-12-10
+ * @module BlueprintModuleRepository
+ * @description
+ * Blueprint Module Repository - Data access layer for Blueprint module subcollections
+ * 藍圖模組儲存庫 - 藍圖模組子集合的資料存取層
+ * 
+ * **Purpose:**
+ * Repository Pattern implementation for managing Blueprint module configurations
+ * stored in Firestore subcollections. Each Blueprint can have multiple modules
+ * (Finance, Tasks, Diary, QA, etc.) with individual settings and metadata.
+ * 
+ * **Collection Structure:**
+ * ```
+ * blueprints/{blueprintId}/modules/{moduleId}
+ * ```
+ * 
+ * **Key Features:**
+ * - CRUD operations for Blueprint modules
+ * - Module enable/disable functionality
+ * - Module configuration management
+ * - Module ordering for UI display
+ * - Batch operations for bulk module updates
+ * - Query by module type or status
+ * 
+ * **Module Model:**
+ * ```typescript
+ * interface BlueprintModule {
+ *   id: string;
+ *   blueprintId: string;
+ *   type: ModuleType;        // 'finance' | 'tasks' | 'diary' | etc.
+ *   name: string;            // Display name
+ *   enabled: boolean;        // Module active status
+ *   order: number;           // Display order (0-based)
+ *   config: Record<string, any>; // Module-specific configuration
+ *   permissions: string[];   // Required permissions to access
+ *   createdAt: Date;
+ *   updatedAt: Date;
+ *   createdBy: string;       // User ID
+ * }
+ * ```
+ * 
+ * **Architecture Patterns:**
+ * - Repository Pattern: Encapsulates Firestore data access
+ * - Direct @angular/fire injection (no FirebaseService wrapper)
+ * - Async/await for promise-based operations
+ * - Error handling with try-catch and logging
+ * - Type-safe document transformations
+ * 
+ * **Operations:**
+ * 
+ * **Create:**
+ * - `create(blueprintId, module)` - Add new module to Blueprint
+ * - Validates blueprintId and module data
+ * - Sets createdAt, updatedAt timestamps
+ * - Returns created module with generated ID
+ * 
+ * **Read:**
+ * - `findById(blueprintId, moduleId)` - Get single module
+ * - `findAll(blueprintId)` - Get all modules for Blueprint
+ * - `findEnabled(blueprintId)` - Get only enabled modules
+ * - `findByType(blueprintId, type)` - Get modules of specific type
+ * - Query with ordering by 'order' field for UI display
+ * 
+ * **Update:**
+ * - `update(blueprintId, moduleId, data)` - Update module fields
+ * - `enable(blueprintId, moduleId)` - Enable module
+ * - `disable(blueprintId, moduleId)` - Disable module
+ * - `updateOrder(blueprintId, moduleId, order)` - Change display order
+ * - `updateConfig(blueprintId, moduleId, config)` - Update configuration
+ * - Automatically updates `updatedAt` timestamp
+ * 
+ * **Delete:**
+ * - `delete(blueprintId, moduleId)` - Permanently delete module
+ * - Warning: Hard delete, no soft delete support
+ * - Consider implications for module data in other collections
+ * 
+ * **Batch Operations:**
+ * - `batchEnable(blueprintId, moduleIds)` - Enable multiple modules
+ * - `batchDisable(blueprintId, moduleIds)` - Disable multiple modules
+ * - `batchUpdateOrder(blueprintId, orderMap)` - Reorder multiple modules
+ * - Uses Firestore batch writes for atomicity (max 500 operations)
+ * 
+ * **Multi-Tenancy:**
+ * - Blueprint-scoped: All operations require blueprintId
+ * - Firestore Security Rules enforce Blueprint membership
+ * - No cross-Blueprint module access
+ * - Module access controlled by Blueprint permissions
+ * 
+ * **Security Rules Integration:**
+ * ```javascript
+ * match /blueprints/{blueprintId}/modules/{moduleId} {
+ *   allow read: if isBlueprintMember(blueprintId);
+ *   allow create, update: if isBlueprintAdmin(blueprintId);
+ *   allow delete: if isBlueprintOwner(blueprintId);
+ * }
+ * ```
+ * 
+ * **Error Handling:**
+ * - Logs all errors with LoggerService
+ * - Throws errors with context for caller handling
+ * - Validates blueprintId before operations
+ * - Handles missing documents gracefully (returns null)
+ * 
+ * **Performance Considerations:**
+ * - Uses indexes on 'enabled' and 'type' fields for efficient queries
+ * - Batch operations preferred over individual writes
+ * - Pagination support for large module lists (though typically <50 modules)
+ * - Client-side ordering by 'order' field (pre-sorted from Firestore)
+ * 
+ * @see {@link docs/⭐️/整體架構設計.md} - Overall Architecture Design
+ * @see {@link .github/instructions/ng-gighub-architecture.instructions.md} - Repository Pattern Guidelines
+ * @see {@link BlueprintModule} - Module data model
+ * 
+ * @remarks
+ * - 390 lines: Standard repository with CRUD + batch operations
+ * - Architecture Compliance: ✅ Direct @angular/fire injection (no wrapper)
+ * - Future Enhancement: Consider FirestoreBaseRepository for retry logic
+ * - Module Types: Currently 13+ module types (Finance, Tasks, Diary, QA, etc.)
+ * - Date: 2025-12-10 - Initial implementation
+ * 
+ * @example
+ * ```typescript
+ * // Create new module
+ * const module = await repository.create('blueprint-123', {
+ *   type: 'finance',
+ *   name: 'Financial Management',
+ *   enabled: true,
+ *   order: 0,
+ *   config: { currency: 'USD' },
+ *   permissions: ['finance:view']
+ * });
+ * 
+ * // Get all enabled modules
+ * const modules = await repository.findEnabled('blueprint-123');
+ * 
+ * // Batch enable modules
+ * await repository.batchEnable('blueprint-123', ['module-1', 'module-2']);
+ * ```
  */
 
 import { Injectable, inject } from '@angular/core';

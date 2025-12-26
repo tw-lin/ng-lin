@@ -35,5 +35,7 @@
     "*.json": "jsonc",
     ".prettierrc": "jsonc"
   },
-  "typescript.referencesCodeLens.enabled": true
+  "typescript.referencesCodeLens.enabled": true,
+  "chat.mcp.discovery.enabled": true
+
 }

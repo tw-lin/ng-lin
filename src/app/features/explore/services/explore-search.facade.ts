@@ -1,3 +1,94 @@
+/**
+ * @module ExploreSearchFacade
+ * @description
+ * Explore Search Facade - Unified search service for discovering accounts, organizations, and blueprints
+ * 探索搜尋門面 - 跨實體類型的統一搜尋服務
+ *
+ * ## Purpose
+ * Provides a centralized search interface for the Explore feature, enabling users to discover
+ * accounts, organizations, and blueprints across the platform with advanced filtering, sorting,
+ * and pagination capabilities. Integrates with Firestore for data retrieval and implements
+ * client-side caching for improved performance.
+ *
+ * ## Key Features
+ * - **Multi-Entity Search**: Search across accounts, organizations, and blueprints simultaneously
+ * - **Advanced Filtering**: Type-specific filters with client-side validation
+ * - **Real-Time Results**: Firestore-backed search with live updates
+ * - **Result Caching**: Client-side cache (SearchCacheService) to reduce redundant queries
+ * - **Pagination Support**: Efficient cursor-based pagination for large result sets
+ * - **Discoverable Content**: Respects is_discoverable flags for public/private filtering
+ * - **Sorted Results**: Configurable sorting by relevance, date, popularity
+ * - **Type-Safe Queries**: Explicit Firestore document interfaces to avoid `any` usage
+ *
+ * ## Search Entity Types
+ * 1. **Accounts**: User profiles with name, email, avatar, organization/blueprint counts
+ * 2. **Organizations**: Public/private organizations with member/blueprint counts
+ * 3. **Blueprints**: Discoverable blueprints with owner metadata and module information
+ *
+ * ## Architecture Patterns
+ * - **Facade Pattern**: Simplifies complex multi-collection search logic
+ * - **Repository Pattern**: Direct Firestore injection (compliant with architecture rules)
+ * - **State Management**: Signals for reactive search state (loading, results, filters)
+ * - **Dependency Injection**: inject() function (Angular 20+)
+ * - **Caching Strategy**: Client-side cache with TTL expiration
+ *
+ * ## State Management
+ * ```typescript
+ * // Search state
+ * loading = signal(false)
+ * results = signal<SearchResult[]>([])
+ * filters = signal<SearchFilters>(DEFAULT_SEARCH_FILTERS)
+ * pagination = signal<PaginationState>(DEFAULT_PAGINATION_STATE)
+ * 
+ * // Computed properties
+ * totalResults = computed(() => this.results().length)
+ * hasMoreResults = computed(() => this.pagination().hasMore)
+ * ```
+ *
+ * ## Firestore Query Strategy
+ * - **Composite Indexes**: Requires custom indexes for multi-field filtering
+ * - **Discoverability**: Filters `is_discoverable: true` for public results
+ * - **Ownership**: Filters by `ownerType` and `ownerId` for context-aware results
+ * - **Sorting**: Uses `orderBy()` with `created_at` or custom fields
+ * - **Pagination**: Uses `limit()` with cursor-based pagination for efficiency
+ *
+ * ## Performance Considerations
+ * - Cache hit rate significantly reduces Firestore read costs
+ * - Client-side filtering for refinement after initial query
+ * - Debounced search input (handled by UI component)
+ * - Lazy loading of result details (metadata fetched on demand)
+ * - Batch query optimization (fetches multiple entity types in parallel)
+ *
+ * ## Security &amp; Privacy
+ * - Respects `is_discoverable` flags to prevent unauthorized discovery
+ * - Filters out private organizations and blueprints
+ * - Only returns publicly accessible data (no permission-gated content)
+ * - Firestore Security Rules enforce read access control
+ *
+ * @example Usage in Component
+ * ```typescript
+ * private searchFacade = inject(ExploreSearchFacade)
+ * 
+ * async search(): Promise<void> {
+ *   this.searchFacade.setFilters({ entityType: 'all', query: 'construction' })
+ *   await this.searchFacade.executeSearch()
+ *   const results = this.searchFacade.results()
+ * }
+ * 
+ * loadMore(): void {
+ *   this.searchFacade.loadNextPage()
+ * }
+ * ```
+ *
+ * @see {@link https://github.com/ac484/ng-lin/blob/main/docs/⭐️/整體架構設計.md | Overall Architecture Design}
+ * @see {@link https://github.com/ac484/ng-lin/blob/main/.github/instructions/ng-gighub-architecture.instructions.md | Architecture Guidelines}
+ * 
+ * @remarks
+ * This facade coordinates multiple Firestore queries and merges results based on relevance scoring.
+ * Future enhancements may include full-text search via Algolia or Elasticsearch for better
+ * search quality and performance at scale.
+ */
+
 import { Injectable, signal, computed, inject, Injector, runInInjectionContext } from '@angular/core';
 import { Firestore, collection, query, where, orderBy, limit, getDocs, Timestamp, QueryConstraint } from '@angular/fire/firestore';
 import { LoggerService } from '@core';

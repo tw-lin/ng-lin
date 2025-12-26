@@ -1,9 +1,119 @@
 /**
- * Blueprint Container Implementation
- * 藍圖容器實作
- *
- * 整合所有核心元件的主要容器類別。
- *
+ * @module BlueprintContainer
+ * @description Blueprint Container - Core Composition Root (藍圖容器)
+ * 
+ * **Purpose**: Main container class that integrates all core Blueprint subsystems into a cohesive runtime.
+ * Acts as the composition root and lifecycle coordinator for Blueprint modules.
+ * 
+ * **Key Features**:
+ * - **Module Management**: Centralized module registration and lifecycle
+ * - **Event Coordination**: Integrated event bus for module communication
+ * - **Resource Provisioning**: Shared resource provider for modules
+ * - **Context Management**: Unified execution context and tenant info
+ * - **Lifecycle Control**: Initialize, start, stop, dispose operations
+ * - **Reactive State**: Signal-based status and module count
+ * 
+ * **Architecture Patterns**:
+ * - **Composition Root**: Composes ModuleRegistry, LifecycleManager, EventBus, ResourceProvider
+ * - **Facade Pattern**: Provides unified interface to complex subsystems
+ * - **Dependency Injection**: Passes container dependencies to modules
+ * - **State Machine**: Tracks container lifecycle states
+ * - **Signal-Based State**: Reactive state management with Angular Signals
+ * 
+ * **Container Lifecycle States**:
+ * - `uninitialized`: Container created but not initialized
+ * - `initializing`: Core components being set up
+ * - `ready`: Initialized and ready to load modules
+ * - `running`: Modules loaded and active
+ * - `stopping`: Graceful shutdown in progress
+ * - `stopped`: All modules stopped, container idle
+ * - `error`: Fatal error occurred during lifecycle
+ * 
+ * **Core Components**:
+ * - **ModuleRegistry**: Manages module registration and lookup
+ * - **LifecycleManager**: Coordinates module initialization/startup/shutdown
+ * - **EventBus**: Pub/sub system for module communication
+ * - **ResourceProvider**: Shared resource access for modules
+ * - **SharedContext**: Global state shared across modules
+ * 
+ * **Module Integration**:
+ * - Modules receive container reference on registration
+ * - Modules access EventBus, ResourceProvider, SharedContext via container
+ * - Module lifecycle (initialize → start → stop → dispose) managed by container
+ * - Module dependencies resolved before initialization
+ * 
+ * **Execution Context**:
+ * - `blueprintId`: Unique identifier for this blueprint instance
+ * - `contextType`: User, Organization, Team, Partner, or Bot
+ * - `contextId`: Entity ID for the context (user.uid, org.id, etc.)
+ * - `tenantId`: Tenant isolation ID for multi-tenancy
+ * - `timestamp`: Container creation time
+ * 
+ * **Tenant Info**:
+ * - `tenantId`: Primary tenant identifier
+ * - `tenantType`: Type of tenant (user, organization, team, partner)
+ * - `tenantName`: Display name for tenant
+ * - `metadata`: Additional tenant-specific data
+ * 
+ * **Multi-Tenancy Context**:
+ * - Each container instance is tenant-scoped
+ * - Modules inherit tenant context from container
+ * - Events include tenant context automatically
+ * - Resources filtered by tenant ID
+ * 
+ * **Event Integration**:
+ * - Container publishes lifecycle events (initialized, started, stopped)
+ * - Modules can subscribe to container events
+ * - Event bus shared across all modules in container
+ * - Event types: BlueprintEventType (MODULE_REGISTERED, LIFECYCLE_CHANGED, etc.)
+ * 
+ * **Performance**:
+ * - Lazy module initialization (only when needed)
+ * - Parallel module initialization where possible
+ * - Efficient event routing via EventBus
+ * - Minimal overhead for resource access
+ * 
+ * @see docs/⭐️/整體架構設計.md (Blueprint architecture)
+ * @see .github/instructions/ng-gighub-architecture.instructions.md
+ * 
+ * @remarks
+ * **Design**: Based on Dependency Injection Container and Composition Root patterns
+ * **Testing**: Container facilitates testing by allowing module mocking
+ * **Extensibility**: New subsystems can be added without modifying existing modules
+ * 
+ * @example
+ * ```typescript
+ * // Create container with config
+ * const config: IBlueprintConfig = {
+ *   blueprintId: 'construction-site-1',
+ *   name: 'Construction Site Blueprint',
+ *   version: '1.0.0',
+ *   modules: [],
+ *   featureFlags: {},
+ *   theme: {},
+ *   permissions: {}
+ * };
+ * 
+ * const container = new BlueprintContainer(config);
+ * 
+ * // Initialize container
+ * await container.initialize();
+ * 
+ * // Load modules
+ * await container.loadModule(new TasksModule());
+ * await container.loadModule(new LogsModule());
+ * 
+ * // Start container (starts all modules)
+ * await container.start();
+ * 
+ * // Access components
+ * const eventBus = container.getEventBus();
+ * eventBus.publish({ type: 'task.created', data: {...} });
+ * 
+ * // Stop container (graceful shutdown)
+ * await container.stop();
+ * ```
+ * 
  * @packageDocumentation
  * @module BlueprintCore
  */

@@ -1,17 +1,145 @@
 /**
- * Firestore Storage Strategy
- *
- * Warm Tier storage implementation using Firebase Firestore
- * - 90-day retention period for general queries & export
- * - Tenant-isolated collections with composite indexes
- * - Batch write optimization for high throughput
- * - Automatic archiving to Cold Tier (Cloud Storage)
- *
- * Follows docs/⭐️/Global-Audit-Log-系統拆解與對齊方案.md specifications
- *
+ * @module FirestoreStorageStrategy
+ * @description Firestore Storage Strategy - Warm Tier Audit Event Persistence (Firestore 存儲策略)
+ * 
+ * **Purpose**: Implements Warm Tier storage for audit events using Firebase Firestore,
+ * providing queryable storage with 90-day retention and automatic archiving.
+ * 
+ * **Key Features**:
+ * - **Warm Tier Storage**: 90-day retention for recent audit events
+ * - **Tenant Isolation**: Multi-tenant collections with composite indexes
+ * - **Batch Operations**: Optimized batch writes for high throughput
+ * - **Query Support**: Rich querying by tenant, level, category, time range
+ * - **Auto-Archiving**: Automatic migration to Cold Tier (Cloud Storage)
+ * - **Performance**: 50-200ms read/write latency, indexed queries
+ * 
+ * **Architecture Patterns**:
+ * - **Strategy Pattern**: Implements IStorageStrategy interface
+ * - **Repository Pattern**: Abstracts Firestore operations
+ * - **Batch Processing**: Groups writes for efficiency
+ * - **Data Mapping**: Transforms AuditEvent ↔ Firestore documents
+ * 
+ * **Storage Tier Characteristics**:
+ * - **Tier**: Warm (medium-term storage)
+ * - **Retention**: 90 days (configurable)
+ * - **Cost**: $0.18/GB storage + $0.06-0.36 per 100k operations
+ * - **Latency**: 50-200ms typical
+ * - **Use Cases**: Recent queries, compliance reporting, exports
+ * 
+ * **Firestore Collection Structure**:
+ * ```
+ * audit_events/
+ *   {event_id}/
+ *     - event_id: string (unique)
+ *     - tenant_id: string (indexed)
+ *     - timestamp: Timestamp (indexed)
+ *     - level: string (indexed)
+ *     - category: string (indexed)
+ *     - actor_id: string
+ *     - resource_type: string
+ *     - resource_id: string
+ *     - action: string
+ *     - result: 'success' | 'failure' | 'partial'
+ *     - description: string
+ *     - changes: { before, after, diff }
+ *     - metadata: Record<string, any>
+ *     - created_at: Timestamp
+ * ```
+ * 
+ * **Composite Indexes** (Required):
+ * ```
+ * Index 1: tenant_id (ASC) + timestamp (DESC)
+ * Index 2: tenant_id (ASC) + level (ASC) + timestamp (DESC)
+ * Index 3: tenant_id (ASC) + category (ASC) + timestamp (DESC)
+ * Index 4: tenant_id (ASC) + actor_id (ASC) + timestamp (DESC)
+ * Index 5: tenant_id (ASC) + resource_type (ASC) + resource_id (ASC)
+ * ```
+ * 
+ * **Query Capabilities**:
+ * - Filter by: tenant_id, level, category, actor_id, resource, time range
+ * - Sort by: timestamp (ascending/descending)
+ * - Pagination: limit + cursor-based pagination
+ * - Full-text search: Not supported (use external search service)
+ * 
+ * **Batch Write Optimization**:
+ * - Max 500 operations per batch (Firestore limit)
+ * - Automatic batch splitting for large writes
+ * - Atomic batch commits (all-or-nothing)
+ * - Error handling with partial success reporting
+ * 
+ * **Data Lifecycle**:
+ * 1. **Write**: Events written to Firestore via batch operations
+ * 2. **Query**: Recent events (0-90 days) queried from Firestore
+ * 3. **Archive**: Events older than 90 days archived to Cloud Storage
+ * 4. **Delete**: Archived events deleted from Firestore
+ * 
+ * **Multi-Tenancy**:
+ * - All queries filtered by tenant_id
+ * - Security Rules enforce tenant isolation
+ * - Cross-tenant queries forbidden (except superadmin)
+ * - Tenant metadata included in all documents
+ * 
+ * **Integration Points**:
+ * - **StorageRouter**: Routes writes to Warm Tier
+ * - **AuditLogService**: Consumes this strategy for persistence
+ * - **Cold Tier**: Archives aged-out events to Cloud Storage
+ * - **Security Rules**: Server-side tenant validation
+ * 
+ * **Performance Optimization**:
+ * - Batch writes: 5-10x faster than individual writes
+ * - Composite indexes: Sub-100ms query performance
+ * - Pagination: Efficient cursor-based pagination
+ * - Caching: StorageRouter provides Hot Tier cache
+ * 
+ * **Cost Optimization**:
+ * - Batch operations reduce write costs
+ * - Auto-archiving reduces long-term storage costs
+ * - Indexes optimize query performance (reduce read costs)
+ * - TTL-based cleanup prevents unbounded growth
+ * 
+ * @see docs/⭐️/Global-Audit-Log-系統拆解與對齊方案.md (Part V - Phase 1 - Task 1.1)
+ * @see docs/⭐️/Global Audit Log.md (Audit system design)
+ * @see .github/instructions/ng-gighub-firestore-repository.instructions.md
+ * 
+ * @remarks
+ * **Version**: 1.0.0
+ * **Phase**: Phase 1 (P0 - Critical) - Task 1.1
+ * **Dependencies**: Requires composite indexes in Firestore
+ * **Limitations**: No full-text search (consider Algolia for that)
+ * 
+ * @example
+ * ```typescript
+ * // Initialize strategy
+ * const strategy = inject(FirestoreStorageStrategy);
+ * 
+ * // Configure retention
+ * await strategy.configure({
+ *   tier: StorageTier.WARM,
+ *   retentionDays: 90
+ * });
+ * 
+ * // Write single event
+ * await strategy.write(auditEvent);
+ * 
+ * // Batch write (efficient)
+ * const result = await strategy.writeBatch([event1, event2, event3]);
+ * console.log(`Written: ${result.successCount}, Failed: ${result.failedCount}`);
+ * 
+ * // Query events
+ * const events = await strategy.query({
+ *   tenantId: 'tenant-123',
+ *   level: AuditLevel.ERROR,
+ *   startDate: new Date('2025-01-01'),
+ *   endDate: new Date('2025-12-31'),
+ *   limit: 100
+ * });
+ * 
+ * // Archive old events
+ * const archived = await strategy.archiveOldEvents(90);
+ * console.log(`Archived ${archived} events to Cold Tier`);
+ * ```
+ * 
  * @author Global Event Bus Team
- * @version 1.0.0
- * @phase Phase 1 (P0 - Critical) - Task 1.1
  */
 
 import { Injectable, inject } from '@angular/core';

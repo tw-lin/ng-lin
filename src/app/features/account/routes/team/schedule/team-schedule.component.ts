@@ -1,3 +1,82 @@
+/**
+ * @module TeamScheduleComponent
+ * @description
+ * Team Schedule Component - Calendar-based team meeting and event management
+ * 團隊排程元件 - 基於日曆的團隊會議與活動管理
+ *
+ * ## Purpose
+ * Provides a visual calendar interface for managing team meetings, standups, reviews, and other
+ * scheduled activities. Helps teams coordinate time-sensitive events and maintain visibility
+ * into team availability and commitments.
+ *
+ * ## Key Features
+ * - **Visual Calendar**: ng-zorro calendar component with date cell customization
+ * - **Event Types**: Standup, Review, Planning, Other (color-coded badges)
+ * - **Event Management**: Add, edit, delete events with modal dialogs
+ * - **Date Selection**: Click date to view/add events for that day
+ * - **Event Badges**: Visual indicators on calendar cells showing event times
+ * - **Participant Tracking**: List of team members attending each event
+ * - **Tooltips**: Hover over event badges to see full details
+ *
+ * ## Event Types
+ * 1. **Standup**: Daily team sync meetings (blue badge)
+ * 2. **Review**: Sprint reviews, demo sessions (green badge)
+ * 3. **Planning**: Sprint planning, roadmap discussions (orange badge)
+ * 4. **Other**: General team events (gray badge)
+ *
+ * ## Architecture Patterns
+ * - **State Management**: Signals for reactive calendar state
+ * - **Change Detection**: OnPush strategy for optimal performance
+ * - **Dependency Injection**: inject() function (Angular 20+)
+ * - **Component Structure**: Standalone component with SHARED_IMPORTS
+ *
+ * ## State Management
+ * ```typescript
+ * // Calendar state
+ * selectedDate = signal(new Date())
+ * events = signal<TeamScheduleEvent[]>([])
+ * 
+ * // Computed properties
+ * eventsForSelectedDate = computed(() => 
+ *   this.events().filter(e => isSameDay(e.date, this.selectedDate()))
+ * )
+ * ```
+ *
+ * ## Multi-Tenancy Context
+ * Events are scoped to the active team context:
+ * - **Team ID**: All events belong to current team (team.id)
+ * - **Organization Isolation**: Team events isolated by parent organization
+ * - **Permission Control**: Only team members can view/edit schedule
+ *
+ * ## Future Enhancements
+ * - Firestore persistence for event storage
+ * - Real-time sync across team members
+ * - Recurring events (daily, weekly, monthly)
+ * - Calendar export (iCal format)
+ * - Email/notification reminders
+ * - Integration with video conferencing (Zoom, Meet)
+ * - Conflict detection and resolution
+ *
+ * @example Route Configuration
+ * ```typescript
+ * {
+ *   path: 'schedule',
+ *   component: TeamScheduleComponent,
+ *   data: { title: '團隊排程', guard: 'canManageTeam' }
+ * }
+ * ```
+ *
+ * @see {@link https://github.com/ac484/ng-lin/blob/main/docs/⭐️/整體架構設計.md | Overall Architecture Design}
+ * @see {@link https://github.com/ac484/ng-lin/blob/main/.github/instructions/ng-gighub-architecture.instructions.md | Architecture Guidelines}
+ * 
+ * @remarks
+ * **Current Status**: Mock implementation with in-memory events
+ * 
+ * **Complexity Note**: Calendar components require careful state management for date selection,
+ * event filtering, and visual rendering. The ng-zorro calendar component provides a solid foundation
+ * but may need customization for advanced features like drag-drop rescheduling.
+ */
+
 import { ChangeDetectionStrategy, Component, signal, computed, inject, OnInit } from '@angular/core';
 import { SHARED_IMPORTS } from '@shared';
 import { NzMessageService } from 'ng-zorro-antd/message';

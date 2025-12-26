@@ -1,3 +1,78 @@
+/**
+ * @module PartnerMembersComponent
+ * @description
+ * Partner-level member management component for organization collaborations
+ * 
+ * ## Purpose
+ * Manage external partners and their members within an organization's ecosystem:
+ * - Partner relationship management
+ * - Member assignment and role management
+ * - Cross-organization collaboration
+ * - Permission and access control
+ * 
+ * ## Key Features
+ * - **Member List**: Display all partner members with account information
+ * - **Role Management**: Assign and update partner-specific roles
+ * - **Member Invitation**: Add organization members to partner group
+ * - **Member Removal**: Remove members from partner collaboration
+ * - **Account Integration**: Fetch and display linked user accounts
+ * 
+ * ## Partner Roles
+ * - **Admin** (管理員): Full partner management permissions
+ * - **Member** (成員): Standard collaboration access
+ * - **Viewer** (檢視者): Read-only access to partner resources
+ * 
+ * ## Architecture
+ * - **Presentation Layer**: Standalone component with OnPush change detection
+ * - **State Management**: PartnerStore for reactive partner state
+ * - **Data Layer**: OrganizationMemberRepository, AccountRepository
+ * - **Multi-Tenancy**: Partner-scoped, organization-isolated
+ * 
+ * ## State Management
+ * Uses Angular 20+ Signals and RxJS integration:
+ * - `partnerId` - Current partner context (from route)
+ * - `members` - Signal: List of partner members
+ * - `availableOrgMembers` - Signal: Members available for invitation
+ * - `membersWithAccounts` - Computed: Members enriched with account data
+ * - `loading` - Signal: Loading state
+ * 
+ * ## Multi-Tenancy Context
+ * Partner operations respect organizational boundaries:
+ * - Partner belongs to parent organization (tenant_id)
+ * - Members must be from the same organization
+ * - Cross-tenant access strictly prohibited
+ * - All operations log to organization audit trail
+ * 
+ * ## Integration
+ * Integrates with:
+ * - Organization member management
+ * - User account system
+ * - Permission and ACL system
+ * - Audit logging
+ * - Workspace context service
+ * 
+ * @see {@link docs/⭐️/整體架構設計.md} - Multi-Tenancy Architecture
+ * @see {@link .github/instructions/ng-gighub-architecture.instructions.md} - Architecture Guidelines
+ * 
+ * @remarks
+ * Partners enable external collaboration while maintaining security:
+ * - Partners are organization-level entities
+ * - Members maintain organization membership + partner association
+ * - Dual-context access (organization + partner)
+ * - Separate permission model from internal teams
+ * 
+ * @example
+ * ```typescript
+ * // Route configuration
+ * {
+ *   path: 'partner/:partnerId/members',
+ *   component: PartnerMembersComponent
+ * }
+ * 
+ * // Navigation
+ * router.navigate(['/account/partner', partnerId, 'members']);
+ * ```
+ */
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, effect, DestroyRef, untracked } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';

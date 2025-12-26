@@ -1,33 +1,175 @@
 /**
- * Shared Context Implementation for Blueprint V2.0
- *
- * Provides a shared state container that modules can use to store and retrieve
- * data with tenant isolation. Uses Angular Signals for reactive state management.
- *
- * Features:
- * - Type-safe state management with generics
- * - Tenant-level isolation (Organization/Team/User)
+ * @module SharedContext
+ * @description
+ * Shared Context Implementation for Blueprint Runtime - Tenant-isolated state container
+ * 共享上下文實作 - 藍圖執行時租戶隔離的狀態容器
+ * 
+ * **Purpose:**
+ * Provides a centralized, type-safe state container for Blueprint modules to share
+ * data with tenant-level isolation. Uses Angular Signals for reactive state management
+ * and automatic change propagation across modules.
+ * 
+ * **Key Features:**
+ * - Type-safe state management with TypeScript generics
+ * - Tenant-level isolation (Organization/Team/User Blueprint scope)
  * - Angular Signals for reactive updates
- * - Key-value store with namespacing
- * - State history tracking
- * - Automatic cleanup
- *
+ * - Key-value store with hierarchical namespacing
+ * - State history tracking with rollback capability
+ * - Automatic cleanup on context disposal
+ * - Cross-module data sharing within same Blueprint
+ * 
+ * **Architecture Patterns:**
+ * - Shared Memory Pattern: Central state accessible to all modules
+ * - Signal-based Reactivity: Automatic UI updates on state changes
+ * - Namespacing: Prevents key collisions across modules
+ * - Observer Pattern: Modules can subscribe to state changes
+ * - Singleton per Blueprint: Each Blueprint instance has its own context
+ * 
+ * **State Operations:**
+ * 
+ * **Set State:**
+ * ```typescript
+ * context.setState('user.preferences', { theme: 'dark', language: 'zh-TW' });
+ * context.setState('finance.currency', 'TWD');
+ * context.setState('tasks.filter', { status: 'in-progress', assignee: 'user-123' });
+ * ```
+ * 
+ * **Get State:**
+ * ```typescript
+ * // Get as plain value
+ * const prefs = context.getState<UserPreferences>('user.preferences');
+ * 
+ * // Get as Signal (reactive)
+ * const prefsSignal = context.getStateSignal<UserPreferences>('user.preferences');
+ * 
+ * // Use in component template
+ * <div>{{ prefsSignal()?.theme }}</div>
+ * ```
+ * 
+ * **Check Existence:**
+ * ```typescript
+ * if (context.hasState('user.preferences')) {
+ *   const prefs = context.getState('user.preferences');
+ * }
+ * ```
+ * 
+ * **Delete State:**
+ * ```typescript
+ * context.deleteState('user.preferences');
+ * context.clearNamespace('user'); // Delete all user.* keys
+ * ```
+ * 
+ * **Namespacing Convention:**
+ * ```
+ * {module}.{feature}.{key}
+ * 
+ * Examples:
+ * - user.preferences.theme
+ * - finance.invoice.selected
+ * - tasks.filter.status
+ * - diary.form.draft
+ * - qa.inspection.current
+ * ```
+ * 
+ * **State History:**
+ * - Each state change recorded in history
+ * - Configurable history depth (default: 50 entries)
+ * - Rollback to previous state by steps
+ * - Undo/redo support for user actions
+ * 
+ * **Multi-Tenancy:**
+ * - Blueprint-scoped: Each Blueprint has isolated context
+ * - Tenant isolation enforced at Blueprint level
+ * - No cross-Blueprint state access
+ * - Context lifecycle tied to Blueprint runtime
+ * 
+ * **Performance Considerations:**
+ * - Signals provide fine-grained reactivity (only affected components re-render)
+ * - Shallow state updates preferred over deep cloning
+ * - History pruning to prevent memory leaks
+ * - Namespace-based cleanup for bulk deletions
+ * 
+ * **Use Cases:**
+ * 
+ * **User Preferences:**
+ * ```typescript
+ * // Module A sets preference
+ * context.setState('user.preferences', { locale: 'zh-TW' });
+ * 
+ * // Module B reads preference
+ * const locale = context.getState<string>('user.preferences.locale');
+ * ```
+ * 
+ * **Current Selection:**
+ * ```typescript
+ * // Task list sets selected task
+ * context.setState('tasks.selected', { id: 'task-123', title: 'Foundation' });
+ * 
+ * // Task detail reads selection
+ * const selected = context.getStateSignal<Task>('tasks.selected');
+ * ```
+ * 
+ * **Form Draft:**
+ * ```typescript
+ * // Save draft automatically
+ * context.setState('diary.form.draft', formValue);
+ * 
+ * // Restore draft on reload
+ * const draft = context.getState('diary.form.draft');
+ * if (draft) {
+ *   this.form.patchValue(draft);
+ * }
+ * ```
+ * 
+ * **Cross-Module Communication:**
+ * ```typescript
+ * // Finance module publishes invoice
+ * context.setState('finance.invoice.selected', invoice);
+ * 
+ * // Audit module reads invoice for logging
+ * const invoice = context.getStateSignal('finance.invoice.selected');
+ * effect(() => {
+ *   const inv = invoice();
+ *   if (inv) this.logInvoiceView(inv);
+ * });
+ * ```
+ * 
+ * **Lifecycle Management:**
+ * - Created when BlueprintContainer initializes
+ * - Cleared when Blueprint context switches
+ * - Disposed when BlueprintContainer stops
+ * - History auto-pruned to prevent memory growth
+ * 
+ * @see {@link docs/⭐️/整體架構設計.md} - Overall Architecture Design
+ * @see {@link BlueprintContainer} - Container that owns this context
+ * @see {@link ModuleRegistry} - Modules that consume this context
+ * 
+ * @remarks
+ * - Version: 2.0.0 - Blueprint V2 architecture
+ * - 384 lines: Core state management infrastructure
+ * - Complexity: Medium - Signal management + history tracking
+ * - Thread-safe: No (single-threaded JavaScript, no concurrency issues)
+ * - Performance: O(1) get/set, O(n) namespace operations
+ * - Memory: Bounded by history depth (default 50 entries)
+ * 
  * @example
  * ```typescript
- * // Set state
- * context.setState('user.preferences', { theme: 'dark' });
- *
- * // Get state
- * const prefs = context.getState<UserPrefs>('user.preferences');
- *
- * // Get state as Signal
- * const prefsSignal = context.getStateSignal<UserPrefs>('user.preferences');
- *
- * // Check if state exists
- * if (context.hasState('user.preferences')) {
- *   // ...
- * }
- *
+ * // In BlueprintContainer initialization
+ * const context = new SharedContext({
+ *   blueprintId: 'blueprint-123',
+ *   historyDepth: 50
+ * });
+ * 
+ * // In module initialization
+ * this.context = inject(SHARED_CONTEXT_TOKEN);
+ * 
+ * // Set module-specific state
+ * this.context.setState('finance.selectedInvoice', invoice);
+ * 
+ * // Get state as Signal for reactive UI
+ * this.selectedInvoice = this.context.getStateSignal<Invoice>('finance.selectedInvoice');
+ * ```
+ */
  * // Clear specific state
  * context.clearState('user.preferences');
  * ```
