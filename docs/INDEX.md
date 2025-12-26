@@ -76,6 +76,7 @@ Organize future docs into a predictable, GitHub-governed tree. Create new conten
 
 ```
 docs/
+├─ ai-governance/              # AI roles, authority boundaries, decision protocols, safety guardrails (protected)
 ├─ strategy-governance/        # Ownership, branching, PR policy, risk gates, compliance invariants
 ├─ identity-tenancy/           # AuthN/Z, org/blueprint membership, account context switch, roles/permissions
 ├─ change-control/             # Repos as contracts, API/interface specs, data contracts, versioning, migrations
