@@ -1,6 +1,6 @@
 # Identity & Auth Lite — Subtraction-First Cleanup Plan
 
-> 目標：先減法後加法，剔除幻覺與重複文件，保留與母體一致的必要內容。**尚未刪檔**，僅列出保留/待審清單。
+> 目標：先減法後加法，剔除幻覺與重複文件，保留與母體一致的必要內容。**目前未刪檔**，僅列出保留/待審清單。
 
 ## 準則
 - 僅保留與母體一致的核心鏈路與文檔：`@angular/fire/auth → @delon/auth → DA_SERVICE_TOKEN`、必要登入/註冊/重設/Email 驗證、Google/GitHub OAuth、Token 注入/守衛。
@@ -13,7 +13,7 @@
 - `docs/identity-tenancy/identity/` 下六份核心文檔：`API_REFERENCE.md`, `DEPLOYMENT_GUIDE.md`, `PRODUCTION_RUNBOOK.md`, `PRODUCTION_READINESS_CHECKLIST.md`, `MONITORING_COST_OPTIMIZATION.md`, `VALIDATION_REPORT.md`
 - `docs/identity-tenancy/README.md`（範圍總覽）
 
-## 已移除（減法落地）
+## 待審（未刪，列名單）
 - `docs/identity-tenancy/ACCOUNT_CONTEXT_SWITCHER_ANALYSIS.md`
 - `docs/identity-tenancy/ACCOUNT_REORGANIZATION_SUMMARY.md`
 - `docs/identity-tenancy/saas-ddd-structure.md`
