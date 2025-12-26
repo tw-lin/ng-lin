@@ -56,6 +56,13 @@ Layer 8: Review Workflow (審查工作流層) → Compliance review & approval
 | [audit-architecture/FILE_TREE_STRUCTURE.md](./audit-architecture/FILE_TREE_STRUCTURE.md) | Centralized discoverability plan | ✅ Complete |
 | [audit-architecture/META_AUDIT_FRAMEWORK.md](./audit-architecture/META_AUDIT_FRAMEWORK.md) | AI self-auditing & compliance framework | ✅ Complete |
 
+### 1.5 Implementation Planning
+
+| Document | Purpose | Status |
+|----------|---------|--------|
+| [AUDIT_SYSTEM_IMPLEMENTATION_ROADMAP.md](./AUDIT_SYSTEM_IMPLEMENTATION_ROADMAP.md) | **Detailed implementation roadmap with file tree, integration strategy, and 3-phase rollout plan** | ✅ Complete |
+| [AUDIT_SYSTEM_TASK_BREAKDOWN.md](./AUDIT_SYSTEM_TASK_BREAKDOWN.md) | **Granular task breakdown with dependencies, time estimates, and integration verification checklists** | ✅ Complete |
+
 ### 2. Layer-by-Layer Architecture (8 Layers)
 
 | Layer | Document | Responsibility | Status |
@@ -137,6 +144,9 @@ Layer 8: Review Workflow (審查工作流層) → Compliance review & approval
 | └─ Integration Map | ✅ Complete (18KB) | 0% | 🔴 P0 |
 | └─ File Tree Structure | ✅ Complete (18KB) | 0% | 🔴 P0 |
 | └─ Meta-Audit Framework | ✅ Complete (14KB) | 0% | 🔴 P0 |
+| **Implementation Planning** | ✅ 100% | 0% | - |
+| └─ Implementation Roadmap | ✅ Complete (18KB) | 0% | 🔴 P0 |
+| └─ Task Breakdown | ✅ Complete (22KB) | 0% | 🔴 P0 |
 | **8-Layer Topology** | ✅ 100% | 0% | - |
 | └─ Layer 1: Event Sources | ✅ Complete (15KB) | 30% | 🔴 P0 |
 | └─ Layer 2: Event Bus | ✅ Complete (18KB) | 70% | 🟡 P1 |
@@ -154,11 +164,14 @@ Layer 8: Review Workflow (審查工作流層) → Compliance review & approval
 | └─ AI Self-Monitoring | ✅ Complete (16KB) | 0% | 🔴 P0 |
 | └─ Compliance Checkpoints | ✅ Complete | 0% | 🔴 P0 |
 
-**Documentation**: 100% Complete (~210KB comprehensive documentation)  
-**Implementation**: 0% (Ready for development)  
+**Documentation**: 100% Complete (~250KB comprehensive documentation)  
+**Implementation**: 0% (Ready for development - See [AUDIT_SYSTEM_TASK_BREAKDOWN.md](./AUDIT_SYSTEM_TASK_BREAKDOWN.md))  
 **Target Alignment**: 48% → 95% achievable with documented architecture
 
-**Next Steps**: Begin Phase 1 P0 implementation (Extend Event Bus, Build Collector, Implement Storage)
+**Quick Start**: 
+1. Read [AUDIT_SYSTEM_IMPLEMENTATION_ROADMAP.md](./AUDIT_SYSTEM_IMPLEMENTATION_ROADMAP.md) for strategy
+2. Review [AUDIT_SYSTEM_TASK_BREAKDOWN.md](./AUDIT_SYSTEM_TASK_BREAKDOWN.md) for granular tasks
+3. Start with AUDIT-P1-L0-001 (Base Audit Event Interface)
 
 ---
 
