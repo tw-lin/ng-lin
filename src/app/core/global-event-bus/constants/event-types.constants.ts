@@ -1,6 +1,6 @@
 /**
  * Event Type Constants
- * 
+ *
  * Centralized event type definitions.
  * Use these constants instead of magic strings.
  */
@@ -32,12 +32,12 @@ export const SYSTEM_EVENTS = {
   /**
    * Fired when event store is full
    */
-  STORE_FULL: 'system.store.full' as const,
+  STORE_FULL: 'system.store.full' as const
 } as const;
 
 /**
  * Domain event namespaces
- * 
+ *
  * Use these as prefixes for domain events:
  * `${DOMAIN_NAMESPACES.BLUEPRINT}.created`
  */
@@ -50,7 +50,7 @@ export const DOMAIN_NAMESPACES = {
   PARTNER: 'partner' as const,
   NOTIFICATION: 'notification' as const,
   AUDIT: 'audit' as const,
-  ANALYTICS: 'analytics' as const,
+  ANALYTICS: 'analytics' as const
 } as const;
 
 /**
@@ -69,7 +69,7 @@ export const EVENT_SUFFIXES = {
   STARTED: 'started' as const,
   PAUSED: 'paused' as const,
   RESUMED: 'resumed' as const,
-  CANCELLED: 'cancelled' as const,
+  CANCELLED: 'cancelled' as const
 } as const;
 
 /**
@@ -91,16 +91,16 @@ export const EVENT_PATTERNS = {
    * Match specific action across namespaces
    * Example: '*.created' matches 'task.created', 'blueprint.created', etc.
    */
-  ACTION_ALL: (action: string) => `*.${action}` as const,
+  ACTION_ALL: (action: string) => `*.${action}` as const
 } as const;
 
 /**
  * Helper to build event type string
- * 
+ *
  * @param namespace - Event namespace
  * @param action - Event action
  * @returns Formatted event type string
- * 
+ *
  * @example
  * ```typescript
  * const eventType = buildEventType('task', 'created'); // 'task.created'
@@ -112,11 +112,11 @@ export function buildEventType(namespace: string, action: string): string {
 
 /**
  * Helper to check if event type matches pattern
- * 
+ *
  * @param eventType - Event type to check
  * @param pattern - Pattern to match against (supports * wildcard)
  * @returns true if matches, false otherwise
- * 
+ *
  * @example
  * ```typescript
  * matchesPattern('task.created', 'task.*') // true
@@ -131,8 +131,8 @@ export function matchesPattern(eventType: string, pattern: string): boolean {
 
   // Convert glob pattern to regex
   const regexPattern = pattern
-    .replace(/\./g, '\\.')  // Escape dots
-    .replace(/\*/g, '.*');  // Convert * to .*
+    .replace(/\./g, '\\.') // Escape dots
+    .replace(/\*/g, '.*'); // Convert * to .*
 
   const regex = new RegExp(`^${regexPattern}$`);
   return regex.test(eventType);

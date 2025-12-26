@@ -1,6 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { AccountProfileService } from '../services/profile.service';
+
 import { AccountProfile } from '../../models/account-profile.model';
+import { AccountProfileService } from '../services/profile.service';
 
 @Injectable({ providedIn: 'root' })
 export class AccountProfileStore {

@@ -1,25 +1,26 @@
 /**
  * Audit Log Consumer
- * 
+ *
  * Records all domain events for compliance and security auditing.
- * 
+ *
  * **Phase 7B Enhancement**: Integrates with Global Audit Log Service
  * - Converts all domain events to standardized audit events
  * - Leverages AuditCollectorService for intelligent categorization
  * - Maintains backward compatibility with in-memory logs
- * 
+ *
  * @module Consumers/AuditLog
  */
 
 import { Injectable, inject, signal } from '@angular/core';
-import { EventConsumer } from '../services/event-consumer.base';
-import { Subscribe } from '../decorators/subscribe.decorator';
+
 import { EventHandler } from '../decorators/event-handler.decorator';
 import { Retry } from '../decorators/retry.decorator';
-import { DomainEvent } from '../models/base-event';
-import { AuditLogService } from '../services/audit-log.service';
-import { AuditCollectorService } from '../services/audit-collector.service';
+import { Subscribe } from '../decorators/subscribe.decorator';
 import { AuditLevel } from '../models/audit-event.model';
+import { DomainEvent } from '../models/base-event';
+import { AuditCollectorService } from '../services/audit-collector.service';
+import { AuditLogService } from '../services/audit-log.service';
+import { EventConsumer } from '../services/event-consumer.base';
 
 /**
  * Audit log entry (legacy interface for backward compatibility)
@@ -41,13 +42,13 @@ interface AuditLogEntry {
 
 /**
  * Audit Log Consumer
- * 
+ *
  * Priority: 100 (highest priority - compliance critical)
  * Tags: audit, compliance, security
- * 
+ *
  * Logs all events for compliance auditing.
  * MUST succeed - uses aggressive retry strategy.
- * 
+ *
  * **Phase 7B**: Enhanced with Global Audit Log Service integration
  */
 @Injectable({ providedIn: 'root' })
@@ -64,7 +65,7 @@ export class AuditLogConsumer extends EventConsumer {
    */
   private auditLogService = inject(AuditLogService);
   private auditCollector = inject(AuditCollectorService);
-  
+
   /**
    * Legacy: Audit logs (in-memory for backward compatibility)
    */
@@ -73,10 +74,10 @@ export class AuditLogConsumer extends EventConsumer {
 
   /**
    * Subscribe to ALL events
-   * 
+   *
    * Priority 100 ensures this runs before other consumers.
    * Aggressive retry ensures audit trail completeness.
-   * 
+   *
    * **Phase 7B**: Enhanced with Global Audit Log Service
    */
   @Subscribe('**')
@@ -92,11 +93,11 @@ export class AuditLogConsumer extends EventConsumer {
       level: this.determineAuditLevel(event.eventType),
       requiresReview: this.shouldRequireReview(event.eventType)
     });
-    
+
     // Legacy: Also maintain in-memory logs for backward compatibility
     const auditEntry = this.createAuditEntry(event);
     await this.persistAuditLog(auditEntry);
-    
+
     console.log('[AuditLogConsumer] Audit logged (Phase 7B):', event.eventType);
   }
 
@@ -105,7 +106,7 @@ export class AuditLogConsumer extends EventConsumer {
    */
   private determineAuditLevel(eventType: string): AuditLevel {
     const type = eventType.toLowerCase();
-    
+
     if (type.includes('delete') || type.includes('remove') || type.includes('revoke')) {
       return AuditLevel.WARNING;
     }
@@ -115,22 +116,18 @@ export class AuditLogConsumer extends EventConsumer {
     if (type.includes('mfa.disabled') || type.includes('admin') || type.includes('critical')) {
       return AuditLevel.CRITICAL;
     }
-    
+
     return AuditLevel.INFO;
   }
-  
+
   /**
    * Phase 7B: Determine if event should require review
    */
   private shouldRequireReview(eventType: string): boolean {
     const type = eventType.toLowerCase();
-    
-    const highRiskKeywords = [
-      'delete', 'remove', 'revoke', 'disable',
-      'admin', 'owner', 'superuser',
-      'mfa.disabled', 'password.changed'
-    ];
-    
+
+    const highRiskKeywords = ['delete', 'remove', 'revoke', 'disable', 'admin', 'owner', 'superuser', 'mfa.disabled', 'password.changed'];
+
     return highRiskKeywords.some(keyword => type.includes(keyword));
   }
 
@@ -142,7 +139,7 @@ export class AuditLogConsumer extends EventConsumer {
     const action = this.extractAction(event.eventType);
     const resource = event.aggregateType || 'Unknown';
     const resourceId = event.aggregateId || event.eventId;
-    
+
     return {
       id: `audit-${event.eventId}`,
       eventId: event.eventId,
@@ -189,7 +186,7 @@ export class AuditLogConsumer extends EventConsumer {
 
   /**
    * Persist audit log entry
-   * 
+   *
    * In production, this should write to:
    * - Immutable append-only log
    * - Separate audit database
@@ -198,10 +195,10 @@ export class AuditLogConsumer extends EventConsumer {
   private async persistAuditLog(entry: AuditLogEntry): Promise<void> {
     // Add to in-memory store
     this._auditLogs.update(logs => [...logs, entry]);
-    
+
     // Simulate persistence delay
     await new Promise(resolve => setTimeout(resolve, 10));
-    
+
     // In production:
     // await this.auditLogRepository.create(entry);
     // await this.s3.putObject({
@@ -221,34 +218,22 @@ export class AuditLogConsumer extends EventConsumer {
   /**
    * Query audit logs by resource
    */
-  getAuditLogsByResource(
-    resource: string,
-    resourceId: string
-  ): AuditLogEntry[] {
-    return this._auditLogs().filter(
-      log => log.resource === resource && log.resourceId === resourceId
-    );
+  getAuditLogsByResource(resource: string, resourceId: string): AuditLogEntry[] {
+    return this._auditLogs().filter(log => log.resource === resource && log.resourceId === resourceId);
   }
 
   /**
    * Query audit logs by time range
    */
-  getAuditLogsByTimeRange(
-    startDate: Date,
-    endDate: Date
-  ): AuditLogEntry[] {
-    return this._auditLogs().filter(
-      log => log.timestamp >= startDate && log.timestamp <= endDate
-    );
+  getAuditLogsByTimeRange(startDate: Date, endDate: Date): AuditLogEntry[] {
+    return this._auditLogs().filter(log => log.timestamp >= startDate && log.timestamp <= endDate);
   }
 
   /**
    * Query audit logs by correlation ID (trace a request chain)
    */
   getAuditLogsByCorrelation(correlationId: string): AuditLogEntry[] {
-    return this._auditLogs().filter(
-      log => log.correlationId === correlationId
-    );
+    return this._auditLogs().filter(log => log.correlationId === correlationId);
   }
 
   /**
@@ -256,15 +241,17 @@ export class AuditLogConsumer extends EventConsumer {
    */
   exportAuditLogs(format: 'json' | 'csv' = 'json'): string {
     const logs = this._auditLogs();
-    
+
     if (format === 'json') {
       return JSON.stringify(logs, null, 2);
     }
-    
+
     // CSV format
     const headers = Object.keys(logs[0] || {}).join(',');
-    const rows = logs.map(log => 
-      Object.values(log).map(v => JSON.stringify(v)).join(',')
+    const rows = logs.map(log =>
+      Object.values(log)
+        .map(v => JSON.stringify(v))
+        .join(',')
     );
     return [headers, ...rows].join('\n');
   }

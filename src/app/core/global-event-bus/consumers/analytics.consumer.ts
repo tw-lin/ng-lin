@@ -1,16 +1,17 @@
 /**
  * Analytics Consumer
- * 
+ *
  * Collects analytics data from domain events for business intelligence.
- * 
+ *
  * @module Consumers/Analytics
  */
 
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { EventConsumer } from '../services/event-consumer.base';
-import { Subscribe } from '../decorators/subscribe.decorator';
+
 import { EventHandler } from '../decorators/event-handler.decorator';
+import { Subscribe } from '../decorators/subscribe.decorator';
 import { DomainEvent } from '../models/base-event';
+import { EventConsumer } from '../services/event-consumer.base';
 
 /**
  * Analytics metrics
@@ -32,10 +33,10 @@ interface AnalyticsMetrics {
 
 /**
  * Analytics Consumer
- * 
+ *
  * Priority: 1 (low priority, non-critical)
  * Tags: analytics, metrics, bi
- * 
+ *
  * Tracks metrics and analytics from all domain events.
  * Non-critical, so failures won't retry extensively.
  */
@@ -88,7 +89,7 @@ export class AnalyticsConsumer extends EventConsumer {
 
   /**
    * Subscribe to all events for analytics
-   * 
+   *
    * Note: Using wildcard '**' to capture all events
    */
   @Subscribe('**')
@@ -105,7 +106,7 @@ export class AnalyticsConsumer extends EventConsumer {
       ...m,
       taskMetrics: { ...m.taskMetrics, created: m.taskMetrics.created + 1 }
     }));
-    
+
     console.log('[AnalyticsConsumer] Task created metric updated');
   }
 
@@ -115,7 +116,7 @@ export class AnalyticsConsumer extends EventConsumer {
       ...m,
       taskMetrics: { ...m.taskMetrics, completed: m.taskMetrics.completed + 1 }
     }));
-    
+
     console.log('[AnalyticsConsumer] Task completed metric updated');
   }
 
@@ -125,7 +126,7 @@ export class AnalyticsConsumer extends EventConsumer {
       ...m,
       taskMetrics: { ...m.taskMetrics, assigned: m.taskMetrics.assigned + 1 }
     }));
-    
+
     console.log('[AnalyticsConsumer] Task assigned metric updated');
   }
 
@@ -138,7 +139,7 @@ export class AnalyticsConsumer extends EventConsumer {
       ...m,
       userMetrics: { ...m.userMetrics, registered: m.userMetrics.registered + 1 }
     }));
-    
+
     console.log('[AnalyticsConsumer] User registration metric updated');
   }
 
@@ -151,7 +152,7 @@ export class AnalyticsConsumer extends EventConsumer {
       ...m,
       userMetrics: { ...m.userMetrics, logins: m.userMetrics.logins + 1 }
     }));
-    
+
     console.log('[AnalyticsConsumer] User login metric updated');
   }
 
@@ -160,7 +161,7 @@ export class AnalyticsConsumer extends EventConsumer {
    */
   private trackEvent(event: DomainEvent<any>): void {
     const userId = this.extractUserId(event.payload);
-    
+
     this._metrics.update(m => ({
       totalEvents: m.totalEvents + 1,
       eventsByType: {
@@ -196,7 +197,7 @@ export class AnalyticsConsumer extends EventConsumer {
   private sendToAnalyticsPlatform(event: DomainEvent<any>): void {
     // Simulate sending to analytics platform
     console.log('[AnalyticsConsumer] Sending to analytics:', event.eventType);
-    
+
     // In production:
     // await this.googleAnalytics.trackEvent({
     //   category: event.aggregateType || 'Unknown',

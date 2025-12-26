@@ -1,6 +1,6 @@
-import { Observable } from 'rxjs';
-import { User } from '@angular/fire/auth';
 import { Signal } from '@angular/core';
+import { User } from '@angular/fire/auth';
+import { Observable } from 'rxjs';
 
 /**
  * Public contract for authentication capabilities exposed to features.

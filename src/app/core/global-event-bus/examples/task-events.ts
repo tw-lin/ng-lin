@@ -2,13 +2,13 @@ import { DomainEvent } from '../models';
 
 /**
  * Example: Task Created Event
- * 
+ *
  * This event is published when a new task is created in the system.
  */
 export class TaskCreatedEvent extends DomainEvent {
   readonly eventType = 'task.created' as const;
   readonly aggregateType = 'task' as const;
-  
+
   readonly payload: Readonly<{
     task: Readonly<{
       id: string;
@@ -24,7 +24,7 @@ export class TaskCreatedEvent extends DomainEvent {
       name: string;
     }>;
   }>;
-  
+
   constructor(data: {
     task: {
       id: string;
@@ -48,7 +48,7 @@ export class TaskCreatedEvent extends DomainEvent {
         source: 'task-service'
       }
     });
-    
+
     this.payload = {
       task: { ...data.task },
       creator: { ...data.creator }
@@ -58,13 +58,13 @@ export class TaskCreatedEvent extends DomainEvent {
 
 /**
  * Example: Task Updated Event
- * 
+ *
  * This event is published when a task is updated.
  */
 export class TaskUpdatedEvent extends DomainEvent {
   readonly eventType = 'task.updated' as const;
   readonly aggregateType = 'task' as const;
-  
+
   readonly payload: Readonly<{
     taskId: string;
     changes: Readonly<Record<string, unknown>>;
@@ -73,7 +73,7 @@ export class TaskUpdatedEvent extends DomainEvent {
       name: string;
     }>;
   }>;
-  
+
   constructor(data: {
     taskId: string;
     changes: Record<string, unknown>;
@@ -90,7 +90,7 @@ export class TaskUpdatedEvent extends DomainEvent {
         source: 'task-service'
       }
     });
-    
+
     this.payload = {
       taskId: data.taskId,
       changes: { ...data.changes },
@@ -101,13 +101,13 @@ export class TaskUpdatedEvent extends DomainEvent {
 
 /**
  * Example: Task Completed Event
- * 
+ *
  * This event is published when a task is marked as completed.
  */
 export class TaskCompletedEvent extends DomainEvent {
   readonly eventType = 'task.completed' as const;
   readonly aggregateType = 'task' as const;
-  
+
   readonly payload: Readonly<{
     taskId: string;
     completedBy: Readonly<{
@@ -116,7 +116,7 @@ export class TaskCompletedEvent extends DomainEvent {
     }>;
     completedAt: Date;
   }>;
-  
+
   constructor(data: {
     taskId: string;
     completedBy: {
@@ -133,7 +133,7 @@ export class TaskCompletedEvent extends DomainEvent {
         source: 'task-service'
       }
     });
-    
+
     this.payload = {
       taskId: data.taskId,
       completedBy: { ...data.completedBy },

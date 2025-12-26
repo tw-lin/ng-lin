@@ -1,9 +1,8 @@
 import { inject, Injectable } from '@angular/core';
-import { addDoc, collection, doc, getDoc, getDocs, orderBy, query, Timestamp, updateDoc, where } from '@angular/fire/firestore';
-import { Firestore } from '@angular/fire/firestore';
-import type { Blueprint, CreateBlueprintRequest, UpdateBlueprintRequest } from '@core/blueprint/domain/types/blueprint/blueprint.types';
-import { BlueprintStatus } from '@core/blueprint/domain/types/blueprint/blueprint-status.enum';
+import { addDoc, collection, doc, getDoc, getDocs, orderBy, query, Timestamp, updateDoc, where, Firestore } from '@angular/fire/firestore';
 import { ModuleType } from '@core/blueprint/domain/types';
+import { BlueprintStatus } from '@core/blueprint/domain/types/blueprint/blueprint-status.enum';
+import type { Blueprint, CreateBlueprintRequest, UpdateBlueprintRequest } from '@core/blueprint/domain/types/blueprint/blueprint.types';
 import { OwnerType } from '@core/blueprint/domain/types/blueprint/owner-type.enum';
 
 import { COLLECTION_NAMES } from '../../../firebase/constants/collection-names.const';
@@ -31,7 +30,7 @@ export class BlueprintFirestoreRepository {
         createdBy: data['createdBy'] as string,
         createdAt: toDateOrNull(data['createdAt']) ?? new Date(),
         updatedAt: toDateOrNull(data['updatedAt']) ?? new Date(),
-        deletedAt: toDateOrNull(data['deletedAt']) ?? null,
+        deletedAt: toDateOrNull(data['deletedAt']) ?? null
       }),
       value => ({
         ...value,
@@ -41,13 +40,9 @@ export class BlueprintFirestoreRepository {
         enabledModules: value.enabledModules ?? [],
         createdAt: value.createdAt instanceof Date ? Timestamp.fromDate(value.createdAt) : value.createdAt,
         updatedAt: value.updatedAt instanceof Date ? Timestamp.fromDate(value.updatedAt) : value.updatedAt,
-        deletedAt: value.deletedAt
-          ? value.deletedAt instanceof Date
-            ? Timestamp.fromDate(value.deletedAt)
-            : value.deletedAt
-          : null,
-      }),
-    ),
+        deletedAt: value.deletedAt ? (value.deletedAt instanceof Date ? Timestamp.fromDate(value.deletedAt) : value.deletedAt) : null
+      })
+    )
   );
 
   async getById(id: string): Promise<Blueprint | null> {
@@ -63,7 +58,7 @@ export class BlueprintFirestoreRepository {
       where('ownerType', '==', ownerType),
       where('ownerId', '==', ownerId),
       where('deletedAt', '==', null),
-      orderBy('createdAt', 'desc'),
+      orderBy('createdAt', 'desc')
     );
     const snapshot = await getDocs(q);
     return snapshot.docs.map(docSnap => ({ ...docSnap.data(), id: docSnap.id }));
@@ -85,7 +80,7 @@ export class BlueprintFirestoreRepository {
       createdBy: payload.createdBy,
       createdAt: new Date(),
       updatedAt: new Date(),
-      deletedAt: null,
+      deletedAt: null
     };
 
     const docRef = await addDoc(this.collectionRef, draft);
@@ -99,7 +94,7 @@ export class BlueprintFirestoreRepository {
   async update(id: string, updates: UpdateBlueprintRequest): Promise<void> {
     await updateDoc(doc(this.collectionRef, id), {
       ...updates,
-      updatedAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
     });
   }
 
@@ -107,7 +102,7 @@ export class BlueprintFirestoreRepository {
     await updateDoc(doc(this.collectionRef, id), {
       deletedAt: Timestamp.now(),
       status: BlueprintStatus.ARCHIVED,
-      updatedAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
     });
   }
 }

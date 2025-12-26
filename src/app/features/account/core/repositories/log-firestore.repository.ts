@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-
 import { CreateLogRequest, Log, UpdateLogRequest } from '@core/blueprint/domain/types/log/log.types';
 
 @Injectable({

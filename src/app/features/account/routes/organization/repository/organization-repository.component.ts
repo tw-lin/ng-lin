@@ -1,3 +1,83 @@
+/**
+ * @module OrganizationRepositoryComponent
+ * @description
+ * Organization-level material repository and warehouse management system
+ * 
+ * ## Purpose
+ * Centralized inventory management for construction organizations:
+ * - Track material stock across multiple warehouse locations
+ * - Monitor inventory levels with automatic alerts
+ * - Manage warehouse capacity and logistics
+ * - Generate stock reports and analytics
+ * 
+ * ## Key Features
+ * - **Multi-Location Management**: Support for multiple warehouse locations
+ * - **Material Tracking**: Comprehensive material inventory with categories
+ * - **Stock Alerts**: Automatic low-stock and critical-stock notifications
+ * - **Capacity Management**: Warehouse capacity monitoring and optimization
+ * - **Real-time Updates**: Live inventory status with Signals
+ * 
+ * ## Material Categories
+ * - Construction materials (建築材料)
+ * - Electrical equipment (電氣設備)
+ * - Plumbing supplies (管道設備)
+ * - Finishing materials (裝修材料)
+ * - Other supplies (其他物料)
+ * 
+ * ## Architecture
+ * - **Presentation Layer**: Standalone component with OnPush change detection
+ * - **State Management**: Angular Signals for reactive inventory state
+ * - **UI Framework**: ng-alain ST table for data display
+ * - **Multi-Tenancy**: Organization-scoped inventory (tenant isolation)
+ * 
+ * ## Stock Status Logic
+ * - **Sufficient** (充足): quantity >= minStock * 1.5
+ * - **Low** (偏低): quantity >= minStock but < minStock * 1.5
+ * - **Critical** (嚴重不足): quantity < minStock
+ * 
+ * ## Warehouse Status
+ * - **Active** (運作中): Fully operational
+ * - **Inactive** (停用): Temporarily closed
+ * - **Maintenance** (維護中): Under maintenance
+ * 
+ * ## State Management
+ * Uses Angular 20+ Signals pattern:
+ * - `warehouses` - List of warehouse locations
+ * - `materials` - Material inventory items
+ * - `selectedLocation` - Currently selected warehouse
+ * - `lowStockCount` - Computed: materials below threshold
+ * - `criticalStockCount` - Computed: critical shortage items
+ * 
+ * ## Integration
+ * Integrates with:
+ * - Organization management system
+ * - Procurement workflows
+ * - Project material requisitions
+ * - Supply chain tracking
+ * 
+ * @see {@link docs/⭐️/整體架構設計.md} - Overall Architecture
+ * @see {@link .github/instructions/ng-gighub-architecture.instructions.md} - Architecture Guidelines
+ * 
+ * @remarks
+ * This component handles organization-level resource management.
+ * Key considerations:
+ * - Real-time stock updates for concurrent operations
+ * - Multi-location synchronization
+ * - Inventory audit trail integration
+ * - Integration with procurement and project management
+ * 
+ * @example
+ * ```typescript
+ * // Route configuration
+ * {
+ *   path: 'repository',
+ *   component: OrganizationRepositoryComponent
+ * }
+ * 
+ * // Navigation
+ * router.navigate(['/account/organization', orgId, 'repository']);
+ * ```
+ */
 import { ChangeDetectionStrategy, Component, signal, computed, inject, OnInit } from '@angular/core';
 import { STColumn } from '@delon/abc/st';
 import { SHARED_IMPORTS } from '@shared';

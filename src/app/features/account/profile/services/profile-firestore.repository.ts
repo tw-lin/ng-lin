@@ -1,6 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { collection, doc, getDoc, setDoc } from '@angular/fire/firestore';
-import { Firestore } from '@angular/fire/firestore';
+import { collection, doc, getDoc, setDoc, Firestore } from '@angular/fire/firestore';
 
 import { COLLECTION_NAMES } from '../../../../firebase/constants/collection-names.const';
 import { buildConverter } from '../../../../firebase/utils/firestore-converter.util';
@@ -18,23 +17,23 @@ export class AccountProfileFirestoreRepository {
 
   private readonly collectionRef = collection(this.firestore, COLLECTION_NAMES.ACCOUNT_PROFILES).withConverter(
     buildConverter<AccountProfileFirestore>(
-      (data) => ({
+      data => ({
         id: data['id'] as string,
         displayName: data['displayName'] as string,
         namespacePath: data['namespacePath'] as string,
         avatarUrl: data['avatarUrl'] as string | undefined,
         bio: data['bio'] as string | undefined,
-        updatedAt: toDateOrNull(data['updatedAt']),
+        updatedAt: toDateOrNull(data['updatedAt'])
       }),
-      (value) => ({
+      value => ({
         id: value.id,
         displayName: value.displayName,
         namespacePath: value.namespacePath,
         avatarUrl: value.avatarUrl ?? null,
         bio: value.bio ?? null,
-        updatedAt: value.updatedAt ?? null,
-      }),
-    ),
+        updatedAt: value.updatedAt ?? null
+      })
+    )
   );
 
   async getById(profileId: string): Promise<AccountProfile | null> {
@@ -46,14 +45,14 @@ export class AccountProfileFirestoreRepository {
       displayName: data.displayName,
       namespacePath: data.namespacePath,
       avatarUrl: data.avatarUrl ?? undefined,
-      bio: data.bio ?? undefined,
+      bio: data.bio ?? undefined
     };
   }
 
   async upsert(profile: AccountProfile): Promise<void> {
     await setDoc(doc(this.collectionRef, profile.id), {
       ...profile,
-      updatedAt: new Date(),
+      updatedAt: new Date()
     });
   }
 }

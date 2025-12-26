@@ -44,7 +44,22 @@ export default tseslint.config(
     ],
     processor: angular.processInlineTemplates,
     rules: {
-      'prettier/prettier': ['error', require('./.prettierrc.js')],
+      'prettier/prettier': [
+        'error',
+        {
+          singleQuote: true,
+          useTabs: false,
+          printWidth: 140,
+          tabWidth: 2,
+          semi: true,
+          htmlWhitespaceSensitivity: 'strict',
+          arrowParens: 'avoid',
+          bracketSpacing: true,
+          proseWrap: 'preserve',
+          trailingComma: 'none',
+          endOfLine: 'lf'
+        }
+      ],
       'jsdoc/tag-lines': [
         'error',
         'any',

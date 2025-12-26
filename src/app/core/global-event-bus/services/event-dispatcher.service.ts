@@ -1,13 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { DomainEvent } from '../models/base-event';
-import { EventHandler } from '../interfaces/event-handler.interface';
-import { RetryManagerService } from './retry-manager.service';
+
 import { DeadLetterQueueService } from './dead-letter-queue.service';
+import { RetryManagerService } from './retry-manager.service';
+import { HandlerExecutionError, HandlerTimeoutError } from '../errors/event-handler.error';
+import { EventHandler } from '../interfaces/event-handler.interface';
+import { DomainEvent } from '../models/base-event';
 import { EventEnvelope } from '../models/event-envelope';
-import {
-  HandlerExecutionError,
-  HandlerTimeoutError,
-} from '../errors/event-handler.error';
 
 /**
  * Event Dispatcher Service
@@ -59,12 +57,7 @@ export class EventDispatcherService {
     const results = await this.processConcurrently(
       handlers,
       async handlerConfig => {
-        await this.dispatchToHandler(
-          handlerConfig.handler,
-          event,
-          handlerConfig.retryPolicy,
-          timeout
-        );
+        await this.dispatchToHandler(handlerConfig.handler, event, handlerConfig.retryPolicy, timeout);
       },
       maxConcurrency
     );
@@ -72,9 +65,7 @@ export class EventDispatcherService {
     // Log any failures (all failed events already sent to DLQ)
     const failures = results.filter(r => r.status === 'rejected');
     if (failures.length > 0) {
-      console.warn(
-        `[EventDispatcher] ${failures.length}/${handlers.length} handlers failed for event ${event.eventType}`
-      );
+      console.warn(`[EventDispatcher] ${failures.length}/${handlers.length} handlers failed for event ${event.eventType}`);
     }
   }
 
@@ -86,49 +77,31 @@ export class EventDispatcherService {
    * @param retryPolicy - Retry configuration
    * @param timeout - Handler execution timeout in milliseconds
    */
-  async dispatchToHandler<T extends DomainEvent>(
-    handler: EventHandler<T>,
-    event: T,
-    retryPolicy?: any,
-    timeout?: number
-  ): Promise<void> {
+  async dispatchToHandler<T extends DomainEvent>(handler: EventHandler<T>, event: T, retryPolicy?: any, timeout?: number): Promise<void> {
     const envelope = EventEnvelope.wrap(event);
 
     try {
       if (retryPolicy) {
         // Execute with retry logic
-        await this.retryManager.executeWithRetry(
-          () => this.executeHandlerWithTimeout(handler, event, timeout),
-          retryPolicy
-        );
+        await this.retryManager.executeWithRetry(() => this.executeHandlerWithTimeout(handler, event, timeout), retryPolicy);
       } else {
         // Execute once without retry
         await this.executeHandlerWithTimeout(handler, event, timeout);
       }
     } catch (error) {
       // After all retries exhausted or immediate failure, send to DLQ
-      const failedEnvelope = envelope.asDeadLetter(
-        error instanceof Error ? error : new Error(String(error))
-      );
+      const failedEnvelope = envelope.asDeadLetter(error instanceof Error ? error : new Error(String(error)));
       await this.deadLetterQueue.send(failedEnvelope);
 
       // Re-throw to maintain error isolation at caller level
-      throw new HandlerExecutionError(
-        event,
-        'EventDispatcher',
-        error instanceof Error ? error : new Error(String(error))
-      );
+      throw new HandlerExecutionError(event, 'EventDispatcher', error instanceof Error ? error : new Error(String(error)));
     }
   }
 
   /**
    * Execute handler with timeout protection
    */
-  private async executeHandlerWithTimeout<T extends DomainEvent>(
-    handler: EventHandler<T>,
-    event: T,
-    timeout?: number
-  ): Promise<void> {
+  private async executeHandlerWithTimeout<T extends DomainEvent>(handler: EventHandler<T>, event: T, timeout?: number): Promise<void> {
     if (!timeout) {
       await handler(event);
       return;
@@ -136,13 +109,7 @@ export class EventDispatcherService {
 
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => {
-        reject(
-          new HandlerTimeoutError(
-            event,
-            'EventDispatcher',
-            timeout
-          )
-        );
+        reject(new HandlerTimeoutError(event, 'EventDispatcher', timeout));
       }, timeout);
     });
 
@@ -168,9 +135,7 @@ export class EventDispatcherService {
       const settled = await Promise.allSettled(items.map(processor));
       return settled.map(result => ({
         status: result.status,
-        ...(result.status === 'fulfilled'
-          ? { value: result.value }
-          : { reason: result.reason }),
+        ...(result.status === 'fulfilled' ? { value: result.value } : { reason: result.reason })
       }));
     }
 

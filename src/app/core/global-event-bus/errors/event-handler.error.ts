@@ -1,6 +1,6 @@
 /**
  * Event Handler Error Classes
- * 
+ *
  * Errors that occur during event handler execution.
  */
 
@@ -31,17 +31,8 @@ export class EventHandlerError extends Error {
  * Event handler execution failed
  */
 export class HandlerExecutionError extends EventHandlerError {
-  constructor(
-    event: DomainEvent,
-    handlerName: string,
-    originalError: Error
-  ) {
-    super(
-      `Handler '${handlerName}' failed to process event '${event.eventType}'`,
-      event,
-      handlerName,
-      originalError
-    );
+  constructor(event: DomainEvent, handlerName: string, originalError: Error) {
+    super(`Handler '${handlerName}' failed to process event '${event.eventType}'`, event, handlerName, originalError);
     this.name = 'HandlerExecutionError';
     Object.setPrototypeOf(this, HandlerExecutionError.prototype);
   }
@@ -56,11 +47,7 @@ export class HandlerTimeoutError extends EventHandlerError {
     handlerName: string,
     public readonly timeoutMs: number
   ) {
-    super(
-      `Handler '${handlerName}' timed out after ${timeoutMs}ms processing event '${event.eventType}'`,
-      event,
-      handlerName
-    );
+    super(`Handler '${handlerName}' timed out after ${timeoutMs}ms processing event '${event.eventType}'`, event, handlerName);
     this.name = 'HandlerTimeoutError';
     Object.setPrototypeOf(this, HandlerTimeoutError.prototype);
   }
@@ -75,11 +62,7 @@ export class HandlerValidationError extends EventHandlerError {
     handlerName: string,
     public readonly validationErrors: string[]
   ) {
-    super(
-      `Handler '${handlerName}' validation failed: ${validationErrors.join(', ')}`,
-      event,
-      handlerName
-    );
+    super(`Handler '${handlerName}' validation failed: ${validationErrors.join(', ')}`, event, handlerName);
     this.name = 'HandlerValidationError';
     Object.setPrototypeOf(this, HandlerValidationError.prototype);
   }
@@ -94,9 +77,7 @@ export class HandlerNotFoundError extends Error {
     public readonly handlerName?: string
   ) {
     super(
-      handlerName
-        ? `Handler '${handlerName}' not found for event type '${eventType}'`
-        : `No handlers found for event type '${eventType}'`
+      handlerName ? `Handler '${handlerName}' not found for event type '${eventType}'` : `No handlers found for event type '${eventType}'`
     );
     this.name = 'HandlerNotFoundError';
     Object.setPrototypeOf(this, HandlerNotFoundError.prototype);
@@ -140,11 +121,7 @@ export class IdempotencyError extends EventHandlerError {
     handlerName: string,
     public readonly reason: string
   ) {
-    super(
-      `Idempotency check failed for handler '${handlerName}': ${reason}`,
-      event,
-      handlerName
-    );
+    super(`Idempotency check failed for handler '${handlerName}': ${reason}`, event, handlerName);
     this.name = 'IdempotencyError';
     Object.setPrototypeOf(this, IdempotencyError.prototype);
   }

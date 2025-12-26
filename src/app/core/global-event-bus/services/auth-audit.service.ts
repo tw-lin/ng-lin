@@ -1,25 +1,20 @@
 /**
  * Auth Audit Service
- * 
+ *
  * 認證審計服務
  * - 自動訂閱所有認證相關事件
  * - 轉換為審計格式並記錄
  * - 提供 Signal-based 即時統計
  * - 遵循 docs/⭐️/Identity & Auth.md 規範
- * 
+ *
  * @author Global Event Bus Team
  * @version 1.0.0
  */
 
 import { Injectable, signal, computed, inject, DestroyRef } from '@angular/core';
-import { IEventBus } from '../interfaces/event-bus.interface';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { EVENT_BUS } from '../constants/event-bus-tokens';
-import {
-  AuthAuditEvent,
-  AuthAuditEventBuilder,
-  AuditLevel,
-  AuditCategory
-} from '../models/auth-audit-event.model';
 import {
   UserLoginEvent,
   UserLogoutEvent,
@@ -31,7 +26,8 @@ import {
   LoginFailedEvent,
   EmailVerifiedEvent
 } from '../domain-events/auth-events';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { IEventBus } from '../interfaces/event-bus.interface';
+import { AuthAuditEvent, AuthAuditEventBuilder, AuditLevel, AuditCategory } from '../models/auth-audit-event.model';
 
 /**
  * 審計統計資訊
@@ -86,7 +82,7 @@ export interface AuthAuditFilter {
 
 /**
  * Auth Audit Service
- * 
+ *
  * 職責:
  * 1. 訂閱所有認證相關事件
  * 2. 轉換為審計格式
@@ -112,7 +108,7 @@ export class AuthAuditService {
   /** 統計資訊 (Computed) */
   readonly statistics = computed<AuthAuditStatistics>(() => {
     const events = this._auditEvents();
-    
+
     return {
       totalEvents: events.length,
       successfulLogins: events.filter(e => e.eventType === 'auth.user.login').length,
@@ -125,9 +121,7 @@ export class AuthAuditService {
       sessionExpired: events.filter(e => e.eventType === 'auth.session.expired').length,
       emailVerifications: events.filter(e => e.eventType === 'auth.email.verified').length,
       requiresReview: events.filter(e => e.requiresReview).length,
-      criticalEvents: events.filter(e => 
-        e.level === AuditLevel.WARNING || e.level === AuditLevel.CRITICAL
-      ).length
+      criticalEvents: events.filter(e => e.level === AuditLevel.WARNING || e.level === AuditLevel.CRITICAL).length
     };
   });
 
@@ -143,9 +137,7 @@ export class AuthAuditService {
 
   /** 嚴重事件 */
   readonly criticalEvents = computed(() => {
-    return this._auditEvents().filter(e => 
-      e.level === AuditLevel.WARNING || e.level === AuditLevel.CRITICAL
-    );
+    return this._auditEvents().filter(e => e.level === AuditLevel.WARNING || e.level === AuditLevel.CRITICAL);
   });
 
   // ========================================
@@ -165,11 +157,12 @@ export class AuthAuditService {
    */
   private subscribeToAuthEvents(): void {
     // 訂閱所有 auth.* 事件
-    this.eventBus.observe<any>('auth.*')
+    this.eventBus
+      .observe<any>('auth.*')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (event) => this.handleAuthEvent(event),
-        error: (error) => console.error('[AuthAuditService] Event subscription error:', error)
+        next: event => this.handleAuthEvent(event),
+        error: error => console.error('[AuthAuditService] Event subscription error:', error)
       });
   }
 
@@ -202,19 +195,19 @@ export class AuthAuditService {
   private recordAuditEvent(auditEvent: AuthAuditEvent): void {
     this._auditEvents.update(events => {
       const updatedEvents = [...events, auditEvent];
-      
+
       // 限制記憶體使用，只保留最近 1000 筆
       if (updatedEvents.length > 1000) {
         return updatedEvents.slice(-1000);
       }
-      
+
       return updatedEvents;
     });
   }
 
   /**
    * 持久化審計事件 (整合 Global Audit Log Service)
-   * 
+   *
    * TODO: 整合 Global Audit Log Service
    * - 寫入 Firestore audit_logs collection
    * - 支援長期儲存與查詢
@@ -331,12 +324,16 @@ export class AuthAuditService {
    */
   exportAuditEvents(filter?: AuthAuditFilter): string {
     const events = filter ? this.getFilteredEvents(filter) : this._auditEvents();
-    
-    return JSON.stringify({
-      exportDate: new Date().toISOString(),
-      totalEvents: events.length,
-      statistics: this.statistics(),
-      events: events
-    }, null, 2);
+
+    return JSON.stringify(
+      {
+        exportDate: new Date().toISOString(),
+        totalEvents: events.length,
+        statistics: this.statistics(),
+        events: events
+      },
+      null,
+      2
+    );
   }
 }

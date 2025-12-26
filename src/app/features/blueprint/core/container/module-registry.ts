@@ -1,8 +1,128 @@
 /**
- * Module Registry Implementation
- *
- * Manages registration and lookup of Blueprint modules with dependency resolution.
- *
+ * @module ModuleRegistry
+ * @description Module Registry - Blueprint Module Registration & Dependency Resolution (模組註冊表)
+ * 
+ * **Purpose**: Centralized registry for managing Blueprint modules with dependency resolution,
+ * version management, and module lookup capabilities.
+ * 
+ * **Key Features**:
+ * - **Module Registration**: Register/unregister modules by ID
+ * - **Dependency Resolution**: Resolve module dependencies with circular detection
+ * - **Load Order Calculation**: Topological sort for proper initialization sequence
+ * - **Version Management**: Track module versions and registration timestamps
+ * - **Module Lookup**: Query modules by ID, name, or filter criteria
+ * - **Reactive Count**: Signal-based module count for UI binding
+ * 
+ * **Architecture Patterns**:
+ * - **Registry Pattern**: Centralized storage and lookup for modules
+ * - **Dependency Injection**: Provides injectable service for module management
+ * - **Topological Sort**: Resolves dependency order for module initialization
+ * - **Signal-Based State**: Reactive module count with Angular Signals
+ * - **Immutable Metadata**: Frozen module metadata for safety
+ * 
+ * **Module Registration**:
+ * - Each module must have unique ID
+ * - Metadata includes: id, name, version, instance, dependencies, registeredAt
+ * - Metadata frozen after registration (immutable)
+ * - Module count signal updated automatically
+ * 
+ * **Dependency Resolution**:
+ * - **Input**: List of module IDs to resolve
+ * - **Output**: DependencyResolution with load order and detected issues
+ * - **Algorithm**: Depth-first search (DFS) with cycle detection
+ * - **Error Handling**: Returns missing/circular dependencies in result
+ * 
+ * **Resolution Result**:
+ * - `loadOrder`: Array of module IDs in dependency order (topologically sorted)
+ * - `missingDependencies`: Map of module → missing dependency IDs
+ * - `circularDependencies`: Array of circular dependency chains
+ * 
+ * **Circular Dependency Detection**:
+ * - Tracks visit stack during DFS traversal
+ * - Detects cycles when revisiting a module in current path
+ * - Returns full cycle path (e.g., ['A', 'B', 'C', 'A'])
+ * 
+ * **Module Metadata**:
+ * - `id`: Unique module identifier (kebab-case)
+ * - `name`: Human-readable module name
+ * - `version`: Semantic version (e.g., "1.2.3")
+ * - `instance`: Reference to module implementation
+ * - `dependencies`: Frozen array of dependency module IDs
+ * - `registeredAt`: Timestamp of registration
+ * 
+ * **Query Capabilities**:
+ * - `get(id)`: Retrieve module by ID
+ * - `has(id)`: Check if module exists
+ * - `getAllModules()`: Get all registered modules
+ * - `getAllMetadata()`: Get metadata for all modules
+ * - `resolveDependencies()`: Calculate load order for module set
+ * 
+ * **Multi-Tenancy Context**:
+ * - Registry is singleton (shared across all tenants)
+ * - Module instances are stateless or tenant-aware
+ * - Each BlueprintContainer has isolated module instances
+ * - Registry only stores module classes/factories
+ * 
+ * **Integration Points**:
+ * - **BlueprintContainer**: Uses registry for module management
+ * - **LifecycleManager**: Coordinates with registry for initialization order
+ * - **Module System**: All Blueprint modules register here
+ * 
+ * **Performance**:
+ * - O(1) lookup by module ID (Map-based storage)
+ * - O(n + e) dependency resolution (DFS, n=modules, e=edges)
+ * - Lazy evaluation (resolution only when requested)
+ * - Efficient reactivity via Signals
+ * 
+ * @see docs/⭐️/整體架構設計.md (Blueprint module system)
+ * @see .github/instructions/ng-gighub-architecture.instructions.md
+ * 
+ * @remarks
+ * **Design**: Based on Registry and Dependency Injection Container patterns
+ * **Thread Safety**: Angular's dependency injection ensures singleton behavior
+ * **Extensibility**: Easy to add new query methods or resolution strategies
+ * 
+ * @example
+ * ```typescript
+ * // Inject registry service
+ * @Component({ ... })
+ * export class AppComponent {
+ *   private registry = inject(ModuleRegistry);
+ * 
+ *   ngOnInit() {
+ *     // Register modules
+ *     this.registry.register(new TasksModule());
+ *     this.registry.register(new LogsModule());
+ *     this.registry.register(new FinanceModule());
+ * 
+ *     // Resolve dependencies
+ *     const resolution = this.registry.resolveDependencies([
+ *       'tasks-module',
+ *       'finance-module'
+ *     ]);
+ * 
+ *     if (resolution.circularDependencies.length > 0) {
+ *       console.error('Circular dependencies detected:', 
+ *         resolution.circularDependencies);
+ *     }
+ * 
+ *     if (resolution.missingDependencies.size > 0) {
+ *       console.error('Missing dependencies:', 
+ *         resolution.missingDependencies);
+ *     }
+ * 
+ *     // Load modules in correct order
+ *     for (const moduleId of resolution.loadOrder) {
+ *       const module = this.registry.get(moduleId);
+ *       await module?.initialize();
+ *     }
+ * 
+ *     // Check module count (reactive)
+ *     console.log('Total modules:', this.registry.moduleCount());
+ *   }
+ * }
+ * ```
+ * 
  * @packageDocumentation
  */
 

@@ -1,6 +1,6 @@
 /**
  * Hybrid Event Store Exports
- * 
+ *
  * @phase Phase 1.5 (Blocker Fix)
  */
 

@@ -1,8 +1,8 @@
 /**
  * Event Versioning Examples
- * 
+ *
  * Demonstrates event version evolution and upcasting strategies
- * 
+ *
  * @see docs/event-bus(Global Event Bus)-4.md for versioning patterns
  */
 
@@ -30,7 +30,7 @@ export interface TaskCreatedPayloadV1_0 {
 
 export class TaskCreatedEventV1_0 extends DomainEvent<TaskCreatedPayloadV1_0> {
   readonly eventType = 'task.created' as const;
-  
+
   constructor(payload: TaskCreatedPayloadV1_0) {
     super({
       aggregateId: payload.task.id,
@@ -49,19 +49,19 @@ export interface TaskCreatedPayloadV1_1 {
     id: string;
     title: string;
     status: 'pending' | 'in-progress' | 'completed';
-    description?: string;       // NEW: Optional field
+    description?: string; // NEW: Optional field
     priority?: 'low' | 'medium' | 'high'; // NEW: Optional field
   };
   creator: {
     id: string;
     name: string;
-    email?: string;            // NEW: Optional field
+    email?: string; // NEW: Optional field
   };
 }
 
 export class TaskCreatedEventV1_1 extends DomainEvent<TaskCreatedPayloadV1_1> {
   readonly eventType = 'task.created' as const;
-  
+
   constructor(payload: TaskCreatedPayloadV1_1) {
     super({
       aggregateId: payload.task.id,
@@ -92,8 +92,8 @@ export interface TaskCreatedPayloadV2_0 {
   createdBy: {
     id: string;
     name: string;
-    email: string;             // BREAKING: Now required
-    role: string;              // NEW: Required field
+    email: string; // BREAKING: Now required
+    role: string; // NEW: Required field
   };
   // NEW: Blueprint context
   blueprint: {
@@ -104,7 +104,7 @@ export interface TaskCreatedPayloadV2_0 {
 
 export class TaskCreatedEventV2_0 extends DomainEvent<TaskCreatedPayloadV2_0> {
   readonly eventType = 'task.created' as const;
-  
+
   constructor(payload: TaskCreatedPayloadV2_0) {
     super({
       aggregateId: payload.task.id,
@@ -121,26 +121,24 @@ export class TaskCreatedEventV2_0 extends DomainEvent<TaskCreatedPayloadV2_0> {
 
 /**
  * Upcast from V1.0 to V1.1
- * 
+ *
  * Adds optional fields with default values
  */
-export class TaskCreatedUpcaster_1_0_to_1_1 
-  extends BaseEventUpcaster<TaskCreatedEventV1_0, TaskCreatedEventV1_1> 
-{
+export class TaskCreatedUpcaster_1_0_to_1_1 extends BaseEventUpcaster<TaskCreatedEventV1_0, TaskCreatedEventV1_1> {
   readonly fromVersion = '1.0';
   readonly toVersion = '1.1';
   readonly eventType = 'task.created';
-  
+
   protected transform(event: TaskCreatedEventV1_0): TaskCreatedEventV1_1 {
     return new TaskCreatedEventV1_1({
       task: {
         ...event.payload.task,
-        description: undefined,    // Add optional field
-        priority: undefined         // Add optional field
+        description: undefined, // Add optional field
+        priority: undefined // Add optional field
       },
       creator: {
         ...event.payload.creator,
-        email: undefined            // Add optional field
+        email: undefined // Add optional field
       }
     });
   }
@@ -148,7 +146,7 @@ export class TaskCreatedUpcaster_1_0_to_1_1
 
 /**
  * Upcast from V1.1 to V2.0
- * 
+ *
  * Handles breaking changes:
  * - Restructure status to state
  * - Rename creator to createdBy
@@ -156,13 +154,11 @@ export class TaskCreatedUpcaster_1_0_to_1_1
  * - Add role field
  * - Add blueprint context
  */
-export class TaskCreatedUpcaster_1_1_to_2_0 
-  extends BaseEventUpcaster<TaskCreatedEventV1_1, TaskCreatedEventV2_0> 
-{
+export class TaskCreatedUpcaster_1_1_to_2_0 extends BaseEventUpcaster<TaskCreatedEventV1_1, TaskCreatedEventV2_0> {
   readonly fromVersion = '1.1';
   readonly toVersion = '2.0';
   readonly eventType = 'task.created';
-  
+
   protected transform(event: TaskCreatedEventV1_1): TaskCreatedEventV2_0 {
     return new TaskCreatedEventV2_0({
       task: {
@@ -195,17 +191,15 @@ export class TaskCreatedUpcaster_1_1_to_2_0
 
 /**
  * Combined upcaster (V1.0 -> V2.0)
- * 
+ *
  * Directly upcast from V1.0 to V2.0 for performance
  * (avoids intermediate V1.1 transformation)
  */
-export class TaskCreatedUpcaster_1_0_to_2_0 
-  extends BaseEventUpcaster<TaskCreatedEventV1_0, TaskCreatedEventV2_0> 
-{
+export class TaskCreatedUpcaster_1_0_to_2_0 extends BaseEventUpcaster<TaskCreatedEventV1_0, TaskCreatedEventV2_0> {
   readonly fromVersion = '1.0';
   readonly toVersion = '2.0';
   readonly eventType = 'task.created';
-  
+
   protected transform(event: TaskCreatedEventV1_0): TaskCreatedEventV2_0 {
     return new TaskCreatedEventV2_0({
       task: {
@@ -239,37 +233,37 @@ export class TaskCreatedUpcaster_1_0_to_2_0
 
 /**
  * Example: Using versioned events with upcasters
- * 
+ *
  * ```typescript
  * import { inject } from '@angular/core';
  * import { UpcasterChain } from '../versioning/upcaster-chain';
  * import { VersionedEventBus } from '../versioning/versioned-event-bus';
- * 
+ *
  * // Setup
  * const upcasterChain = inject(UpcasterChain);
  * const versionedBus = inject(VersionedEventBus);
- * 
+ *
  * // Register upcasters
  * upcasterChain.register(new TaskCreatedUpcaster_1_0_to_1_1());
  * upcasterChain.register(new TaskCreatedUpcaster_1_1_to_2_0());
  * // Or use direct upcaster for performance
  * upcasterChain.register(new TaskCreatedUpcaster_1_0_to_2_0());
- * 
+ *
  * // Publish V1.0 event
  * const eventV1 = new TaskCreatedEventV1_0({
  *   task: { id: 'task-1', title: 'Test Task', status: 'pending' },
  *   creator: { id: 'user-1', name: 'John Doe' }
  * });
- * 
+ *
  * await versionedBus.publish(eventV1);
- * 
+ *
  * // Subscribe with automatic upcasting to latest (V2.0)
  * await versionedBus.subscribe('task.created', (event: TaskCreatedEventV2_0) => {
  *   // event is automatically upcasted to V2.0
  *   console.log(event.payload.createdBy.role); // 'member'
  *   console.log(event.payload.task.state.status); // 'pending'
  * }, { targetVersion: 'latest' });
- * 
+ *
  * // Subscribe to specific version
  * await versionedBus.subscribe('task.created', (event: TaskCreatedEventV1_1) => {
  *   // event is upcasted to V1.1 only

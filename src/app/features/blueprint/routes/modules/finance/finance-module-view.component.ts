@@ -1,20 +1,106 @@
 /**
- * Finance Module View Component (Refactored)
- * 財務域視圖元件 (重構版)
- *
- * Purpose: Main orchestrator for finance module with feature-based architecture
- * Features: Delegates to specialized feature components
- *
- * Architecture: Feature-Based (High Cohesion, Low Coupling)
- * - Dashboard Feature: Financial summary display
- * - Invoice List Feature: Receivable/Payable invoice management
- * - Approval Dialog Feature: Invoice approval workflow
- *
- * SETC-030: Invoice/Payment UI Components
- *
  * @module FinanceModuleViewComponent
- * @author GigHub Development Team
- * @date 2025-12-19
+ * @description
+ * Finance Module View Component - Construction project financial management
+ * 財務域視圖元件 - 工程專案財務管理
+ * 
+ * **Purpose:**
+ * Comprehensive financial management for construction projects including invoicing,
+ * payment tracking, and budget control with approval workflows.
+ * 
+ * **Key Features:**
+ * - Financial dashboard with real-time summary statistics
+ * - Dual invoice management: Receivables (應收) & Payables (應付)
+ * - Multi-stage approval workflow with role-based permissions
+ * - Payment tracking with installment support
+ * - Budget vs. actual cost tracking
+ * - Invoice status lifecycle management
+ * - Receipt and payment document management
+ * 
+ * **Architecture Patterns:**
+ * - Feature-Based Architecture: High cohesion, low coupling
+ * - Delegation Pattern: Orchestrator delegates to specialized feature components
+ * - OnPush Change Detection: Performance optimization
+ * - Signal-based State Management: Reactive data flow
+ * - inject() DI: Angular 20 dependency injection
+ * 
+ * **Feature Components:**
+ * 1. **Dashboard Feature** (`FinanceDashboardComponent`)
+ *    - Total revenue, total cost, pending amounts
+ *    - Budget utilization chart
+ *    - Financial health indicators
+ * 
+ * 2. **Invoice List Feature** (`InvoiceListComponent`)
+ *    - Receivables list with status filtering
+ *    - Payables list with vendor information
+ *    - Quick actions: view, edit, approve, pay
+ *    - Sorting and search capabilities
+ * 
+ * 3. **Approval Dialog Feature** (`InvoiceApprovalDialogComponent`)
+ *    - Multi-level approval workflow
+ *    - Approval history tracking
+ *    - Rejection with reason
+ *    - Approval delegation
+ * 
+ * **Invoice Status Lifecycle:**
+ * ```
+ * Draft → Submitted → Under Review → Approved → Paid → Closed
+ *    ↓        ↓            ↓
+ * Rejected ← Rejected ← Rejected
+ * ```
+ * 
+ * **Data Model:**
+ * - `Invoice`: Core invoice entity with line items, amounts, status
+ * - `BillableItem`: Individual line item with quantity, unit price, subtotal
+ * - `FinancialSummary`: Aggregated financial statistics
+ * - `InvoiceStatus`: Enum for status values
+ * 
+ * **Multi-Tenancy:**
+ * - Blueprint-scoped: All financial data isolated to current Blueprint
+ * - Firestore collection: `blueprints/{blueprintId}/invoices/{invoiceId}`
+ * - Security Rules enforce Blueprint membership and role-based permissions
+ * 
+ * **Security & Permissions:**
+ * - `finance:view` - View financial data
+ * - `finance:create` - Create new invoices
+ * - `finance:edit` - Edit draft invoices
+ * - `finance:approve` - Approve submitted invoices
+ * - `finance:pay` - Mark invoices as paid
+ * 
+ * **Integration Points:**
+ * - Budget Module: Budget allocation and tracking
+ * - Contract Module: Invoice linked to contract milestones
+ * - Audit Log: Financial transactions audited automatically
+ * - Event Bus: Publishes financial events for cross-module consumption
+ * 
+ * **Performance Considerations:**
+ * - OnPush change detection for large invoice lists
+ * - Virtual scrolling for 1000+ invoice records
+ * - Lazy loading of invoice details
+ * - Pagination with 50 items per page
+ * 
+ * @see {@link docs/⭐️/整體架構設計.md} - Overall Architecture Design
+ * @see {@link SETC-030} - Invoice/Payment UI Components Design Document
+ * @see {@link Invoice} - Invoice data model
+ * @see {@link FinancialSummary} - Financial summary model
+ * 
+ * @remarks
+ * - Version: 2.0.0 (Refactored with feature-based architecture)
+ * - 446 lines: Medium-sized orchestrator with 3 feature components
+ * - Complexity: Medium-High - multi-stage approval workflow
+ * - Refactored: 2025-12-19 - Split from monolithic component
+ * - Task: SETC-030 - Invoice/Payment UI implementation
+ * 
+ * @example
+ * ```typescript
+ * // Usage in Blueprint Detail Component
+ * <app-finance-module-view [blueprintId]="blueprintId()" />
+ * 
+ * // Component auto-loads financial data
+ * // Displays dashboard with summary statistics
+ * // Lists receivables and payables with status
+ * // Provides approval workflow for submitted invoices
+ * ```
  */
 
 import { Component, ChangeDetectionStrategy, OnInit, inject, input, signal, computed } from '@angular/core';

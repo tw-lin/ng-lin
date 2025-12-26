@@ -1,3 +1,80 @@
+/**
+ * @module UserTodoComponent
+ * @description
+ * Personal task management component for individual user productivity
+ * 
+ * ## Purpose
+ * Lightweight personal todo list for individual users:
+ * - Personal task tracking (separate from project tasks)
+ * - Priority-based task management
+ * - Due date tracking and reminders
+ * - Category-based organization
+ * 
+ * ## Key Features
+ * - **Task List**: Display all personal todo items
+ * - **Priority Management**: High, Medium, Low priority levels
+ * - **Due Dates**: Optional deadline tracking
+ * - **Categories**: Organize tasks by category
+ * - **Completion Tracking**: Mark tasks as complete/incomplete
+ * - **Filtering**: Filter by priority, status, or category
+ * 
+ * ## Task Properties
+ * - **Title**: Brief task description (required)
+ * - **Description**: Detailed task information (optional)
+ * - **Priority**: high | medium | low
+ * - **Due Date**: Optional deadline
+ * - **Category**: Task classification (work, personal, urgent, etc.)
+ * - **Completed**: Boolean completion status
+ * 
+ * ## Architecture
+ * - **Presentation Layer**: Standalone component with OnPush change detection
+ * - **State Management**: Angular Signals for reactive task state
+ * - **Storage**: User-scoped personal data (not project-related)
+ * - **Multi-Tenancy**: User-level isolation (tenant_id = user.uid)
+ * 
+ * ## State Management
+ * Uses Angular 20+ Signals pattern:
+ * - `todos` - Signal: List of todo items
+ * - `filter` - Signal: Current filter settings
+ * - `filteredTodos` - Computed: Filtered and sorted todos
+ * - `completedCount` - Computed: Number of completed tasks
+ * - `pendingCount` - Computed: Number of pending tasks
+ * 
+ * ## Todo vs Project Task Distinction
+ * - **Personal Todo**: User-level, productivity tool, no project association
+ * - **Project Task**: Blueprint-scoped, team collaboration, formal workflow
+ * - Personal todos are lightweight and user-controlled
+ * - Project tasks follow Blueprint permissions and audit trail
+ * 
+ * ## Integration
+ * Separate from project management:
+ * - No Blueprint association
+ * - User-private data
+ * - Optional integration with calendar
+ * - Can reference project tasks but remains independent
+ * 
+ * @see {@link docs/⭐️/整體架構設計.md} - Overall Architecture
+ * @see {@link .github/instructions/ng-gighub-architecture.instructions.md} - Architecture Guidelines
+ * 
+ * @remarks
+ * This component provides personal productivity features:
+ * - Lightweight task management for individuals
+ * - No collaboration or permission complexity
+ * - Quick capture and organization
+ * - Complement to formal project task system
+ * 
+ * @example
+ * ```typescript
+ * // Route configuration
+ * {
+ *   path: 'user/todo',
+ *   component: UserTodoComponent
+ * }
+ * 
+ * // Navigation
+ * router.navigate(['/account/user/todo']);
+ * ```
+ */
 import { ChangeDetectionStrategy, Component, signal, computed, inject, OnInit } from '@angular/core';
 import { SHARED_IMPORTS } from '@shared';
 import { NzMessageService } from 'ng-zorro-antd/message';

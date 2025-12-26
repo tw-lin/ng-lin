@@ -1,10 +1,11 @@
 import { inject, Injectable } from '@angular/core';
+
 import { InMemoryEventBus } from '../services';
 import { TaskCreatedEvent, TaskUpdatedEvent, TaskCompletedEvent } from './task-events';
 
 /**
  * Example: Task Service
- * 
+ *
  * Demonstrates how to publish domain events from a service.
  */
 @Injectable({
@@ -12,7 +13,7 @@ import { TaskCreatedEvent, TaskUpdatedEvent, TaskCompletedEvent } from './task-e
 })
 export class ExampleTaskService {
   private readonly eventBus = inject(InMemoryEventBus);
-  
+
   /**
    * Create a new task and publish TaskCreatedEvent
    */
@@ -32,9 +33,9 @@ export class ExampleTaskService {
       blueprintId: data.blueprintId,
       createdAt: new Date()
     };
-    
+
     console.log('Task created:', task);
-    
+
     // 2. Publish domain event
     await this.eventBus.publish(
       new TaskCreatedEvent({
@@ -45,22 +46,17 @@ export class ExampleTaskService {
         }
       })
     );
-    
+
     console.log('TaskCreatedEvent published');
   }
-  
+
   /**
    * Update a task and publish TaskUpdatedEvent
    */
-  async updateTask(
-    taskId: string,
-    changes: Record<string, unknown>,
-    updatedById: string,
-    updatedByName: string
-  ): Promise<void> {
+  async updateTask(taskId: string, changes: Record<string, unknown>, updatedById: string, updatedByName: string): Promise<void> {
     // 1. Execute business logic (simulated)
     console.log('Task updated:', taskId, changes);
-    
+
     // 2. Publish domain event
     await this.eventBus.publish(
       new TaskUpdatedEvent({
@@ -72,21 +68,17 @@ export class ExampleTaskService {
         }
       })
     );
-    
+
     console.log('TaskUpdatedEvent published');
   }
-  
+
   /**
    * Complete a task and publish TaskCompletedEvent
    */
-  async completeTask(
-    taskId: string,
-    completedById: string,
-    completedByName: string
-  ): Promise<void> {
+  async completeTask(taskId: string, completedById: string, completedByName: string): Promise<void> {
     // 1. Execute business logic (simulated)
     console.log('Task completed:', taskId);
-    
+
     // 2. Publish domain event
     await this.eventBus.publish(
       new TaskCompletedEvent({
@@ -98,10 +90,10 @@ export class ExampleTaskService {
         completedAt: new Date()
       })
     );
-    
+
     console.log('TaskCompletedEvent published');
   }
-  
+
   private generateId(): string {
     return `task_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
   }

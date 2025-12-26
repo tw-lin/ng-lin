@@ -7,8 +7,8 @@ import { DocumentData, FirestoreDataConverter, QueryDocumentSnapshot } from '@an
  */
 export const buildConverter = <T>(
   fromFirestore: (data: DocumentData) => T,
-  toFirestore: (value: T) => DocumentData,
+  toFirestore: (value: T) => DocumentData
 ): FirestoreDataConverter<T> => ({
   fromFirestore: (snapshot: QueryDocumentSnapshot<DocumentData>) => fromFirestore(snapshot.data()),
-  toFirestore,
+  toFirestore
 });

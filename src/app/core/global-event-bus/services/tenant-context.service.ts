@@ -1,43 +1,96 @@
 /**
- * Tenant Context Service - Unified Workspace & Tenant Management
+ * @module TenantContextService
+ * @description Tenant Context Service - Unified Workspace & Tenant Management (租戶上下文服務)
  * 
- * Primary service for workspace management with built-in multi-tenant isolation
- * Replaces WorkspaceContextService with enhanced tenant-first architecture
+ * **Purpose**: Primary service for workspace management with built-in multi-tenant isolation.
+ * Replaces WorkspaceContextService with enhanced tenant-first architecture.
  * 
- * Manages workspace context (user, organization, team, partner, bot) with automatic tenant isolation
+ * **Key Features**:
+ * - **Multi-Context Support**: User, Organization, Team, Partner, Bot workspaces
+ * - **Tenant Isolation**: Automatic tenant_id extraction and validation
+ * - **Context Switching**: Seamless workspace switching with persistence
+ * - **Reactive State**: Signals for sync state, RxJS for async operations
+ * - **Settings Integration**: Syncs context to @delon/theme SettingsService
  * 
- * Architecture:
- * - RxJS Pipeline: Handles ALL async operations (data loading, HTTP requests)
- * - Signals: Manages sync state only (context type, context ID, tenant ID)
- * - Computed: Derived state (labels, icons, mappings, tenant metadata)
- * - Effects: Side effects only (sync to SettingsService, persistence)
- *
- * Tenant Isolation (Primary Purpose):
- * - User Context: tenant_id = user.uid (personal workspace)
- * - Organization Context: tenant_id = organization.id (organization workspace)
- * - Team Context: tenant_id = team.organization_id (team's parent organization)
- * - Partner Context: tenant_id = partner.organization_id (partner's organization)
- * - Bot Context: tenant_id = bot.organization_id (bot's organization)
- *
- * Follows Angular 20 best practices:
- * - "RxJS for Async, Signals for Sync"
- * - switchMap for async operations in pipelines
- * - shareReplay(1) to prevent duplicate requests
- * - toSignal to convert Observable to Signal at the end
+ * **Architecture Patterns**:
+ * - **RxJS Pipeline**: Handles ALL async operations (data loading, HTTP requests)
+ * - **Signals**: Manages sync state only (context type, context ID, tenant ID)
+ * - **Computed**: Derived state (labels, icons, mappings, tenant metadata)
+ * - **Effects**: Side effects only (sync to SettingsService, persistence)
+ * 
+ * **Tenant Isolation Rules** (Primary Purpose):
+ * - `User Context`: tenant_id = user.uid (personal workspace)
+ * - `Organization Context`: tenant_id = organization.id (organization workspace)
+ * - `Team Context`: tenant_id = team.organization_id (team's parent organization)
+ * - `Partner Context`: tenant_id = partner.organization_id (partner's organization)
+ * - `Bot Context`: tenant_id = bot.organization_id (bot's organization)
+ * 
+ * **Angular 20 Best Practices**:
+ * - "RxJS for Async, Signals for Sync" pattern
+ * - `switchMap` for async operations in pipelines
+ * - `shareReplay(1)` to prevent duplicate requests
+ * - `toSignal` to convert Observable to Signal at the end
  * - Keep effects "thin and focused" - no async operations
- *
- * Follows: docs/⭐️/Global-Audit-Log-系統拆解與對齊方案.md (Part V - Phase 1 - Task 1.2)
- *
- * @module core/global-event-bus/services
- * @version 2.0.0 - Unified workspace & tenant management (replaced WorkspaceContextService)
+ * 
+ * **Multi-Tenancy Context**:
+ * - All Firestore queries must include `tenant_id` filter
+ * - Security Rules validate tenant_id on server side
+ * - Audit logs automatically record tenant context
+ * - Context switching triggers full data refresh
+ * 
+ * **State Management**:
+ * - `workspace$`: Observable of complete workspace data (RxJS)
+ * - `currentContext`: Signal for active context type
+ * - `currentContextId`: Signal for active context entity ID
+ * - `tenantId`: Computed signal derived from context
+ * - `tenantMetadata`: Computed signal with full tenant info
+ * 
+ * **Integration Points**:
+ * - **AuthFacade**: User authentication state
+ * - **SettingsService**: Layout and theme settings
+ * - **AuditCollectorService**: Automatic tenant_id injection
+ * - **Repository Layer**: Tenant-filtered queries
+ * 
+ * **Performance**:
+ * - Data cached with `shareReplay(1)` (single request per context)
+ * - Local storage persistence reduces initial load
+ * - Manual reload trigger for forced refresh
+ * - Efficient computed signals for derived state
+ * 
+ * @see docs/⭐️/Global-Audit-Log-系統拆解與對齊方案.md (Part V - Phase 1 - Task 1.2)
+ * @see docs/⭐️/整體架構設計.md (Multi-tenancy model)
+ * @see .github/instructions/ng-gighub-architecture.instructions.md
+ * 
+ * @remarks
+ * **Version**: 2.0.0 - Unified workspace & tenant management (replaced WorkspaceContextService)
+ * **Migration**: Old WorkspaceContextService deprecated, use TenantContextService
+ * **P0 Violation**: Uses FirebaseService (must migrate to direct Auth injection)
+ * 
+ * @example
+ * ```typescript
+ * // Inject service
+ * private tenantContext = inject(TenantContextService);
+ * 
+ * // Switch to organization workspace
+ * this.tenantContext.setContext('organization', 'org-123');
+ * 
+ * // Access tenant ID for queries
+ * const tenantId = this.tenantContext.tenantId();
+ * const query = collection(firestore, 'tasks')
+ *   .where('tenant_id', '==', tenantId);
+ * 
+ * // Get full tenant metadata
+ * const metadata = this.tenantContext.tenantMetadata();
+ * console.log(metadata.tenantName); // "Acme Corp"
+ * ```
  */
 
 import { Injectable, computed, inject, signal, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ContextType, Account, Organization, Team, Partner, Bot, AuthFacade } from '@core';
 import { OrganizationRepository, TeamRepository, PartnerRepository } from '@core/repositories';
-import { SettingsService } from '@delon/theme';
 import { FirebaseService } from '@core/services/firebase.service';
+import { SettingsService } from '@delon/theme';
 import { combineLatest, of, switchMap, map, shareReplay, catchError, BehaviorSubject } from 'rxjs';
 
 const STORAGE_KEY = 'workspace_context';
@@ -283,7 +336,7 @@ export class TenantContextService {
   /**
    * Current Tenant ID
    * Extracted from workspace context (User/Organization/Team/Partner/Bot)
-   * 
+   *
    * Tenant ID Mapping:
    * - User: user.uid
    * - Organization: organization.id
@@ -334,7 +387,7 @@ export class TenantContextService {
   /**
    * Is Superadmin
    * Superadmins can access all tenants (cross-tenant queries)
-   * 
+   *
    * TODO: Integrate with actual role/permission system
    * For now, check custom claim 'role' === 'superadmin' from Firebase Auth
    */
@@ -369,54 +422,64 @@ export class TenantContextService {
     switch (tenantType) {
       case ContextType.USER: {
         const user = this.currentUser();
-        return user ? {
-          tenantId,
-          tenantType,
-          tenantName: user.name || user.email || 'User'
-        } : null;
+        return user
+          ? {
+              tenantId,
+              tenantType,
+              tenantName: user.name || user.email || 'User'
+            }
+          : null;
       }
 
       case ContextType.ORGANIZATION: {
         const org = this.organizations().find(o => o.id === tenantId);
-        return org ? {
-          tenantId,
-          tenantType,
-          tenantName: org.name,
-          ownerId: org.created_by || org.creator_id
-        } : null;
+        return org
+          ? {
+              tenantId,
+              tenantType,
+              tenantName: org.name,
+              ownerId: org.created_by || org.creator_id
+            }
+          : null;
       }
 
       case ContextType.TEAM: {
         const contextId = this.contextId();
         const team = this.teams().find(t => t.id === contextId);
-        return team ? {
-          tenantId, // organization_id
-          tenantType,
-          tenantName: team.name,
-          parentOrgId: team.organization_id
-        } : null;
+        return team
+          ? {
+              tenantId, // organization_id
+              tenantType,
+              tenantName: team.name,
+              parentOrgId: team.organization_id
+            }
+          : null;
       }
 
       case ContextType.PARTNER: {
         const contextId = this.contextId();
         const partner = this.partners().find(p => p.id === contextId);
-        return partner ? {
-          tenantId, // organization_id
-          tenantType,
-          tenantName: partner.name,
-          parentOrgId: partner.organization_id
-        } : null;
+        return partner
+          ? {
+              tenantId, // organization_id
+              tenantType,
+              tenantName: partner.name,
+              parentOrgId: partner.organization_id
+            }
+          : null;
       }
 
       case ContextType.BOT: {
         const contextId = this.contextId();
         const bot = this.bots().find(b => b.id === contextId);
-        return bot ? {
-          tenantId, // organization_id
-          tenantType,
-          tenantName: bot.name,
-          parentOrgId: (bot as any).organization_id
-        } : null;
+        return bot
+          ? {
+              tenantId, // organization_id
+              tenantType,
+              tenantName: bot.name,
+              parentOrgId: (bot as any).organization_id
+            }
+          : null;
       }
 
       default:
@@ -445,16 +508,13 @@ export class TenantContextService {
   /**
    * Ensure Tenant ID Exists
    * Throws error if no tenant context is available
-   * 
+   *
    * Use this before any audit operation to ensure tenant isolation
    */
   ensureTenantId(): string {
     const tenantId = this.currentTenantId();
     if (!tenantId) {
-      throw new Error(
-        '[TenantContextService] No tenant context available. ' +
-        'User must be authenticated and have a workspace context.'
-      );
+      throw new Error('[TenantContextService] No tenant context available. ' + 'User must be authenticated and have a workspace context.');
     }
     return tenantId;
   }

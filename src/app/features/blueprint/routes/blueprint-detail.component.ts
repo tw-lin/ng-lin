@@ -1,3 +1,82 @@
+/**
+ * @module BlueprintDetailComponent
+ * @description
+ * Blueprint Detail Component - Comprehensive blueprint information viewer with modular architecture
+ * 藍圖詳情元件 - 具模組化架構的完整藍圖資訊檢視器
+ * 
+ * **Purpose:**
+ * Central hub for viewing and managing a single Blueprint instance with all enabled modules.
+ * Provides unified access to all construction project management features.
+ * 
+ * **Key Features:**
+ * - Blueprint overview with status, owner, dates, and statistics
+ * - Tab-based navigation for 11+ specialized domain modules
+ * - AsyncState pattern for reliable data loading and error handling
+ * - Real-time audit log sidebar integration
+ * - Module-specific feature delegation (Finance, Tasks, Diary, QA, etc.)
+ * - Multi-tenancy support with Blueprint-scoped data
+ * 
+ * **Architecture Patterns:**
+ * - Component as Orchestrator: Delegates to specialized module components
+ * - AsyncState Pattern: Structured loading/error/success state management
+ * - OnPush Change Detection: Performance optimization for large data
+ * - inject() DI: Angular 20 dependency injection pattern
+ * - Signal-based reactive state (via child components)
+ * 
+ * **Domain Modules:**
+ * 1. **Overview** (default tab) - Summary statistics, recent activity, quick actions
+ * 2. **Tasks** - Construction task management with assignments and dependencies
+ * 3. **Diary** - Daily construction log with photos, weather, progress notes
+ * 4. **Finance** - Invoice management, payment tracking, budget control
+ * 5. **Quality (QA)** - Quality assurance checklists, inspections, non-conformances
+ * 6. **Issues** - Issue tracking, resolution workflow, risk management
+ * 7. **Members** - Team member management, roles, permissions
+ * 8. **Cloud** - File storage, document management, versioning
+ * 9. **Agreement** - Contract documents, amendments, approval workflow
+ * 10. **Contract** - Contract lifecycle management, milestones
+ * 11. **Acceptance** - Final acceptance criteria, handover documentation
+ * 12. **Log** - System event logs, change history
+ * 13. **Weather** - Weather data integration for construction planning
+ * 
+ * **State Management:**
+ * - `AsyncState<Blueprint>` - Loading, error, and data states
+ * - Route params for blueprintId resolution
+ * - Child components manage their own module-specific state
+ * 
+ * **Multi-Tenancy:**
+ * - Blueprint-scoped: All data isolated to current Blueprint
+ * - Blueprint belongs to User, Organization, or Team
+ * - Security Rules enforce Blueprint membership access control
+ * 
+ * **Evolution History:**
+ * - 2025-12-11: Added Construction Log & Task modules
+ * - 2025-12-12: Simplified design, added audit logs to overview sidebar
+ * - 2025-12-13: Added Cloud module for file storage
+ * - 2025-12-23: Removed workflow, safety, warranty, manager modules (consolidated)
+ * - 2025-12-25: Removed container monitoring (moved to infrastructure layer)
+ * 
+ * @see {@link docs/⭐️/整體架構設計.md} - Overall Architecture Design
+ * @see {@link .github/instructions/ng-gighub-architecture.instructions.md} - Architecture Guidelines
+ * @see {@link BlueprintFeatureService} - Business logic for Blueprint operations
+ * 
+ * @remarks
+ * - 842 lines: Large orchestrator component with 13+ module integrations
+ * - Performance: Uses OnPush and AsyncState pattern for efficiency
+ * - Complexity: High - coordinates multiple domain modules with different data models
+ * - Tab Navigation: Dynamic tabs based on enabled modules (configurable per Blueprint)
+ * - Audit Integration: Real-time audit log display in overview sidebar
+ * 
+ * @example
+ * ```typescript
+ * // Route: /blueprint/:id
+ * // Access: Requires Blueprint membership (checked by Security Rules)
+ * 
+ * // Component auto-loads Blueprint from route param
+ * // Displays tabs for enabled modules only
+ * // Each module component manages its own features independently
+ * ```
+ */
+
 import { DatePipe } from '@angular/common';
 import { Component, ChangeDetectionStrategy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -13,8 +92,8 @@ import { NzStatisticModule } from 'ng-zorro-antd/statistic';
 import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { firstValueFrom } from 'rxjs';
-import { BlueprintFeatureService } from '../services/blueprint.service';
 
+import { BlueprintFeatureService } from '../services/blueprint.service';
 import { AcceptanceModuleViewComponent } from './modules/acceptance';
 import { AgreementModuleViewComponent } from './modules/agreement';
 import { AuditLogsComponent } from './modules/audit-logs';
@@ -28,26 +107,6 @@ import { MembersModuleViewComponent } from './modules/members';
 import { QaModuleViewComponent } from './modules/quality';
 import { TasksModuleViewComponent } from './modules/tasks';
 import { WeatherModuleViewComponent } from './modules/weather';
-
-/**
- * Blueprint Detail Component
- * 藍圖詳情元件 - 顯示單一藍圖的完整資訊
- *
- * Features:
- * - Display blueprint information
- * - Show enabled modules
- * - Navigate to module pages
- * - Integrated diary module (工地施工日誌)
- * - Integrated tasks (任務管理)
- * - Integrated audit logs (審計記錄) in overview sidebar
- * - Cloud module (雲端模組) for storage and backup
- *
- * ✅ Modernized with AsyncState pattern
- * ✅ Updated: 2025-12-11 - Added Construction Log & Task modules
- * ✅ Updated: 2025-12-12 - Simplified design, added audit logs to overview
- * ✅ Updated: 2025-12-13 - Added Cloud module tab
- * ✅ Updated: 2025-12-23 - Removed workflow, safety, warranty, manager modules and container monitoring
- */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-blueprint-detail',

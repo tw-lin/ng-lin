@@ -1,19 +1,20 @@
 /**
  * @Auditable Decorator
- * 
+ *
  * 方法級別審計裝飾器
  * - 自動記錄方法呼叫到審計日誌
  * - 捕獲方法參數與返回值
  * - 記錄執行時間與結果
  * - 遵循 docs/⭐️/Global Audit Log.md 規範
- * 
+ *
  * @author Global Event Bus Team
  * @version 1.0.0
  */
 
 import { inject } from '@angular/core';
-import { AuditCollectorService, AuditRecordOptions } from '../services/audit-collector.service';
+
 import { AuditLevel, AuditCategory, AuditChanges } from '../models/audit-event.model';
+import { AuditCollectorService, AuditRecordOptions } from '../services/audit-collector.service';
 
 /**
  * @Auditable 裝飾器選項
@@ -45,9 +46,9 @@ export interface AuditableOptions {
 
 /**
  * @Auditable 方法裝飾器
- * 
+ *
  * 自動記錄方法呼叫到審計日誌
- * 
+ *
  * @example
  * ```typescript
  * @Auditable({
@@ -62,16 +63,12 @@ export interface AuditableOptions {
  * ```
  */
 export function Auditable(options: AuditableOptions = {}) {
-  return function (
-    target: any,
-    propertyKey: string,
-    descriptor: PropertyDescriptor
-  ) {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
-    
+
     descriptor.value = async function (...args: any[]) {
       const startTime = performance.now();
-      
+
       // 取得 AuditCollectorService 實例
       // Note: This requires the service to be available in the injection context
       let auditCollector: AuditCollectorService;
@@ -81,26 +78,22 @@ export function Auditable(options: AuditableOptions = {}) {
         console.warn('[Auditable] Cannot inject AuditCollectorService, audit logging disabled');
         return originalMethod.apply(this, args);
       }
-      
+
       // 準備審計資訊
       const action = options.action || `${propertyKey}`;
       const resourceType = options.resourceType || target.constructor.name.toLowerCase();
-      const resourceId = options.extractResourceId ? 
-        options.extractResourceId(...args) : 
-        (args[0]?.id || args[0] || 'unknown');
-      const actor = options.extractActor ? 
-        options.extractActor(...args) : 
-        'current-user'; // TODO: Get from AuthService
-      
+      const resourceId = options.extractResourceId ? options.extractResourceId(...args) : args[0]?.id || args[0] || 'unknown';
+      const actor = options.extractActor ? options.extractActor(...args) : 'current-user'; // TODO: Get from AuthService
+
       const eventId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const eventType = `${resourceType}.${action}`;
-      
+
       try {
         // 執行原始方法
         const result = await originalMethod.apply(this, args);
         const endTime = performance.now();
         const duration = endTime - startTime;
-        
+
         // 準備元數據
         const metadata: Record<string, unknown> = {};
         if (options.logArgs) {
@@ -112,13 +105,13 @@ export function Auditable(options: AuditableOptions = {}) {
         if (options.logDuration) {
           metadata['durationMs'] = duration.toFixed(2);
         }
-        
+
         // 提取變更 (如果有提供)
         let changes: AuditChanges | undefined;
         if (options.extractChanges) {
           changes = options.extractChanges(args, result);
         }
-        
+
         // 記錄審計
         const recordOptions: AuditRecordOptions = {
           level: options.level || AuditLevel.INFO,
@@ -128,7 +121,7 @@ export function Auditable(options: AuditableOptions = {}) {
           metadata,
           requiresReview: options.requiresReview
         };
-        
+
         // 根據類別選擇適當的記錄方法
         if (options.category === AuditCategory.DATA_MODIFICATION || changes) {
           await auditCollector.recordDataModification(
@@ -143,34 +136,11 @@ export function Auditable(options: AuditableOptions = {}) {
             recordOptions
           );
         } else if (options.category === AuditCategory.DATA_ACCESS) {
-          await auditCollector.recordDataAccess(
-            eventId,
-            eventType,
-            actor,
-            action,
-            resourceType,
-            resourceId,
-            undefined,
-            recordOptions
-          );
+          await auditCollector.recordDataAccess(eventId, eventType, actor, action, resourceType, resourceId, undefined, recordOptions);
         } else if (options.category === AuditCategory.AUTHENTICATION) {
-          await auditCollector.recordAuth(
-            eventId,
-            eventType,
-            actor,
-            action,
-            recordOptions
-          );
+          await auditCollector.recordAuth(eventId, eventType, actor, action, recordOptions);
         } else if (options.category === AuditCategory.AUTHORIZATION) {
-          await auditCollector.recordAuthorization(
-            eventId,
-            eventType,
-            actor,
-            action,
-            resourceType,
-            resourceId,
-            recordOptions
-          );
+          await auditCollector.recordAuthorization(eventId, eventType, actor, action, resourceType, resourceId, recordOptions);
         } else if (options.category === AuditCategory.SECURITY) {
           await auditCollector.recordSecurityEvent(
             eventId,
@@ -195,12 +165,12 @@ export function Auditable(options: AuditableOptions = {}) {
             recordOptions
           );
         }
-        
+
         return result;
       } catch (error) {
         const endTime = performance.now();
         const duration = endTime - startTime;
-        
+
         // 記錄失敗的審計
         const metadata: Record<string, unknown> = {};
         if (options.logArgs) {
@@ -210,7 +180,7 @@ export function Auditable(options: AuditableOptions = {}) {
           metadata['durationMs'] = duration.toFixed(2);
         }
         metadata['error'] = error instanceof Error ? error.message : String(error);
-        
+
         const recordOptions: AuditRecordOptions = {
           level: AuditLevel.ERROR,
           category: options.category || AuditCategory.BUSINESS_OPERATION,
@@ -219,7 +189,7 @@ export function Auditable(options: AuditableOptions = {}) {
           metadata,
           requiresReview: true // 失敗操作總是需要審查
         };
-        
+
         await auditCollector.recordDataModification(
           eventId,
           eventType,
@@ -231,21 +201,21 @@ export function Auditable(options: AuditableOptions = {}) {
           undefined,
           recordOptions
         );
-        
+
         // 重新拋出錯誤
         throw error;
       }
     };
-    
+
     return descriptor;
   };
 }
 
 /**
  * @TrackPermission 裝飾器
- * 
+ *
  * 專門用於追蹤權限相關操作的裝飾器
- * 
+ *
  * @example
  * ```typescript
  * @TrackPermission({
@@ -268,9 +238,9 @@ export function TrackPermission(options: Omit<AuditableOptions, 'category'> = {}
 
 /**
  * @TrackDataModification 裝飾器
- * 
+ *
  * 專門用於追蹤資料修改操作的裝飾器
- * 
+ *
  * @example
  * ```typescript
  * @TrackDataModification({
@@ -296,9 +266,9 @@ export function TrackDataModification(options: Omit<AuditableOptions, 'category'
 
 /**
  * @TrackSecurityEvent 裝飾器
- * 
+ *
  * 專門用於追蹤安全事件的裝飾器
- * 
+ *
  * @example
  * ```typescript
  * @TrackSecurityEvent({

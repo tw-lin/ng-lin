@@ -1,12 +1,12 @@
 /**
  * Global Audit Event Model
- * 
+ *
  * 全域審計事件模型
  * - 統一所有審計事件的結構
  * - 支援多種審計級別與類別
  * - 包含完整的操作上下文
  * - 遵循 docs/⭐️/Global Audit Log.md 規範
- * 
+ *
  * @author Global Event Bus Team
  * @version 1.0.0
  */
@@ -67,12 +67,12 @@ export interface AuditEvent {
   readonly level: AuditLevel;
   /** 審計類別 */
   readonly category: AuditCategory;
-  
+
   /** 執行者 (用戶 ID) */
   readonly actor: string;
   /** 租戶 ID (多租戶隔離) */
   readonly tenantId?: string;
-  
+
   /** 操作描述 */
   readonly action: string;
   /** 資源類型 (如: repository, issue, user) */
@@ -81,24 +81,24 @@ export interface AuditEvent {
   readonly resourceId: string;
   /** 資源名稱 (可選，用於顯示) */
   readonly resourceName?: string;
-  
+
   /** 操作結果 (success, failure, partial) */
   readonly result: 'success' | 'failure' | 'partial';
   /** 錯誤訊息 (如果失敗) */
   readonly errorMessage?: string;
-  
+
   /** 變更內容 (before/after snapshot) */
   readonly changes?: AuditChanges;
   /** 額外元數據 */
   readonly metadata?: Record<string, unknown>;
-  
+
   /** IP 位址 */
   readonly ipAddress?: string;
   /** User Agent */
   readonly userAgent?: string;
   /** 關聯 ID (追蹤跨系統操作) */
   readonly correlationId?: string;
-  
+
   /** 是否需要審查 */
   readonly requiresReview: boolean;
   /** 是否已審查 */
@@ -161,44 +161,44 @@ export class AuditEventBuilder {
     requiresReview: false,
     reviewed: false
   };
-  
+
   withId(id: string): this {
     this.data.id = id;
     return this;
   }
-  
+
   fromDomainEvent(eventId: string, eventType: string, timestamp: Date): this {
     this.data.eventId = eventId;
     this.data.eventType = eventType;
     this.data.timestamp = timestamp;
     return this;
   }
-  
+
   withLevel(level: AuditLevel): this {
     this.data.level = level;
     return this;
   }
-  
+
   withCategory(category: AuditCategory): this {
     this.data.category = category;
     return this;
   }
-  
+
   withActor(actor: string): this {
     this.data.actor = actor;
     return this;
   }
-  
+
   withTenant(tenantId: string): this {
     this.data.tenantId = tenantId;
     return this;
   }
-  
+
   withAction(action: string): this {
     this.data.action = action;
     return this;
   }
-  
+
   withResource(resourceType: string, resourceId: string, resourceName?: string): this {
     this.data.resourceType = resourceType;
     this.data.resourceId = resourceId;
@@ -207,7 +207,7 @@ export class AuditEventBuilder {
     }
     return this;
   }
-  
+
   withResult(result: 'success' | 'failure' | 'partial', errorMessage?: string): this {
     this.data.result = result;
     if (errorMessage) {
@@ -215,29 +215,29 @@ export class AuditEventBuilder {
     }
     return this;
   }
-  
+
   withChanges(changes: AuditChanges): this {
     this.data.changes = changes;
     return this;
   }
-  
+
   withMetadata(metadata: Record<string, unknown>): this {
     this.data.metadata = metadata;
     return this;
   }
-  
+
   withContext(ipAddress?: string, userAgent?: string, correlationId?: string): this {
     this.data.ipAddress = ipAddress;
     this.data.userAgent = userAgent;
     this.data.correlationId = correlationId;
     return this;
   }
-  
-  requiresReview(required: boolean = true): this {
+
+  requiresReview(required = true): this {
     this.data.requiresReview = required;
     return this;
   }
-  
+
   markAsReviewed(reviewedBy: string, notes?: string): this {
     this.data.reviewed = true;
     this.data.reviewedBy = reviewedBy;
@@ -245,11 +245,18 @@ export class AuditEventBuilder {
     this.data.reviewNotes = notes;
     return this;
   }
-  
+
   build(): AuditEvent {
-    if (!this.data.id || !this.data.eventId || !this.data.eventType || 
-        !this.data.timestamp || !this.data.actor || !this.data.action || 
-        !this.data.resourceType || !this.data.resourceId) {
+    if (
+      !this.data.id ||
+      !this.data.eventId ||
+      !this.data.eventType ||
+      !this.data.timestamp ||
+      !this.data.actor ||
+      !this.data.action ||
+      !this.data.resourceType ||
+      !this.data.resourceId
+    ) {
       throw new Error('Missing required audit event fields');
     }
     return {

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { IRetryPolicy, RetryAttempt, RetryResult } from '../interfaces/retry-policy.interface';
+
 import { RetryExhaustedError } from '../errors/event-handler.error';
+import { IRetryPolicy, RetryAttempt, RetryResult } from '../interfaces/retry-policy.interface';
 
 /**
  * Retry Manager Service
@@ -44,10 +45,7 @@ export class RetryManagerService {
    * @returns Promise resolving to function result
    * @throws RetryExhaustedError if all retry attempts fail
    */
-  async executeWithRetry<T>(
-    fn: () => Promise<T>,
-    policy: IRetryPolicy
-  ): Promise<T> {
+  async executeWithRetry<T>(fn: () => Promise<T>, policy: IRetryPolicy): Promise<T> {
     const attempts: RetryAttempt[] = [];
     let lastError: Error | undefined;
 
@@ -87,9 +85,7 @@ export class RetryManagerService {
           const shouldRetry = this.shouldRetry(lastError, attempt, policy);
 
           if (!shouldRetry) {
-            throw new Error(
-              `Operation failed and retry policy decided not to retry: ${lastError.message}`
-            );
+            throw new Error(`Operation failed and retry policy decided not to retry: ${lastError.message}`);
           }
 
           // Wait before next attempt
@@ -99,9 +95,7 @@ export class RetryManagerService {
     }
 
     // All attempts exhausted
-    throw new Error(
-      `Operation failed after ${policy.maxAttempts} attempts: ${lastError?.message ?? 'Unknown error'}`
-    );
+    throw new Error(`Operation failed after ${policy.maxAttempts} attempts: ${lastError?.message ?? 'Unknown error'}`);
   }
 
   /**
@@ -178,7 +172,7 @@ export class RetryManagerService {
     return {
       success,
       attempts: attempts.length,
-      totalTimeMs: this.calculateTotalDuration(attempts),
+      totalTimeMs: this.calculateTotalDuration(attempts)
     };
   }
 
@@ -200,7 +194,7 @@ export class RetryManagerService {
       /not found/i,
       /bad request/i,
       /authentication/i,
-      /permission/i,
+      /permission/i
     ];
 
     const errorMessage = error.message.toLowerCase();

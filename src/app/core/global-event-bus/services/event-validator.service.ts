@@ -1,13 +1,8 @@
 import { Injectable } from '@angular/core';
+
+import { HandlerValidationError, EventHandlerError } from '../errors/event-handler.error';
+import { SchemaValidationError, EventVersionMismatchError } from '../errors/serialization.error';
 import { DomainEvent } from '../models/base-event';
-import {
-  HandlerValidationError,
-  EventHandlerError,
-} from '../errors/event-handler.error';
-import {
-  SchemaValidationError,
-  EventVersionMismatchError,
-} from '../errors/serialization.error';
 
 // Create aliases for backward compatibility
 const ValidationError = HandlerValidationError;
@@ -108,7 +103,7 @@ export class EventValidatorService {
     return {
       valid: errors.length === 0,
       errors,
-      warnings,
+      warnings
     };
   }
 
@@ -122,9 +117,7 @@ export class EventValidatorService {
   validateSchema(event: DomainEvent, strict = false): boolean {
     // Check event is object
     if (!event || typeof event !== 'object') {
-      throw new InvalidEventSchemaError('Event must be a non-null object', [
-        'Event is null or not an object',
-      ]);
+      throw new InvalidEventSchemaError('Event must be a non-null object', ['Event is null or not an object']);
     }
 
     const errors: string[] = [];
@@ -152,23 +145,13 @@ export class EventValidatorService {
     }
 
     // EventId format validation
-    if (
-      'eventId' in event &&
-      typeof event.eventId === 'string' &&
-      event.eventId.length === 0
-    ) {
+    if ('eventId' in event && typeof event.eventId === 'string' && event.eventId.length === 0) {
       errors.push('eventId cannot be empty');
     }
 
     // EventType format validation
-    if (
-      'eventType' in event &&
-      typeof event.eventType === 'string' &&
-      !this.isValidEventType(event.eventType)
-    ) {
-      errors.push(
-        `eventType "${event.eventType}" has invalid format (expected: namespace.action format)`
-      );
+    if ('eventType' in event && typeof event.eventType === 'string' && !this.isValidEventType(event.eventType)) {
+      errors.push(`eventType "${event.eventType}" has invalid format (expected: namespace.action format)`);
     }
 
     // Optional fields (strict mode)
@@ -177,10 +160,7 @@ export class EventValidatorService {
         errors.push('aggregateId must be a string');
       }
 
-      if (
-        'aggregateType' in event &&
-        typeof event.aggregateType !== 'string'
-      ) {
+      if ('aggregateType' in event && typeof event.aggregateType !== 'string') {
         errors.push('aggregateType must be a string');
       }
 
@@ -190,10 +170,7 @@ export class EventValidatorService {
     }
 
     if (errors.length > 0) {
-      throw new InvalidEventSchemaError(
-        'Event schema validation failed',
-        errors
-      );
+      throw new InvalidEventSchemaError('Event schema validation failed', errors);
     }
 
     return true;
@@ -213,12 +190,7 @@ export class EventValidatorService {
 
     // Payload should be object or primitive
     const payloadType = typeof event.payload;
-    if (
-      payloadType !== 'object' &&
-      payloadType !== 'string' &&
-      payloadType !== 'number' &&
-      payloadType !== 'boolean'
-    ) {
+    if (payloadType !== 'object' && payloadType !== 'string' && payloadType !== 'number' && payloadType !== 'boolean') {
       errors.push(`Invalid payload type: ${payloadType}`);
     }
 
@@ -241,12 +213,7 @@ export class EventValidatorService {
     const eventVersion = event.metadata?.version ?? '1.0.0';
 
     if (!allowedVersions.includes(eventVersion)) {
-      throw new InvalidEventVersionError(
-        event.eventType,
-        allowedVersions.join(' | '),
-        eventVersion,
-        event
-      );
+      throw new InvalidEventVersionError(event.eventType, allowedVersions.join(' | '), eventVersion, event);
     }
 
     return true;

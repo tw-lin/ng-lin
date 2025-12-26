@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import { Firestore, addDoc, collection, collectionData, doc, docData, query, updateDoc, where } from '@angular/fire/firestore';
+import { LoggerService } from '@core/services';
 import { Observable, catchError, combineLatest, map, of } from 'rxjs';
 
-import { LoggerService } from '@core/services';
 import { Organization } from '../models';
 
 @Injectable({
@@ -31,10 +31,7 @@ export class OrganizationRepository {
     const createdByQuery = query(this.collectionRef, where('created_by', '==', userId));
     const legacyCreatorIdQuery = query(this.collectionRef, where('creator_id', '==', userId));
 
-    return combineLatest([
-      collectionData(createdByQuery, { idField: 'id' }),
-      collectionData(legacyCreatorIdQuery, { idField: 'id' })
-    ]).pipe(
+    return combineLatest([collectionData(createdByQuery, { idField: 'id' }), collectionData(legacyCreatorIdQuery, { idField: 'id' })]).pipe(
       map(([createdBy, legacy]) => {
         const merged = [...(createdBy as Organization[]), ...(legacy as Organization[])];
         const unique = new Map<string, Organization>();

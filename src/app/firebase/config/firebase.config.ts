@@ -1,5 +1,5 @@
-import { FirebaseOptions } from 'firebase/app';
 import { environment } from '@env/environment';
+import { FirebaseOptions } from 'firebase/app';
 
 /**
  * Centralized Firebase app options (environment-driven).

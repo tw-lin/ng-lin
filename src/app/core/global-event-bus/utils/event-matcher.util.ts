@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+
 import type { DomainEvent } from '../models/base-event';
 
 /**
@@ -17,26 +18,26 @@ interface CompiledPattern {
 
 /**
  * Event Matcher Utility Service
- * 
+ *
  * Provides pattern matching for event types with support for:
  * - Exact matching: "task.created"
  * - Wildcard matching: "task.*", "*.created", "**"
  * - Regex matching: /^task\.(created|updated)$/
- * 
+ *
  * @example
  * ```typescript
  * const matcher = inject(EventMatcherUtil);
- * 
+ *
  * // Exact match
  * matcher.matches("task.created", "task.created"); // true
- * 
+ *
  * // Wildcard
  * matcher.matches("task.created", "task.*"); // true
  * matcher.matches("task.updated", "*.updated"); // true
- * 
+ *
  * // Match all
  * matcher.matches("any.event", "**"); // true
- * 
+ *
  * // Filter events
  * const events = [
  *   { eventType: "task.created" },
@@ -81,34 +82,28 @@ export class EventMatcherUtil {
    * Check if an event matches any of the patterns
    */
   matchesAny(eventType: string, patterns: MatchPattern[]): boolean {
-    return patterns.some((pattern) => this.matches(eventType, pattern));
+    return patterns.some(pattern => this.matches(eventType, pattern));
   }
 
   /**
    * Check if an event matches all patterns
    */
   matchesAll(eventType: string, patterns: MatchPattern[]): boolean {
-    return patterns.every((pattern) => this.matches(eventType, pattern));
+    return patterns.every(pattern => this.matches(eventType, pattern));
   }
 
   /**
    * Filter events by patterns
    */
-  filterEvents<T extends DomainEvent<any>>(
-    events: T[],
-    patterns: MatchPattern[]
-  ): T[] {
-    return events.filter((event) => this.matchesAny(event.eventType, patterns));
+  filterEvents<T extends DomainEvent<any>>(events: T[], patterns: MatchPattern[]): T[] {
+    return events.filter(event => this.matchesAny(event.eventType, patterns));
   }
 
   /**
    * Group events by pattern matching
    * Returns a map of pattern -> matching events
    */
-  groupByPattern<T extends DomainEvent<any>>(
-    events: T[],
-    patterns: string[]
-  ): Map<string, T[]> {
+  groupByPattern<T extends DomainEvent<any>>(events: T[], patterns: string[]): Map<string, T[]> {
     const groups = new Map<string, T[]>();
 
     for (const pattern of patterns) {
@@ -137,9 +132,7 @@ export class EventMatcherUtil {
     }
 
     // Escape regex special characters except * and .
-    let regexStr = pattern
-      .replace(/[\\^$+?()[\]{}|]/g, '\\$&')
-      .replace(/\./g, '\\.');
+    let regexStr = pattern.replace(/[\\^$+?()[\]{}|]/g, '\\$&').replace(/\./g, '\\.');
 
     // Convert wildcards to regex
     // ** matches everything
@@ -154,7 +147,7 @@ export class EventMatcherUtil {
     const compiled: CompiledPattern = {
       original: pattern,
       regex,
-      isWildcard: pattern.includes('*'),
+      isWildcard: pattern.includes('*')
     };
 
     this.compiledPatterns.set(pattern, compiled);
@@ -175,7 +168,7 @@ export class EventMatcherUtil {
   getCacheStats(): { size: number; patterns: string[] } {
     return {
       size: this.compiledPatterns.size,
-      patterns: Array.from(this.compiledPatterns.keys()),
+      patterns: Array.from(this.compiledPatterns.keys())
     };
   }
 

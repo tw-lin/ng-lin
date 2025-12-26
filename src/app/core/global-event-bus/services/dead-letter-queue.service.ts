@@ -1,6 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { EventEnvelope } from '../models/event-envelope';
+
 import { DomainEvent } from '../models/base-event';
+import { EventEnvelope } from '../models/event-envelope';
 
 /**
  * Dead Letter Queue Service
@@ -68,15 +69,12 @@ export class DeadLetterQueueService {
       return next;
     });
 
-    console.error(
-      `[DeadLetterQueue] Event ${eventId} (${envelope.event.eventType}) sent to DLQ after ${envelope.retryCount} attempts`,
-      {
-        eventId,
-        eventType: envelope.event.eventType,
-        retryCount: envelope.retryCount,
-        lastError: envelope.error?.message,
-      }
-    );
+    console.error(`[DeadLetterQueue] Event ${eventId} (${envelope.event.eventType}) sent to DLQ after ${envelope.retryCount} attempts`, {
+      eventId,
+      eventType: envelope.event.eventType,
+      retryCount: envelope.retryCount,
+      lastError: envelope.error?.message
+    });
   }
 
   /**
@@ -85,11 +83,7 @@ export class DeadLetterQueueService {
    * @param filter - Optional filter criteria
    * @returns Array of failed event envelopes
    */
-  async getFailedEvents(filter?: {
-    eventType?: string;
-    since?: Date;
-    limit?: number;
-  }): Promise<EventEnvelope[]> {
+  async getFailedEvents(filter?: { eventType?: string; since?: Date; limit?: number }): Promise<EventEnvelope[]> {
     let events = Array.from(this.failedEvents().values());
 
     // Apply filters
@@ -98,9 +92,7 @@ export class DeadLetterQueueService {
     }
 
     if (filter?.since) {
-      events = events.filter(
-        e => e.lastAttempt && e.lastAttempt >= filter.since!
-      );
+      events = events.filter(e => e.lastAttempt && e.lastAttempt >= filter.since!);
     }
 
     // Sort by last attempt (most recent first)
@@ -162,9 +154,7 @@ export class DeadLetterQueueService {
       isDeadLetter: false
     });
 
-    console.info(
-      `[DeadLetterQueue] Event ${eventId} removed from DLQ for retry`
-    );
+    console.info(`[DeadLetterQueue] Event ${eventId} removed from DLQ for retry`);
 
     return freshEnvelope;
   }
@@ -176,9 +166,7 @@ export class DeadLetterQueueService {
    * @returns Array of event envelopes for reprocessing
    */
   async retryByType(eventType: string): Promise<EventEnvelope[]> {
-    const toRetry = Array.from(this.failedEvents().values()).filter(
-      e => e.event.eventType === eventType
-    );
+    const toRetry = Array.from(this.failedEvents().values()).filter(e => e.event.eventType === eventType);
 
     // Remove from DLQ
     this.failedEvents.update(current => {
@@ -188,22 +176,21 @@ export class DeadLetterQueueService {
       }
       return next;
     });
-    
+
     // Create fresh envelopes with reset retry count
-    const freshEnvelopes: EventEnvelope[] = toRetry.map(envelope => 
-      new EventEnvelope({
-        event: envelope.event,
-        retryCount: 0,
-        error: undefined,
-        lastAttempt: undefined,
-        createdAt: envelope.createdAt,
-        isDeadLetter: false
-      })
+    const freshEnvelopes: EventEnvelope[] = toRetry.map(
+      envelope =>
+        new EventEnvelope({
+          event: envelope.event,
+          retryCount: 0,
+          error: undefined,
+          lastAttempt: undefined,
+          createdAt: envelope.createdAt,
+          isDeadLetter: false
+        })
     );
 
-    console.info(
-      `[DeadLetterQueue] ${freshEnvelopes.length} events of type ${eventType} removed from DLQ for retry`
-    );
+    console.info(`[DeadLetterQueue] ${freshEnvelopes.length} events of type ${eventType} removed from DLQ for retry`);
 
     return freshEnvelopes;
   }
@@ -268,7 +255,7 @@ export class DeadLetterQueueService {
       total: this.totalFailedEvents(),
       byType: this.failedEventTypes(),
       oldestFailure,
-      newestFailure,
+      newestFailure
     };
   }
 
@@ -295,7 +282,7 @@ export class DeadLetterQueueService {
       retryCount: envelope.retryCount,
       lastAttempt: envelope.lastAttempt ?? null,
       error: envelope.error?.message ?? null,
-      payload: envelope.event.payload,
+      payload: envelope.event.payload
     }));
   }
 }

@@ -12,22 +12,22 @@ export type CustomIdGenerator = (timestamp?: number) => string;
 
 /**
  * Event ID Generator Utility Service
- * 
+ *
  * Provides multiple strategies for generating unique event IDs:
  * - UUID v4: Random-based, no ordering (default)
  * - ULID: Timestamp-ordered, lexicographically sortable
  * - Custom: User-defined generator function
- * 
+ *
  * @example
  * ```typescript
  * const generator = inject(EventIdGeneratorUtil);
- * 
+ *
  * // UUID v4 (default)
  * const id1 = generator.generate(); // "550e8400-e29b-41d4-a716-446655440000"
- * 
+ *
  * // ULID (sortable)
  * const id2 = generator.generateULID(); // "01ARZ3NDEKTSV4RRFFQ69G5FAV"
- * 
+ *
  * // Custom generator
  * generator.setCustomGenerator((ts) => `evt-${ts}`);
  * const id3 = generator.generate(); // "evt-1703462400000"
@@ -62,7 +62,7 @@ export class EventIdGeneratorUtil {
    * Format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
    */
   generateUUID(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
       const r = (Math.random() * 16) | 0;
       const v = c === 'x' ? r : (r & 0x3) | 0x8;
       return v.toString(16);
@@ -72,11 +72,11 @@ export class EventIdGeneratorUtil {
   /**
    * Generate ULID (Universally Unique Lexicographically Sortable Identifier)
    * Format: 01ARZ3NDEKTSV4RRFFQ69G5FAV (26 characters)
-   * 
+   *
    * Structure:
    * - First 10 characters: Timestamp (milliseconds)
    * - Last 16 characters: Randomness
-   * 
+   *
    * Benefits:
    * - Sortable by creation time
    * - URL-safe
@@ -121,7 +121,7 @@ export class EventIdGeneratorUtil {
 
   /**
    * Set a custom ID generator function
-   * 
+   *
    * @example
    * ```typescript
    * generator.setCustomGenerator((timestamp) => {
@@ -162,7 +162,7 @@ export class EventIdGeneratorUtil {
 
     const ENCODING = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
     const timeChars = ulid.substring(0, 10);
-    
+
     let timestamp = 0;
     for (let i = 0; i < timeChars.length; i++) {
       const char = timeChars[i];

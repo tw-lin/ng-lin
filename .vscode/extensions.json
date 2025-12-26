@@ -1,4 +1,8 @@
 {
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=827846
-  "recommendations": ["cipchk.ng-alain-extension-pack"]
+  "recommendations": [
+    "cipchk.ng-alain-extension-pack",
+    "GitHub.copilot",
+    "GitHub.copilot-chat"
+  ]
 }

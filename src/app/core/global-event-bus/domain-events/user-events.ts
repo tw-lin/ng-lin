@@ -1,8 +1,8 @@
 /**
  * User Domain Events
- * 
+ *
  * Defines all events related to user lifecycle and operations.
- * 
+ *
  * @module DomainEvents/User
  */
 
@@ -25,7 +25,7 @@ export interface User {
 
 /**
  * Event: User Registered
- * 
+ *
  * Published when a new user registers in the system.
  */
 export class UserRegisteredEvent extends DomainEvent<{
@@ -38,10 +38,7 @@ export class UserRegisteredEvent extends DomainEvent<{
     provider: 'email' | 'google' | 'github' | 'anonymous';
   };
 
-  constructor(payload: {
-    user: User;
-    provider: 'email' | 'google' | 'github' | 'anonymous';
-  }) {
+  constructor(payload: { user: User; provider: 'email' | 'google' | 'github' | 'anonymous' }) {
     super(payload, {
       aggregateId: payload.user.id,
       aggregateType: 'User',
@@ -53,7 +50,7 @@ export class UserRegisteredEvent extends DomainEvent<{
 
 /**
  * Event: User Updated
- * 
+ *
  * Published when user profile is updated.
  */
 export class UserUpdatedEvent extends DomainEvent<{
@@ -68,11 +65,7 @@ export class UserUpdatedEvent extends DomainEvent<{
     previousValues: Partial<User>;
   };
 
-  constructor(payload: {
-    userId: string;
-    changes: Partial<User>;
-    previousValues: Partial<User>;
-  }) {
+  constructor(payload: { userId: string; changes: Partial<User>; previousValues: Partial<User> }) {
     super(payload, {
       aggregateId: payload.userId,
       aggregateType: 'User'
@@ -83,13 +76,13 @@ export class UserUpdatedEvent extends DomainEvent<{
 
 /**
  * Event: User Login
- * 
+ *
  * Published when user successfully authenticates.
- * 
+ *
  * NOTE: This is a deprecated simplified version.
  * For detailed auth events with provider info, session tracking, and security metadata,
  * use UserLoginEvent from auth-events.ts (auth.user.login).
- * 
+ *
  * @deprecated Use UserLoginEvent from auth-events.ts for authentication tracking
  */
 // Commented out to avoid duplicate exports - use auth-events.ts version
@@ -125,13 +118,13 @@ export class UserLoginEvent extends DomainEvent<{
 
 /**
  * Event: User Logout
- * 
+ *
  * Published when user logs out.
- * 
+ *
  * NOTE: This is a deprecated simplified version.
  * For detailed logout events with session duration and security context,
  * use UserLogoutEvent from auth-events.ts (auth.user.logout).
- * 
+ *
  * @deprecated Use UserLogoutEvent from auth-events.ts for authentication tracking
  */
 // Commented out to avoid duplicate exports - use auth-events.ts version
@@ -154,7 +147,7 @@ export class UserLogoutEvent extends DomainEvent<{
 
 /**
  * Event: User Deleted
- * 
+ *
  * Published when user account is deleted.
  */
 export class UserDeletedEvent extends DomainEvent<{

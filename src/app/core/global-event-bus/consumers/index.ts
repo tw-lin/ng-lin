@@ -1,8 +1,8 @@
 /**
  * Consumers
- * 
+ *
  * Central export for all consumer implementations.
- * 
+ *
  * @module Consumers
  */
 

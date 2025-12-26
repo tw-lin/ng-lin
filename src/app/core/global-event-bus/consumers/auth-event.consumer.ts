@@ -1,24 +1,22 @@
 /**
  * Auth Event Consumer
- * 
+ *
  * 認證事件消費者
  * - 優先級: 100 (最高優先級，確保認證事件優先處理)
  * - 訂閱所有認證相關事件
  * - 自動觸發審計記錄
  * - 整合 AuthAuditService & PermissionAuditService
  * - 遵循 docs/Global Event Bus.md 規範
- * 
+ *
  * @author Global Event Bus Team
  * @version 1.0.0
  */
 
 import { Injectable, inject } from '@angular/core';
-import { EventConsumer } from '../services/event-consumer.base';
-import { Subscribe } from '../decorators/subscribe.decorator';
+
 import { EventHandler } from '../decorators/event-handler.decorator';
 import { Retry } from '../decorators/retry.decorator';
-import { AuthAuditService } from '../services/auth-audit.service';
-import { PermissionAuditService } from '../services/permission-audit.service';
+import { Subscribe } from '../decorators/subscribe.decorator';
 import {
   UserLoginEvent,
   UserLogoutEvent,
@@ -32,13 +30,16 @@ import {
   LoginFailedEvent,
   EmailVerifiedEvent
 } from '../domain-events/auth-events';
+import { AuthAuditService } from '../services/auth-audit.service';
+import { EventConsumer } from '../services/event-consumer.base';
+import { PermissionAuditService } from '../services/permission-audit.service';
 
 /**
  * Auth Event Consumer
- * 
+ *
  * 優先級: 100 (最高)
  * 標籤: ['auth', 'security', 'audit', 'critical']
- * 
+ *
  * 職責:
  * 1. 訂閱所有認證事件
  * 2. 整合 AuthAuditService 自動記錄
@@ -64,7 +65,7 @@ export class AuthEventConsumer extends EventConsumer {
 
   /**
    * 處理用戶登入事件
-   * 
+   *
    * 業務邏輯:
    * 1. 記錄登入審計
    * 2. 更新用戶最後登入時間
@@ -86,7 +87,7 @@ export class AuthEventConsumer extends EventConsumer {
     });
 
     // 審計記錄由 AuthAuditService 自動處理
-    
+
     // TODO: 實作次要業務邏輯
     // - 更新用戶最後登入時間
     // - 檢測異常登入
@@ -116,7 +117,7 @@ export class AuthEventConsumer extends EventConsumer {
 
   /**
    * 處理登入失敗事件
-   * 
+   *
    * 安全考量:
    * 1. 記錄失敗嘗試
    * 2. 檢測暴力破解
@@ -195,7 +196,7 @@ export class AuthEventConsumer extends EventConsumer {
 
   /**
    * 處理 MFA 禁用事件
-   * 
+   *
    * 安全考量:
    * - MFA 禁用視為高風險操作
    * - 需要二次確認
@@ -260,7 +261,7 @@ export class AuthEventConsumer extends EventConsumer {
 
   /**
    * 處理權限變更事件
-   * 
+   *
    * 業務邏輯:
    * 1. 記錄權限審計 (由 PermissionAuditService 處理)
    * 2. 清除權限快取
@@ -281,7 +282,7 @@ export class AuthEventConsumer extends EventConsumer {
     // TODO: 實作次要業務邏輯
     // - 清除用戶權限快取
     // await this.permissionCacheService.clearUserCache(event.payload.userId);
-    
+
     // - 發送權限變更通知
     // await this.notificationService.sendPermissionChangeNotification(event.payload);
 
@@ -337,7 +338,7 @@ export class AuthEventConsumer extends EventConsumer {
 
   /**
    * 覆寫錯誤處理
-   * 
+   *
    * 認證事件處理失敗屬於嚴重問題，需要特殊處理
    */
   protected handleError(error: Error, event: any): void {

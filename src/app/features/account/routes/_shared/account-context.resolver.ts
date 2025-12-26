@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Resolve, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+
 import { AccountService } from '../../index';
 
 /**
