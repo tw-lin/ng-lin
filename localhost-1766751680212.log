@@ -1,0 +1,68 @@
+root_effect_scheduler.mjs:3637  ERROR Error: EVENT_BUS not provided. Configure event bus in app providers.
+    at Object.factory (event-bus-tokens.ts:30:11)
+    at root_effect_scheduler.mjs:2194:47
+    at runInInjectorProfilerContext (root_effect_scheduler.mjs:749:9)
+    at R3Injector.hydrate (root_effect_scheduler.mjs:2192:21)
+    at R3Injector.get (root_effect_scheduler.mjs:2040:33)
+    at R3Injector.retrieve (root_effect_scheduler.mjs:1936:25)
+    at injectInjectorOnly (root_effect_scheduler.mjs:1049:39)
+    at ɵɵinject (root_effect_scheduler.mjs:1061:42)
+    at inject2 (root_effect_scheduler.mjs:1149:12)
+    at new _AuditLogService (audit-log.service.ts:67:22)
+handleError @ root_effect_scheduler.mjs:3637
+main.ts:6  Error: EVENT_BUS not provided. Configure event bus in app providers.
+    at Object.factory (event-bus-tokens.ts:30:11)
+    at root_effect_scheduler.mjs:2194:47
+    at runInInjectorProfilerContext (root_effect_scheduler.mjs:749:9)
+    at R3Injector.hydrate (root_effect_scheduler.mjs:2192:21)
+    at R3Injector.get (root_effect_scheduler.mjs:2040:33)
+    at R3Injector.retrieve (root_effect_scheduler.mjs:1936:25)
+    at injectInjectorOnly (root_effect_scheduler.mjs:1049:39)
+    at ɵɵinject (root_effect_scheduler.mjs:1061:42)
+    at inject2 (root_effect_scheduler.mjs:1149:12)
+    at new _AuditLogService (audit-log.service.ts:67:22)
+(匿名) @ main.ts:6
+index.esm2017.js:1498 App Check debug token: 897a321f-ffa2-4f51-9c89-478faf670a91. You will need to add it to your app's App Check settings in the Firebase console for it to work.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+tenant-context.service.ts:103 [TenantContextService] 👤 User authenticated: ac7x@pm.me
+angular-fire.mjs:114  Calling Firebase APIs outside of an Injection context may destabilize your application leading to subtle change-detection and hydration bugs. Find more at https://github.com/angular/angularfire/blob/main/docs/zones.md
+warnOutsideInjectionContext @ angular-fire.mjs:114
+angular-fire.mjs:117  Firebase API called outside injection context: collectionData
+warnOutsideInjectionContext @ angular-fire.mjs:117
+angular-fire.mjs:117  Firebase API called outside injection context: collectionData
+warnOutsideInjectionContext @ angular-fire.mjs:117
+tenant-context.service.ts:118 [TenantContextService] ✅ Organizations loaded: 1
+angular-fire.mjs:117  Firebase API called outside injection context: collectionData
+warnOutsideInjectionContext @ angular-fire.mjs:117
+angular-fire.mjs:117  Firebase API called outside injection context: collectionData
+warnOutsideInjectionContext @ angular-fire.mjs:117
+tenant-context.service.ts:132 [TenantContextService] ✅ Teams loaded: 1
+tenant-context.service.ts:133 [TenantContextService] ✅ Partners loaded: 0
+tenant-context.service.ts:553 [TenantContextService] 🔄 Auto-restoring context...
+tenant-context.service.ts:717 [TenantContextService] 💾 Restoring context from localStorage: {"type":"user","id":"YmebcYDwa6dGylG78kZrkRRfFsr2"}
+tenant-context.service.ts:723 [TenantContextService] ✅ Context restored: Object
+tenant-context.service.ts:118 [TenantContextService] ✅ Organizations loaded: 1
+angular-fire.mjs:117  Firebase API called outside injection context: collectionData
+warnOutsideInjectionContext @ angular-fire.mjs:117
+angular-fire.mjs:117  Firebase API called outside injection context: collectionData
+warnOutsideInjectionContext @ angular-fire.mjs:117
+tenant-context.service.ts:118 [TenantContextService] ✅ Organizations loaded: 1
+angular-fire.mjs:117  Firebase API called outside injection context: collectionData
+warnOutsideInjectionContext @ angular-fire.mjs:117
+angular-fire.mjs:117  Firebase API called outside injection context: collectionData
+warnOutsideInjectionContext @ angular-fire.mjs:117
+tenant-context.service.ts:132 [TenantContextService] ✅ Teams loaded: 1
+tenant-context.service.ts:133 [TenantContextService] ✅ Partners loaded: 0
+tenant-context.service.ts:132 [TenantContextService] ✅ Teams loaded: 1
+tenant-context.service.ts:133 [TenantContextService] ✅ Partners loaded: 0
+tenant-context.service.ts:132 [TenantContextService] ✅ Teams loaded: 1
+tenant-context.service.ts:133 [TenantContextService] ✅ Partners loaded: 0
