@@ -19,19 +19,27 @@ docs/
 ├── multi-tenancy/                # Multi-Tenancy & Blueprint System
 ├── account/                      # SaaS Account Management
 ├── collaboration/                # Issues, Discussions, Notifications
-├── api/                          # API Specifications
-├── architecture/                 # System Architecture
-├── data-model/                   # Data Models & Schemas
-├── deployment/                   # Deployment Guides
-├── design/                       # UI/UX Design
-├── functions/                    # Cloud Functions
-├── getting-started/              # Quick Start Guides
-├── operations/                   # Operations & Monitoring
-├── overview/                     # Project Overview
-├── principles/                   # Core Principles
-├── reference/                    # Technical Reference
-├── security/                     # Security Guidelines
-└── ui-theme/                     # UI Theme System
+├── strategy-governance/          # Ownership, branching, compliance invariants
+│   ├── architecture/             # System architecture views
+│   ├── overview/                 # Project overview & status
+│   └── principles/               # Core principles and rules
+├── identity-tenancy/             # AuthN/Z, roles, context switch
+├── change-control/               # API/data contracts and versioning
+│   ├── api/                      # API/interface specs
+│   └── data-model/               # Data models & schemas
+├── automation-delivery/          # Actions/CI-CD, workflows, functions
+│   ├── deployment/               # Deployment guides and playbooks
+│   └── functions/                # Cloud Functions docs
+├── observability-operations/     # Monitoring, runbooks, topology
+│   └── operations/               # Ops runbooks and checklists
+├── enablement-experience/        # Onboarding, design system, UI themes
+│   ├── design/                   # UX/design guidelines
+│   ├── getting-started/          # Quick start guides
+│   └── ui-theme/                 # UI theme system
+├── security-compliance/          # Security baselines, audits, validation
+│   └── security/                 # Security guidelines
+├── legacy-archive/               # Historical/duplicate docs pending rewrite
+└── reference/                    # Technical Reference (cross-cutting)
 ```
 
 ---
@@ -56,15 +64,15 @@ The GitHub Platform Architect view treats GitHub as a governable platform. The s
 
 | Pillar | Current coverage |
 | --- | --- |
-| Strategy & Governance | [⭐️/](./⭐️/) (strategic), [architecture/](./architecture/), [principles/](./principles/), [Standard.md](./Standard.md), [Level.md](./Level.md), [Platform-0.md](./Platform-0.md), [Platform-1.md](./Platform-1.md), [Platform-Contract-Management.md](./Platform-Contract-Management.md), [ng-gighub-tree.md](./ng-gighub-tree.md) |
-| Identity, Access & Tenancy | [identity/](./identity/), [multi-tenancy/](./multi-tenancy/), [account/](./account/) (planned), [role.md](./role.md), [ACCOUNT_CONTEXT_SWITCHER_ANALYSIS.md](./ACCOUNT_CONTEXT_SWITCHER_ANALYSIS.md), [ACCOUNT_REORGANIZATION_SUMMARY.md](./ACCOUNT_REORGANIZATION_SUMMARY.md), [SaaS.md](./SaaS.md), [saas-ddd-structure.md](./saas-ddd-structure.md) |
-| Source of Truth & Change Control | [api/](./api/), [data-model/](./data-model/), [reference/](./reference/), [ROUTE_ARCHITECTURE_ANALYSIS.md](./ROUTE_ARCHITECTURE_ANALYSIS.md), [0.md](./0.md), [Platform-Contract-Management.md](./Platform-Contract-Management.md) |
-| Collaboration & Work Management | (Planned: issues/discussions/notifications) — track gaps in [overview/](./overview/) and [getting-started/](./getting-started/) for contribution; no dedicated docs yet |
-| Automation & Delivery | [deployment/](./deployment/), [event-bus/](./event-bus/), [functions/](./functions/), [dev.md](./dev.md), [Global Event Bus.md](./Global%20Event%20Bus.md), [event-bus(Global Event Bus)-0.md](./event-bus(Global%20Event%20Bus)-0.md) … [event-bus(Global Event Bus)-9.md](./event-bus(Global%20Event%20Bus)-9.md) |
-| Security, Compliance & Auditability | [audit/](./audit/), [security/](./security/), [Global Audit Log.md](./Global%20Audit%20Log.md), [Audit Log.md](./Audit%20Log.md), [Platform-Contract-Management.md](./Platform-Contract-Management.md) (contract controls), [Identity & Auth.md](./Identity%20%26%20Auth.md) |
-| Observability & Operations | [operations/](./operations/), [audit/MONITORING_COST_OPTIMIZATION.md](./audit/MONITORING_COST_OPTIMIZATION.md), [Level.md](./Level.md) (maturity view), [Global全域系統交互拓撲.md](./Global%E5%85%A8%E5%9F%9F%E7%B3%BB%E7%B5%B1%E4%BA%A4%E4%BA%92%E6%8B%93%E6%89%91.md) |
-| Enablement & Experience | [getting-started/](./getting-started/), [overview/](./overview/), [design/](./design/), [ui-theme/](./ui-theme/), [reference/FRONTEND.md](./reference/FRONTEND.md), [overview(總覽)/](./overview(%E7%B8%BD%E8%A6%BD)/) |
-| Legacy / To Consolidate | [architecture(架構)/](./architecture(%E6%9E%B6%E6%A7%8B)/), [getting-started(快速開始)/](./getting-started(%E5%BF%AB%E9%80%9F%E9%96%8B%E5%A7%8B)/), [legacy-archive/](./legacy-archive/) |
+| Strategy & Governance | [⭐️/](./⭐️/) (strategic), [strategy-governance/](./strategy-governance/) (includes architecture/, overview/, principles/, Standard.md, Level.md, Platform-0/1/Contract-Management, ng-gighub-tree.md, role.md) |
+| Identity, Access & Tenancy | [identity/](./identity/), [identity-tenancy/](./identity-tenancy/), [multi-tenancy/](./multi-tenancy/), [account/](./account/) (planned), [SaaS.md](./identity-tenancy/SaaS.md), [saas-ddd-structure.md](./identity-tenancy/saas-ddd-structure.md), [ACCOUNT_CONTEXT_SWITCHER_ANALYSIS.md](./identity-tenancy/ACCOUNT_CONTEXT_SWITCHER_ANALYSIS.md), [ACCOUNT_REORGANIZATION_SUMMARY.md](./identity-tenancy/ACCOUNT_REORGANIZATION_SUMMARY.md) |
+| Source of Truth & Change Control | [change-control/](./change-control/) (api/, data-model/), [reference/](./reference/), [ROUTE_ARCHITECTURE_ANALYSIS.md](./strategy-governance/ROUTE_ARCHITECTURE_ANALYSIS.md), [0.md](./legacy-archive/0.md) |
+| Collaboration & Work Management | (Planned: issues/discussions/notifications) — track gaps in [collaboration/](./collaboration/) |
+| Automation & Delivery | [automation-delivery/](./automation-delivery/) (deployment/, functions/, dev.md), [event-bus/](./event-bus/), [Global Event Bus.md](./legacy-archive/Global%20Event%20Bus.md), [event-bus(Global Event Bus)-0..9.md](./legacy-archive/event-bus(Global%20Event%20Bus)-0.md) |
+| Security, Compliance & Auditability | [audit/](./audit/), [security-compliance/](./security-compliance/) (security/), [Global Audit Log.md](./security-compliance/Global%20Audit%20Log.md), [Audit Log.md](./security-compliance/Audit%20Log.md), [Identity & Auth.md](./identity-tenancy/Identity%20%26%20Auth.md) |
+| Observability & Operations | [observability-operations/](./observability-operations/) (operations/, topology), [audit/MONITORING_COST_OPTIMIZATION.md](./audit/MONITORING_COST_OPTIMIZATION.md), [Level.md](./strategy-governance/Level.md) (maturity view) |
+| Enablement & Experience | [enablement-experience/](./enablement-experience/) (design/, getting-started/, ui-theme/), [reference/FRONTEND.md](./reference/FRONTEND.md) |
+| Legacy / To Consolidate | [legacy-archive/](./legacy-archive/) (historical event-bus notes, 0.md), [observability-operations/Global全域系統交互拓撲.md](./observability-operations/Global%E5%85%A8%E5%9F%9F%E7%B3%BB%E7%B5%B1%E4%BA%A4%E4%BA%92%E6%8B%93%E6%89%91.md) |
 
 Use the table as the canonical mapping when adding or relocating documents; new docs should declare which pillar they belong to in the opening section.
 
