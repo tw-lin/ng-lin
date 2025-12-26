@@ -797,5 +797,152 @@ service cloud.firestore {
        */
       allow delete: if isSuperAdmin();
     }
+    
+    // ==========================================
+    // Multi-Tier Audit Events Collection Rules
+    // Phase 1 (P0) - Task AUDIT-P1-L5-003
+    // Layer 5: Storage Tiers (HOT/WARM/COLD)
+    // ==========================================
+    
+    /**
+     * Check if user has audit:read permission in blueprint
+     */
+    function hasAuditReadPermission(blueprintId) {
+      let accountId = getCurrentAccountId();
+      let memberPath = /databases/$(database)/documents/blueprints/$(blueprintId)/members/$(accountId);
+      let member = exists(memberPath) ? get(memberPath) : null;
+      
+      // Check if user is blueprint member with audit:read permission
+      return member != null && 
+             member.data.permissions != null &&
+             'audit:read' in member.data.permissions;
+    }
+    
+    /**
+     * Check if user can write audit events
+     * - Must be authenticated and have edit permission on the blueprint
+     */
+    function canWriteAuditEvent(blueprintId) {
+      return isAuthenticated() && canEditBlueprint(blueprintId);
+    }
+    
+    /**
+     * Validate audit event data structure
+     * - Must include all required fields
+     * - Must have valid enum values
+     */
+    function isValidAuditEvent(data) {
+      return data.blueprintId is string &&
+             data.timestamp is timestamp &&
+             data.actor is map &&
+             data.actor.id is string &&
+             data.actor.type in ['user', 'team', 'partner', 'ai', 'system'] &&
+             data.actor.name is string &&
+             data.eventType is string &&
+             data.category in [
+               'AUTHENTICATION', 'AUTHORIZATION', 'USER_ACTION', 
+               'DATA_ACCESS', 'DATA_MODIFICATION', 'SYSTEM_EVENT',
+               'AI_DECISION', 'SECURITY_INCIDENT', 'COMPLIANCE_EVENT',
+               'PERFORMANCE_ISSUE', 'ERROR_EXCEPTION'
+             ] &&
+             data.level in ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] &&
+             data.classification is map &&
+             data.classification.category is string &&
+             data.classification.level is string &&
+             data.classification.riskScore is number &&
+             data.classification.riskScore >= 0 &&
+             data.classification.riskScore <= 100 &&
+             data.classification.complianceTags is list;
+    }
+    
+    /**
+     * HOT Tier Collection
+     * Path: /audit_events_hot/{eventId}
+     * Retention: 7 days
+     * Purpose: Fast query access for recent events
+     */
+    match /audit_events_hot/{eventId} {
+      /**
+       * READ Rules
+       * - User must be authenticated
+       * - User must be blueprint member
+       * - User must have audit:read permission OR be blueprint owner/admin
+       */
+      allow read: if isAuthenticated() && (
+        canReadBlueprint(resource.data.blueprintId) ||
+        hasAuditReadPermission(resource.data.blueprintId)
+      );
+      
+      /**
+       * CREATE Rules
+       * - User must be authenticated
+       * - User must have edit permission on the blueprint
+       * - Must pass validation (required fields, enum values)
+       * - createdAt and updatedAt must be current timestamp
+       */
+      allow create: if canWriteAuditEvent(request.resource.data.blueprintId) &&
+                       isValidAuditEvent(request.resource.data) &&
+                       request.resource.data.createdAt is timestamp &&
+                       request.resource.data.updatedAt is timestamp;
+      
+      /**
+       * UPDATE Rules
+       * - Audit events are immutable except for classification fields
+       * - Only allow updating classification (via background jobs)
+       * - Cannot modify core event data
+       */
+      allow update: if false;
+      
+      /**
+       * DELETE Rules
+       * - Audit events cannot be deleted manually
+       * - Only automated lifecycle policies can delete (via service account)
+       * - Use Cloud Functions with Admin SDK for tier migration
+       */
+      allow delete: if false;
+    }
+    
+    /**
+     * WARM Tier Collection
+     * Path: /audit_events_warm/{eventId}
+     * Retention: 90 days
+     * Purpose: Mid-term storage for compliance queries
+     */
+    match /audit_events_warm/{eventId} {
+      /**
+       * READ Rules
+       * - Same as HOT tier
+       * - User must be authenticated with blueprint access
+       */
+      allow read: if isAuthenticated() && (
+        canReadBlueprint(resource.data.blueprintId) ||
+        hasAuditReadPermission(resource.data.blueprintId)
+      );
+      
+      /**
+       * CREATE Rules
+       * - User must be authenticated
+       * - User must have edit permission on the blueprint
+       * - Must pass validation
+       * - Typically created by lifecycle migration from HOT tier
+       */
+      allow create: if canWriteAuditEvent(request.resource.data.blueprintId) &&
+                       isValidAuditEvent(request.resource.data) &&
+                       request.resource.data.createdAt is timestamp &&
+                       request.resource.data.updatedAt is timestamp;
+      
+      /**
+       * UPDATE Rules
+       * - Audit events are immutable
+       */
+      allow update: if false;
+      
+      /**
+       * DELETE Rules
+       * - Audit events cannot be deleted manually
+       * - Only automated lifecycle policies can delete
+       */
+      allow delete: if false;
+    }
   }
 }
