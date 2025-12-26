@@ -30,3 +30,21 @@ setGlobalOptions({ maxInstances: 10 });
 //   logger.info("Hello logs!", {structuredData: true});
 //   response.send("Hello from Firebase!");
 // });
+
+// ========================================
+// Audit Lifecycle Management
+// ========================================
+
+/**
+ * Automated audit event tier migration
+ * 
+ * Implements multi-tier storage lifecycle:
+ * - HOT tier (7 days): Firestore audit_events_hot collection
+ * - WARM tier (90 days): Firestore audit_events_warm collection
+ * - COLD tier (7 years): Cloud Storage + BigQuery archival
+ * 
+ * Scheduled: Daily at 2:00 AM UTC
+ * 
+ * @see src/audit/audit-tier-migration.ts
+ */
+export { migrateAuditTiers } from './audit/audit-tier-migration';
