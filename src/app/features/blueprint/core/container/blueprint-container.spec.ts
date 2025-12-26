@@ -7,6 +7,44 @@ import { IExecutionContext, ContextType } from '../context/execution-context.int
 import { BlueprintEventType } from '../events/event-types';
 import { ModuleStatus } from '../modules/module-status.enum';
 import { IBlueprintModule } from '../modules/module.interface';
+import { IEventBus } from '@core/event-bus/interfaces/event-bus.interface';
+import { DomainEvent } from '@core/event-bus/models';
+import { Subject, filter } from 'rxjs';
+
+class StubEventBus implements IEventBus {
+  private readonly stream = new Subject<DomainEvent>();
+
+  async publish(event: DomainEvent): Promise<void> {
+    this.stream.next(event);
+  }
+
+  async publishBatch(events: DomainEvent[]): Promise<void> {
+    events.forEach(evt => this.stream.next(evt));
+  }
+
+  async subscribe(eventType: string, handler: (event: DomainEvent) => void | Promise<void>): Promise<any> {
+    const sub = this.stream.pipe(filter(evt => evt.eventType === eventType)).subscribe(evt => {
+      void handler(evt);
+    });
+    return {
+      eventType,
+      handler,
+      unsubscribe: () => sub.unsubscribe()
+    };
+  }
+
+  async unsubscribe(subscription: { unsubscribe: () => void }): Promise<void> {
+    subscription.unsubscribe();
+  }
+
+  observe(eventType: string) {
+    return this.stream.pipe(filter(evt => evt.eventType === eventType));
+  }
+
+  observeAll() {
+    return this.stream.asObservable();
+  }
+}
 
 /**
  * Test Module Implementation
@@ -103,10 +141,10 @@ describe('BlueprintContainer', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [BlueprintContainer]
+      providers: []
     });
 
-    container = new BlueprintContainer(config);
+    container = new BlueprintContainer(config, { eventBus: new StubEventBus() });
   });
 
   afterEach(async () => {
@@ -176,7 +214,7 @@ describe('BlueprintContainer', () => {
 
     it('should handle initialization error', async () => {
       // Force an error by passing invalid config
-      const badContainer = new BlueprintContainer(null as any);
+      const badContainer = new BlueprintContainer(null as any, { eventBus: new StubEventBus() });
 
       await expectAsync(badContainer.initialize()).toBeRejected();
 
@@ -200,7 +238,7 @@ describe('BlueprintContainer', () => {
     });
 
     it('should throw error if loading before initialization', async () => {
-      const uninitContainer = new BlueprintContainer(config);
+      const uninitContainer = new BlueprintContainer(config, { eventBus: new StubEventBus() });
       const module = new TestModule('test-module', 'Test Module', '1.0.0');
 
       await expectAsync(uninitContainer.loadModule(module)).toBeRejectedWithError(/must be initialized/);
@@ -324,7 +362,7 @@ describe('BlueprintContainer', () => {
     });
 
     it('should throw error if starting before ready', async () => {
-      const uninitContainer = new BlueprintContainer(config);
+      const uninitContainer = new BlueprintContainer(config, { eventBus: new StubEventBus() });
 
       await expectAsync(uninitContainer.start()).toBeRejectedWithError(/must be ready/);
     });

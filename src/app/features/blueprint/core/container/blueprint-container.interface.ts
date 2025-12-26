@@ -21,8 +21,8 @@ import { IBlueprintModule } from '../modules/module.interface';
  *
  * @example
  * ```typescript
- * // Create container with config
- * const container = new BlueprintContainer(config);
+ * // Create container with config and core event bus
+ * const container = new BlueprintContainer(config, { eventBus: coreEventBus });
  *
  * // Initialize
  * await container.initialize();

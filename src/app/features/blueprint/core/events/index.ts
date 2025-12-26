@@ -4,10 +4,8 @@
  * Event system interfaces and types for module communication.
  */
 
-// Legacy event bus (for backward compatibility)
-export * from './event-bus.interface';
 export * from './event-types';
-export * from './event-bus';
+export * from './blueprint-domain-event';
 
 // Enhanced event bus (SETC-018)
 export * from './types';
