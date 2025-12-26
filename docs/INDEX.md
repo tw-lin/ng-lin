@@ -70,6 +70,32 @@ Use the table as the canonical mapping when adding or relocating documents; new 
 
 ---
 
+### Ideal Target Directory Layout (GitHub Platform Canonical)
+
+Organize future docs into a predictable, GitHub-governed tree. Create new content under these roots; consolidate legacy items into the matching bucket before adding new folders.
+
+```
+docs/
+├─ strategy-governance/        # Ownership, branching, PR policy, risk gates, compliance invariants
+├─ identity-tenancy/           # AuthN/Z, org/blueprint membership, account context switch, roles/permissions
+├─ change-control/             # Repos as contracts, API/interface specs, data contracts, versioning, migrations
+├─ collaboration/              # Issues, discussions, notifications, templates, contribution flows
+├─ automation-delivery/        # Actions/CI-CD, workflows, runners, OIDC, deployment playbooks
+├─ security-compliance/        # Security baselines, secrets, code scanning, audits, validation reports
+├─ observability-operations/   # Monitoring, SLOs/SLIs, runbooks, incident/DR, cost/usage dashboards
+├─ enablement-experience/      # Getting-started, UX/design system, UI themes, reference guides
+└─ legacy-archive/             # Historical/duplicate docs pending rewrite; track migrations here
+```
+
+Naming rules:
+- Prefer lowercase kebab-case directory names above.
+- Files: `<seq>-<area>-<topic>.md` (e.g., `01-strategy-ownership-models.md`).
+- Declare the pillar in the frontmatter or first section for traceability.
+
+Use this layout when creating or moving documents; update the Classification Map after migration.
+
+---
+
 ## 🎯 Priority System Features
 
 ### ✅ **Complete Documentation Suites** (Production-Ready)
