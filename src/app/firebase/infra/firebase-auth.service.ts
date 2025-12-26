@@ -27,9 +27,7 @@ export class FirebaseAuthService {
   constructor() {
     this.user$.subscribe(user => {
       this.state.currentUser.set(user);
-      if (!user) {
-        this.tokenService.clear();
-      }
+      void this.syncTokenFromUser(user);
     });
   }
 
@@ -121,5 +119,19 @@ export class FirebaseAuthService {
 
   async sendPasswordReset(email: string): Promise<void> {
     return this.runInCtx(() => sendPasswordResetEmail(this.auth, email));
+  }
+
+  private async syncTokenFromUser(user: User | null): Promise<void> {
+    if (!user) {
+      this.tokenService.clear();
+      return;
+    }
+
+    const idToken = await user.getIdToken();
+    this.tokenService.set({
+      token: idToken,
+      uid: user.uid,
+      email: user.email ?? ''
+    });
   }
 }
