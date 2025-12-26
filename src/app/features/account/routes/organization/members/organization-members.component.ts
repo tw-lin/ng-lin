@@ -7,7 +7,7 @@ import {
   OrganizationInvitationRepository,
   OrganizationMemberRepository
 } from '@core/repositories';
-import { FirebaseService } from '@core/services/firebase.service';
+import { AuthFacade } from '@core/data-access/auth/auth.facade';
 import { SHARED_IMPORTS, WorkspaceContextService, createAsyncArrayState } from '@shared';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
@@ -137,7 +137,7 @@ export class OrganizationMembersComponent implements OnInit {
   private readonly invitationRepository = inject(OrganizationInvitationRepository);
   private readonly notificationRepository = inject(NotificationRepository);
   private readonly accountRepository = inject(AccountRepository);
-  private readonly firebaseService = inject(FirebaseService);
+  private readonly auth = inject(AuthFacade);
   private readonly message = inject(NzMessageService);
 
   // ✅ Modern Pattern: Use AsyncState for unified state management
@@ -184,7 +184,7 @@ export class OrganizationMembersComponent implements OnInit {
   async sendInvitation(): Promise<void> {
     const email = this.inviteEmail().trim().toLowerCase();
     const organizationId = this.currentOrgId();
-    const invitedBy = this.firebaseService.getCurrentUserId();
+    const invitedBy = this.auth.getCurrentUserId();
 
     if (!organizationId) {
       this.inviteError.set('請先切換到組織上下文');
@@ -252,7 +252,7 @@ export class OrganizationMembersComponent implements OnInit {
   }
 
   private inviterName(): string {
-    const user = this.firebaseService.getCurrentUser();
+    const user = this.auth.currentUser;
     return user?.displayName || user?.email || '組織成員';
   }
 

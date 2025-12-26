@@ -11,10 +11,15 @@ export class AuthFacade implements AuthPort {
   private readonly impl = inject(FirebaseAuthService);
 
   readonly user$ = this.impl.user$;
+  readonly currentUserSignal = this.impl.currentUserSignal;
   readonly loading = this.impl.loading;
   readonly isAuthenticated = this.impl.isAuthenticated;
   get currentUser() {
     return this.impl.currentUser;
+  }
+
+  getCurrentUserId(): string | null {
+    return this.impl.getCurrentUserId();
   }
 
   signIn(email: string, password: string) {

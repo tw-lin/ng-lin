@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { FirebaseService } from '@core/services/firebase.service';
+import { AuthFacade } from '@core/data-access/auth/auth.facade';
 import { FriendService } from '@core/services/friend.service';
 import { FriendStore } from '@core/state/stores/friend.store';
 import { SHARED_IMPORTS } from '@shared';
@@ -25,7 +25,7 @@ import { FriendCardComponent } from '../components/friend-card.component';
 export class FriendsPageComponent implements OnInit {
   private store = inject(FriendStore);
   private service = inject(FriendService);
-  private firebase = inject(FirebaseService);
+  private auth = inject(AuthFacade);
 
   relations = this.store.relations;
   loading = this.store.loading;
@@ -41,7 +41,7 @@ export class FriendsPageComponent implements OnInit {
   }
 
   async handleAccept(id: string): Promise<void> {
-    const uid = this.firebase.getCurrentUserId();
+    const uid = this.auth.getCurrentUserId();
     if (!uid) return;
     await this.service.acceptRequest(id, uid);
     // optimistic update: mark as accepted in store
@@ -51,7 +51,7 @@ export class FriendsPageComponent implements OnInit {
   }
 
   async handleRemove(id: string): Promise<void> {
-    const uid = this.firebase.getCurrentUserId();
+    const uid = this.auth.getCurrentUserId();
     if (!uid) return;
     await this.service.removeFriend(id, uid);
     this.store.setRelations(this.store.relations().filter(r => r.id !== id));

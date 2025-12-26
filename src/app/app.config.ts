@@ -10,7 +10,15 @@ import {
   RouterFeatures,
   withViewTransitions
 } from '@angular/router';
-import { I18NService, defaultInterceptor, provideBindAuthRefresh, provideStartup } from '@core';
+import {
+  I18NService,
+  authTokenInterceptor,
+  baseUrlInterceptor,
+  errorHandlerInterceptor,
+  provideBindAuthRefresh,
+  provideStartup,
+  refreshTokenInterceptor
+} from '@core';
 import { provideCellWidgets } from '@delon/abc/cell';
 import { provideSTWidgets } from '@delon/abc/st';
 import { authSimpleInterceptor, provideAuth } from '@delon/auth';
@@ -123,7 +131,16 @@ const routerFeatures: RouterFeatures[] = [
 if (environment.useHash) routerFeatures.push(withHashLocation());
 
 const providers: Array<Provider | EnvironmentProviders> = [
-  provideHttpClient(withInterceptors([...(environment.interceptorFns ?? []), authSimpleInterceptor, defaultInterceptor])),
+  provideHttpClient(
+    withInterceptors([
+      ...(environment.interceptorFns ?? []),
+      authSimpleInterceptor,
+      baseUrlInterceptor,
+      authTokenInterceptor,
+      refreshTokenInterceptor,
+      errorHandlerInterceptor
+    ])
+  ),
   provideAnimations(),
   provideRouter(routes, ...routerFeatures),
   provideAlain({ config: alainConfig, defaultLang, i18nClass: I18NService, icons: [...ICONS_AUTO, ...ICONS] }),

@@ -21,6 +21,7 @@ export class FirebaseAuthService {
   private readonly tokenService = inject(DA_SERVICE_TOKEN);
   private readonly state = new AuthState();
   readonly user$: Observable<User | null> = authState(this.auth);
+  readonly currentUserSignal = this.state.currentUser.asReadonly();
   readonly loading = this.state.loading.asReadonly();
   readonly isAuthenticated = this.state.isAuthenticated;
 
@@ -37,6 +38,10 @@ export class FirebaseAuthService {
 
   get currentUser(): User | null {
     return this.auth.currentUser;
+  }
+
+  getCurrentUserId(): string | null {
+    return this.state.currentUser()?.uid ?? null;
   }
 
   async signIn(email: string, password: string): Promise<User> {
