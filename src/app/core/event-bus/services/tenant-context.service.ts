@@ -37,7 +37,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ContextType, Account, Organization, Team, Partner, Bot, AuthFacade } from '@core';
 import { OrganizationRepository, TeamRepository, PartnerRepository } from '@core/repositories';
 import { SettingsService } from '@delon/theme';
-import { FirebaseService } from '@core/services/firebase.service';
 import { combineLatest, of, switchMap, map, shareReplay, catchError, BehaviorSubject } from 'rxjs';
 
 const STORAGE_KEY = 'workspace_context';
@@ -75,7 +74,6 @@ export class TenantContextService {
   private readonly teamRepo = inject(TeamRepository);
   private readonly partnerRepo = inject(PartnerRepository);
   private readonly settingsService = inject(SettingsService);
-  private readonly firebaseService = inject(FirebaseService);
 
   // ============================================================================
   // RxJS Pipeline: Handle ALL async operations
@@ -339,7 +337,7 @@ export class TenantContextService {
    * For now, check custom claim 'role' === 'superadmin' from Firebase Auth
    */
   readonly isSuperAdmin = computed(() => {
-    const user = this.firebaseService.getCurrentUser();
+    const user = this.auth.currentUser;
     if (!user) return false;
 
     // Check custom claims (requires Firebase Admin SDK to set)
