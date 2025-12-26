@@ -1,5 +1,12 @@
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
-import { NavigationEnd, NavigationError, RouteConfigLoadStart, Router, RouterOutlet } from '@angular/router';
+import {
+  NavigationCancel,
+  NavigationEnd,
+  NavigationError,
+  RouteConfigLoadStart,
+  Router,
+  RouterOutlet
+} from '@angular/router';
 import { TitleService, VERSION as VERSION_ALAIN, stepPreloader } from '@delon/theme';
 import { environment } from '@env/environment';
 import { NzModalService } from 'ng-zorro-antd/modal';
@@ -40,7 +47,7 @@ export class AppComponent implements OnInit {
           nzOnOk: () => location.reload()
         });
       }
-      if (ev instanceof NavigationEnd) {
+      if (ev instanceof NavigationEnd || ev instanceof NavigationCancel) {
         this.donePreloader();
         this.titleSrv.setTitle();
         this.modalSrv.closeAll();

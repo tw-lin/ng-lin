@@ -7,12 +7,12 @@
  * @module shared/services
  */
 
-// Export TenantContextService from global-event-bus (replaces WorkspaceContextService)
-export { TenantContextService } from '@core/global-event-bus/services';
-export type { Workspace, TenantMetadata } from '@core/global-event-bus/services';
+// Export TenantContextService from event-bus (replaces WorkspaceContextService)
+export { TenantContextService } from '@core/event-bus/services';
+export type { Workspace, TenantMetadata } from '@core/event-bus/services';
 
 // Backward compatibility alias
-export { TenantContextService as WorkspaceContextService } from '@core/global-event-bus/services';
+export { TenantContextService as WorkspaceContextService } from '@core/event-bus/services';
 
 export * from './menu-management.service';
 export * from './breadcrumb.service';

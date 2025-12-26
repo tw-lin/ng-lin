@@ -100,7 +100,7 @@ src/app/
 │   │   │
 │   │   └── permission.module.ts
 │   │
-│   ├── global-event-bus/                                   # 全域事件總線 (Global Event Bus)
+│   ├── event-bus/                                   # 全域事件總線 (Global Event Bus)
 │   │   ├── USAGE.md
 │   │   ├── README.md
 │   │   ├── index.ts

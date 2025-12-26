@@ -27,7 +27,10 @@ import { ICONS } from '../style-icons';
 import { ICONS_AUTO } from '../style-icons-auto';
 import { firebaseProviders } from './firebase/config/firebase.providers';
 import { routes } from './features/routes';
-import { provideAuditAutoSubscription } from './core/global-event-bus/initializers';
+import { provideAuditAutoSubscription } from './core/event-bus/initializers';
+import { EVENT_BUS, EVENT_STORE } from './core/event-bus/constants/event-bus-tokens';
+import { InMemoryEventBus } from './core/event-bus/implementations/in-memory/in-memory-event-bus';
+import { HybridEventStore } from './core/event-bus/implementations/hybrid/hybrid-event-store';
 
 const defaultLang: AlainProvideLang = {
   abbr: 'zh-CN',
@@ -142,6 +145,8 @@ export const appConfig: ApplicationConfig = {
   providers: [
     ...providers,
     ...firebaseProviders,
-    provideAuditAutoSubscription() // Phase 1 P0 - Task 1.3: Event Bus Automatic Subscription
+    provideAuditAutoSubscription(), // Phase 1 P0 - Task 1.3: Event Bus Automatic Subscription
+    { provide: EVENT_BUS, useExisting: InMemoryEventBus },
+    { provide: EVENT_STORE, useExisting: HybridEventStore }
   ]
 };

@@ -1,8 +1,14 @@
 import { TestBed } from '@angular/core/testing';
-import { AuditQueryService, TimelineQueryOptions, ActorQueryOptions, EntityQueryOptions, ComplianceQueryOptions } from './audit-query.service';
+import {
+  AuditQueryService,
+  TimelineQueryOptions,
+  ActorQueryOptions,
+  EntityQueryOptions,
+  ComplianceQueryOptions
+} from './audit-query.service';
 import { AuditEventRepository, StorageTier } from '../repositories';
 import { ClassifiedAuditEvent } from '../services';
-import { AuditLevel, AuditCategory } from '@core/global-event-bus/models';
+import { AuditLevel, AuditCategory } from '@core/event-bus/models';
 
 describe('AuditQueryService', () => {
   let service: AuditQueryService;
@@ -35,10 +41,7 @@ describe('AuditQueryService', () => {
     const repositorySpy = jasmine.createSpyObj('AuditEventRepository', ['query']);
 
     TestBed.configureTestingModule({
-      providers: [
-        AuditQueryService,
-        { provide: AuditEventRepository, useValue: repositorySpy }
-      ]
+      providers: [AuditQueryService, { provide: AuditEventRepository, useValue: repositorySpy }]
     });
 
     service = TestBed.inject(AuditQueryService);
@@ -97,10 +100,7 @@ describe('AuditQueryService', () => {
 
   describe('queryByActor', () => {
     it('should query events by specific actor', async () => {
-      const events: ClassifiedAuditEvent[] = [
-        createMockEvent({ actor: 'user-123' }),
-        createMockEvent({ actor: 'user-123' })
-      ];
+      const events: ClassifiedAuditEvent[] = [createMockEvent({ actor: 'user-123' }), createMockEvent({ actor: 'user-123' })];
       mockRepository.query.and.returnValue(Promise.resolve(events));
 
       const options: ActorQueryOptions = {
@@ -266,11 +266,7 @@ describe('AuditQueryService', () => {
       ];
       mockRepository.query.and.returnValue(Promise.resolve(events));
 
-      const stats = await service.aggregate(
-        'tenant-1',
-        new Date('2025-01-01'),
-        new Date('2025-01-31')
-      );
+      const stats = await service.aggregate('tenant-1', new Date('2025-01-01'), new Date('2025-01-31'));
 
       expect(stats.totalEvents).toBe(4);
       expect(stats.byCategory[AuditCategory.AUTHENTICATION]).toBe(2);
@@ -344,9 +340,8 @@ describe('AuditQueryService', () => {
 
       expect(aiEvents.length).toBe(2);
       aiEvents.forEach(event => {
-        const isAiEvent = event.eventType.startsWith('ai.') || 
-                         event.aiGenerated === true || 
-                         event.complianceTags?.includes('AI_GOVERNANCE');
+        const isAiEvent =
+          event.eventType.startsWith('ai.') || event.aiGenerated === true || event.complianceTags?.includes('AI_GOVERNANCE');
         expect(isAiEvent).toBeTrue();
       });
     });

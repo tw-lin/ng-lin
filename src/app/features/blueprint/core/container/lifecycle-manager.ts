@@ -10,10 +10,11 @@ import { Injectable, inject, signal } from '@angular/core';
 
 import { ILifecycleManager, LIFECYCLE_TRANSITIONS } from './lifecycle-manager.interface';
 import { IExecutionContext } from '../context/execution-context.interface';
-import { IEventBus } from '../events/event-bus.interface';
 import { BlueprintEventType } from '../events/event-types';
 import { ModuleStatus } from '../modules/module-status.enum';
 import { IBlueprintModule } from '../modules/module.interface';
+import { IEventBus } from '@core/event-bus/interfaces/event-bus.interface';
+import { BlueprintDomainEvent } from '../events/blueprint-domain-event';
 
 /**
  * 模組生命週期狀態
@@ -45,7 +46,7 @@ interface ModuleLifecycleState {
  */
 @Injectable({ providedIn: 'root' })
 export class LifecycleManager implements ILifecycleManager {
-  private eventBus: any; // Avoid circular dependency with IEventBus
+  private eventBus!: IEventBus;
   private modules = new Map<string, ModuleLifecycleState>();
 
   /**
@@ -83,14 +84,17 @@ export class LifecycleManager implements ILifecycleManager {
       await module.init(context);
 
       // Emit event
-      this.eventBus?.emit(
-        BlueprintEventType.MODULE_INITIALIZED,
-        {
-          moduleId: module.id,
-          moduleName: module.name,
-          status: ModuleStatus.INITIALIZED
-        },
-        module.id
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.MODULE_INITIALIZED,
+          {
+            moduleId: module.id,
+            moduleName: module.name,
+            status: ModuleStatus.INITIALIZED
+          },
+          context.blueprintId,
+          module.id
+        )
       );
     } catch (error) {
       await this.handleError(module.id, error);
@@ -108,13 +112,16 @@ export class LifecycleManager implements ILifecycleManager {
       // Transition: initialized → starting
       await this.transitionTo(moduleId, ModuleStatus.STARTING);
 
-      this.eventBus?.emit(
-        BlueprintEventType.MODULE_STARTING,
-        {
-          moduleId,
-          moduleName: state.module.name
-        },
-        moduleId
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.MODULE_STARTING,
+          {
+            moduleId,
+            moduleName: state.module.name
+          },
+          state.context.blueprintId,
+          moduleId
+        )
       );
 
       // Call module start
@@ -123,14 +130,17 @@ export class LifecycleManager implements ILifecycleManager {
       // Transition: starting → started
       await this.transitionTo(moduleId, ModuleStatus.STARTED);
 
-      this.eventBus?.emit(
-        BlueprintEventType.MODULE_STARTED,
-        {
-          moduleId,
-          moduleName: state.module.name,
-          status: ModuleStatus.STARTED
-        },
-        moduleId
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.MODULE_STARTED,
+          {
+            moduleId,
+            moduleName: state.module.name,
+            status: ModuleStatus.STARTED
+          },
+          state.context.blueprintId,
+          moduleId
+        )
       );
     } catch (error) {
       await this.handleError(moduleId, error);
@@ -151,14 +161,17 @@ export class LifecycleManager implements ILifecycleManager {
       // Transition: started → ready
       await this.transitionTo(moduleId, ModuleStatus.READY);
 
-      this.eventBus?.emit(
-        BlueprintEventType.MODULE_READY,
-        {
-          moduleId,
-          moduleName: state.module.name,
-          status: ModuleStatus.READY
-        },
-        moduleId
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.MODULE_READY,
+          {
+            moduleId,
+            moduleName: state.module.name,
+            status: ModuleStatus.READY
+          },
+          state.context.blueprintId,
+          moduleId
+        )
       );
     } catch (error) {
       await this.handleError(moduleId, error);
@@ -176,13 +189,16 @@ export class LifecycleManager implements ILifecycleManager {
       // Transition: ready → stopping
       await this.transitionTo(moduleId, ModuleStatus.STOPPING);
 
-      this.eventBus?.emit(
-        BlueprintEventType.MODULE_STOPPING,
-        {
-          moduleId,
-          moduleName: state.module.name
-        },
-        moduleId
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.MODULE_STOPPING,
+          {
+            moduleId,
+            moduleName: state.module.name
+          },
+          state.context.blueprintId,
+          moduleId
+        )
       );
 
       // Call module stop
@@ -191,14 +207,17 @@ export class LifecycleManager implements ILifecycleManager {
       // Transition: stopping → stopped
       await this.transitionTo(moduleId, ModuleStatus.STOPPED);
 
-      this.eventBus?.emit(
-        BlueprintEventType.MODULE_STOPPED,
-        {
-          moduleId,
-          moduleName: state.module.name,
-          status: ModuleStatus.STOPPED
-        },
-        moduleId
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.MODULE_STOPPED,
+          {
+            moduleId,
+            moduleName: state.module.name,
+            status: ModuleStatus.STOPPED
+          },
+          state.context.blueprintId,
+          moduleId
+        )
       );
     } catch (error) {
       await this.handleError(moduleId, error);
@@ -219,14 +238,17 @@ export class LifecycleManager implements ILifecycleManager {
       // Transition: stopped → disposed
       await this.transitionTo(moduleId, ModuleStatus.DISPOSED);
 
-      this.eventBus?.emit(
-        BlueprintEventType.MODULE_DISPOSED,
-        {
-          moduleId,
-          moduleName: state.module.name,
-          status: ModuleStatus.DISPOSED
-        },
-        moduleId
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.MODULE_DISPOSED,
+          {
+            moduleId,
+            moduleName: state.module.name,
+            status: ModuleStatus.DISPOSED
+          },
+          state.context.blueprintId,
+          moduleId
+        )
       );
 
       // Remove from registry
@@ -306,16 +328,19 @@ export class LifecycleManager implements ILifecycleManager {
     const previousStatus = state.currentStatus;
     state.currentStatus = ModuleStatus.ERROR;
 
-    this.eventBus?.emit(
-      BlueprintEventType.MODULE_ERROR,
-      {
-        moduleId,
-        moduleName: state.module.name,
-        error: error instanceof Error ? error.message : String(error),
-        previousStatus,
-        errorCount: state.errorCount
-      },
-      moduleId
+    await this.eventBus.publish(
+      new BlueprintDomainEvent(
+        BlueprintEventType.MODULE_ERROR,
+        {
+          moduleId,
+          moduleName: state.module.name,
+          error: error instanceof Error ? error.message : String(error),
+          previousStatus,
+          errorCount: state.errorCount
+        },
+        state.context.blueprintId,
+        moduleId
+      )
     );
 
     // Attempt rollback to previous stable state

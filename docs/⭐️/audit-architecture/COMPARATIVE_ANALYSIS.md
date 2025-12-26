@@ -544,7 +544,7 @@ Benefits:
 **Mixed Pattern**:
 ```
 Partial Event-Driven:
-  ✅ Event Bus exists (core/global-event-bus)
+  ✅ Event Bus exists (core/event-bus)
   ✅ Auth events published to Event Bus
   ⚠️ Auth Consumer manually calls AuditService
   ❌ No automatic subscription

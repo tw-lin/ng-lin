@@ -153,7 +153,7 @@ export interface AuditEvent {
 **Estimated Time**: 8 hours  
 **Dependencies**: AUDIT-P1-L0-001, AUDIT-P1-L0-002, AUDIT-P1-L0-003  
 **Reuses**: 
-- ✅ `BlueprintEventBus` (src/app/core/global-event-bus/)
+- ✅ `BlueprintEventBus` (src/app/core/event-bus/)
 - ✅ `LoggerService` (src/app/core/services/logger/)
 
 **Files**:
@@ -173,7 +173,7 @@ export interface AuditEvent {
 
 **Integration Points**:
 ```typescript
-import { BlueprintEventBus } from '@core/global-event-bus';
+import { BlueprintEventBus } from '@core/event-bus';
 import { LoggerService } from '@core/services/logger';
 import { inject, Injectable } from '@angular/core';
 
@@ -625,7 +625,7 @@ After completing each task, verify integration with existing features:
 - [LAYER_6_QUERY_SERVICE.md](./audit-layers/LAYER_6_QUERY_SERVICE.md) - Query patterns
 
 ### Existing Code References (DO NOT RECREATE)
-- `src/app/core/global-event-bus/` - Reuse for event distribution
+- `src/app/core/event-bus/` - Reuse for event distribution
 - `src/app/core/services/logger/` - Reuse for logging
 - `src/app/core/data-access/base/` - Reuse FirestoreBaseRepository
 - `firestore.rules` - Extend with audit rules

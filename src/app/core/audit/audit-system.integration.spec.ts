@@ -1,19 +1,19 @@
 /**
  * Audit System Integration Tests
- * 
+ *
  * Comprehensive end-to-end integration tests for Phase 1 Audit System:
  * - Tests complete flow: Collection → Classification → Storage → Query
  * - Tests batch processing and circuit breaker patterns
  * - Tests multi-tier storage and lifecycle management
  * - Performance and load testing scenarios
- * 
+ *
  * Test Coverage:
  * - Layer 0: Models & Interfaces ✅
  * - Layer 3: Audit Collector ✅
  * - Layer 4: Classification Engine ✅
  * - Layer 5: Storage Repository ✅
  * - Layer 6: Query Service ✅
- * 
+ *
  * Test Scenarios:
  * 1. End-to-end event flow (collect → classify → store → query)
  * 2. Batch processing (50 events, 5-second timeout)
@@ -23,7 +23,7 @@
  * 6. Query patterns (8 patterns: timeline, actor, entity, compliance, etc.)
  * 7. Performance benchmarks (throughput, latency)
  * 8. Load testing (10k, 50k, 100k events/day scenarios)
- * 
+ *
  * @author Audit System Team
  * @version 1.0.0
  * @since Phase 1 - Integration Testing (AUDIT-P1-INT)
@@ -36,7 +36,7 @@ import { of, throwError } from 'rxjs';
 // Core Services
 import { BlueprintEventBus } from '@core/services/blueprint-event-bus.service';
 import { LoggerService } from '@core/services/logger';
-import { TenantContextService } from '@core/global-event-bus/services/tenant-context.service';
+import { TenantContextService } from '@core/event-bus/services/tenant-context.service';
 
 // Audit Infrastructure
 import { AuditCollectorEnhancedService } from './collectors/audit-collector-enhanced.service';
@@ -49,8 +49,8 @@ import { AuditEvent } from './models/audit-event.interface';
 import { EventCategory } from './models/event-category.enum';
 import { EventSeverity } from './models/event-severity.enum';
 import { StorageTier } from './models/storage-tier.enum';
-import { AuditLevel, AuditCategory } from '../global-event-bus/models/audit-event.model';
-import { DomainEvent } from '../global-event-bus/models/base-event';
+import { AuditLevel, AuditCategory } from '../event-bus/models/audit-event.model';
+import { DomainEvent } from '../event-bus/models/base-event';
 
 describe('Audit System Integration Tests', () => {
   let collectorService: AuditCollectorEnhancedService;
@@ -119,7 +119,7 @@ describe('Audit System Integration Tests', () => {
 
       // Assert: Event should be collected
       expect(collectorService).toBeTruthy();
-      
+
       // Simulate batch flush after 5 seconds
       tick(5000);
 
@@ -173,7 +173,7 @@ describe('Audit System Integration Tests', () => {
 
       // All events should be collected and classified
       expect(loggerMock.debug).toHaveBeenCalled();
-      
+
       flush();
     }));
   });
@@ -200,7 +200,7 @@ describe('Audit System Integration Tests', () => {
       tick(100); // Small delay for processing
 
       expect(loggerMock.debug).toHaveBeenCalled();
-      
+
       flush();
     }));
 
@@ -221,7 +221,7 @@ describe('Audit System Integration Tests', () => {
       tick(5000);
 
       expect(loggerMock.debug).toHaveBeenCalled();
-      
+
       flush();
     }));
 
@@ -240,7 +240,7 @@ describe('Audit System Integration Tests', () => {
       expect(classifiedBatch.length).toBe(5);
       expect(classifiedBatch[0].riskScore).toBeDefined();
       expect(classifiedBatch[0].complianceTags.length).toBeGreaterThan(0);
-      
+
       flush();
     }));
   });
@@ -252,9 +252,7 @@ describe('Audit System Integration Tests', () => {
   describe('3. Circuit Breaker Pattern', () => {
     it('should open circuit breaker after 3 consecutive failures', fakeAsync(() => {
       // Mock storage failures
-      spyOn(auditRepository, 'createBatch').and.returnValue(
-        Promise.reject(new Error('Storage failure'))
-      );
+      spyOn(auditRepository, 'createBatch').and.returnValue(Promise.reject(new Error('Storage failure')));
 
       // Trigger 3 failures
       for (let i = 0; i < 3; i++) {
@@ -270,19 +268,14 @@ describe('Audit System Integration Tests', () => {
       }
 
       // Circuit breaker should be open
-      expect(loggerMock.error).toHaveBeenCalledWith(
-        jasmine.stringContaining('Circuit breaker'),
-        jasmine.any(Object)
-      );
-      
+      expect(loggerMock.error).toHaveBeenCalledWith(jasmine.stringContaining('Circuit breaker'), jasmine.any(Object));
+
       flush();
     }));
 
     it('should auto-recover after 60 seconds in open state', fakeAsync(() => {
       // Open circuit breaker (3 failures)
-      spyOn(auditRepository, 'createBatch').and.returnValue(
-        Promise.reject(new Error('Storage failure'))
-      );
+      spyOn(auditRepository, 'createBatch').and.returnValue(Promise.reject(new Error('Storage failure')));
 
       for (let i = 0; i < 3; i++) {
         const event: DomainEvent = {
@@ -300,11 +293,8 @@ describe('Audit System Integration Tests', () => {
       tick(60000);
 
       // Circuit breaker should attempt recovery
-      expect(loggerMock.warn).toHaveBeenCalledWith(
-        jasmine.stringContaining('Circuit breaker'),
-        jasmine.any(Object)
-      );
-      
+      expect(loggerMock.warn).toHaveBeenCalledWith(jasmine.stringContaining('Circuit breaker'), jasmine.any(Object));
+
       flush();
     }));
   });
@@ -322,9 +312,7 @@ describe('Audit System Integration Tests', () => {
         timestamp: new Date()
       };
 
-      spyOn(auditRepository, 'create').and.returnValue(
-        Promise.resolve(event as AuditEvent)
-      );
+      spyOn(auditRepository, 'create').and.returnValue(Promise.resolve(event as AuditEvent));
 
       auditRepository.create(event as AuditEvent).then(result => {
         expect(result.tier).toBe(StorageTier.HOT);
@@ -341,9 +329,7 @@ describe('Audit System Integration Tests', () => {
 
       // Recent events should query HOT tier
       spyOn(auditRepository, 'findByDateRange').and.returnValue(
-        Promise.resolve([
-          { eventId: 'recent-001', tier: StorageTier.HOT, timestamp: now } as AuditEvent
-        ])
+        Promise.resolve([{ eventId: 'recent-001', tier: StorageTier.HOT, timestamp: now } as AuditEvent])
       );
 
       auditRepository.findByDateRange('tenant-001', now, now).then(results => {
@@ -383,12 +369,7 @@ describe('Audit System Integration Tests', () => {
    */
   describe('5. Classification Accuracy', () => {
     it('should correctly classify authentication events', () => {
-      const events = [
-        'user.login',
-        'user.logout',
-        'user.mfa.enabled',
-        'user.password.changed'
-      ];
+      const events = ['user.login', 'user.logout', 'user.mfa.enabled', 'user.password.changed'];
 
       events.forEach(eventType => {
         const classified = classificationEngine.classify({
@@ -404,12 +385,7 @@ describe('Audit System Integration Tests', () => {
     });
 
     it('should correctly classify authorization events', () => {
-      const events = [
-        'permission.granted',
-        'permission.revoked',
-        'role.assigned',
-        'access.denied'
-      ];
+      const events = ['permission.granted', 'permission.revoked', 'role.assigned', 'access.denied'];
 
       events.forEach(eventType => {
         const classified = classificationEngine.classify({
@@ -594,7 +570,7 @@ describe('Audit System Integration Tests', () => {
   describe('7. Performance Benchmarks', () => {
     it('should process 50 events in under 500ms', fakeAsync(() => {
       const startTime = Date.now();
-      
+
       // Create 50 events
       const events: Partial<AuditEvent>[] = [];
       for (let i = 0; i < 50; i++) {
@@ -606,10 +582,10 @@ describe('Audit System Integration Tests', () => {
       }
 
       classificationEngine.classifyBatch(events as AuditEvent[]);
-      
+
       const duration = Date.now() - startTime;
       expect(duration).toBeLessThan(500);
-      
+
       flush();
     }));
 
@@ -635,9 +611,9 @@ describe('Audit System Integration Tests', () => {
       // Performance should scale linearly
       const avgTimePerEvent = durations.map((d, i) => d / batchSizes[i]);
       const maxVariation = Math.max(...avgTimePerEvent) / Math.min(...avgTimePerEvent);
-      
+
       expect(maxVariation).toBeLessThan(2); // Less than 2x variation
-      
+
       flush();
     }));
   });
@@ -670,7 +646,7 @@ describe('Audit System Integration Tests', () => {
       clearInterval(interval);
 
       expect(processedEvents).toBeGreaterThanOrEqual(expectedEvents * 0.9); // 90% tolerance
-      
+
       flush();
     }));
 
@@ -688,7 +664,7 @@ describe('Audit System Integration Tests', () => {
           data: {}
         };
         eventBus.publish(event);
-        
+
         if (i % eventsPerSecond === 0) {
           tick(1000); // Advance 1 second
         }
@@ -696,7 +672,7 @@ describe('Audit System Integration Tests', () => {
 
       // All events should be processed without memory leaks
       expect(loggerMock.debug).toHaveBeenCalled();
-      
+
       flush();
     }));
   });
@@ -720,9 +696,7 @@ describe('Audit System Integration Tests', () => {
     });
 
     it('should handle storage failures with DLQ fallback', fakeAsync(() => {
-      spyOn(auditRepository, 'create').and.returnValue(
-        Promise.reject(new Error('Storage failure'))
-      );
+      spyOn(auditRepository, 'create').and.returnValue(Promise.reject(new Error('Storage failure')));
 
       const event: Partial<AuditEvent> = {
         eventId: 'dlq-test-001',
@@ -751,7 +725,7 @@ describe('Audit System Integration Tests', () => {
 
       // Should process valid events even if some fail
       expect(classified.length).toBeGreaterThan(0);
-      
+
       flush();
     }));
   });
@@ -773,10 +747,7 @@ describe('Audit System Integration Tests', () => {
       // Trigger service destruction
       TestBed.resetTestingModule();
 
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        jasmine.stringContaining('statistics'),
-        jasmine.any(Object)
-      );
+      expect(loggerMock.info).toHaveBeenCalledWith(jasmine.stringContaining('statistics'), jasmine.any(Object));
     });
   });
 });

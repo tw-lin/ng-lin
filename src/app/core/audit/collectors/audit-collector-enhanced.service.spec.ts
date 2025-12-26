@@ -1,6 +1,6 @@
 /**
  * Unit Tests for AuditCollectorEnhancedService
- * 
+ *
  * Test Coverage:
  * - Event subscription initialization
  * - Domain event conversion to audit events
@@ -10,7 +10,7 @@
  * - Circuit breaker behavior
  * - Manual audit recording API
  * - Statistics tracking
- * 
+ *
  * @date 2025-12-26
  */
 
@@ -21,7 +21,7 @@ import { Subject } from 'rxjs';
 import { AuditCollectorEnhancedService } from './audit-collector-enhanced.service';
 import { BlueprintEventBus } from '@core/services/blueprint-event-bus.service';
 import { LoggerService } from '@core/services/logger';
-import { TenantContextService } from '@core/global-event-bus/services/tenant-context.service';
+import { TenantContextService } from '@core/event-bus/services/tenant-context.service';
 import { ClassificationEngineService } from '../services/classification-engine.service';
 import { AuditEventRepository } from '../repositories/audit-event.repository';
 import { EventCategory } from '../models/event-category.enum';
@@ -71,10 +71,7 @@ describe('AuditCollectorEnhancedService', () => {
       processingTimeMs: 5
     });
 
-    mockAuditRepository = jasmine.createSpyObj('AuditEventRepository', [
-      'create',
-      'createBatch'
-    ]);
+    mockAuditRepository = jasmine.createSpyObj('AuditEventRepository', ['create', 'createBatch']);
     mockAuditRepository.create.and.returnValue(Promise.resolve({ id: 'audit-001' } as any));
     mockAuditRepository.createBatch.and.returnValue(Promise.resolve([{ id: 'audit-001' }] as any));
 
@@ -115,17 +112,14 @@ describe('AuditCollectorEnhancedService', () => {
     });
 
     it('should initialize batch processing', () => {
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        '[AuditCollectorEnhanced]',
-        'Batch processing initialized (max: 50 events, 5000ms)'
-      );
+      expect(mockLogger.info).toHaveBeenCalledWith('[AuditCollectorEnhanced]', 'Batch processing initialized (max: 50 events, 5000ms)');
     });
   });
 
   describe('Domain Event Conversion', () => {
     it('should convert basic domain event to audit event', fakeAsync(() => {
       const domainEvent = createMockDomainEvent();
-      
+
       // Trigger manual recording to test conversion
       service.recordAuditEvent('blueprint-123', 'task.created', 'user-123', {
         entityId: 'task-456',
@@ -137,7 +131,7 @@ describe('AuditCollectorEnhancedService', () => {
 
       expect(mockClassificationEngine.classify).toHaveBeenCalled();
       expect(mockAuditRepository.create).toHaveBeenCalled();
-      
+
       const auditEvent = mockClassificationEngine.classify.calls.mostRecent().args[0];
       expect(auditEvent.blueprintId).toBe('blueprint-123');
       expect(auditEvent.actor.id).toBe('user-123');
@@ -194,7 +188,7 @@ describe('AuditCollectorEnhancedService', () => {
 
       // Should have flushed at least once
       expect(mockAuditRepository.create).toHaveBeenCalled();
-      
+
       const stats = service.getStatistics();
       expect(stats.eventsCollected).toBeGreaterThan(0);
     }));
@@ -216,7 +210,7 @@ describe('AuditCollectorEnhancedService', () => {
       tick();
 
       expect(mockClassificationEngine.classify).toHaveBeenCalledTimes(1);
-      
+
       const auditEvent = mockClassificationEngine.classify.calls.mostRecent().args[0];
       expect(auditEvent.category).toBe(EventCategory.SYSTEM_EVENT); // Before classification
     }));
@@ -237,7 +231,7 @@ describe('AuditCollectorEnhancedService', () => {
 
       expect(mockAuditRepository.create).toHaveBeenCalled();
       const persistedEvent = mockAuditRepository.create.calls.mostRecent().args[0];
-      
+
       expect(persistedEvent.category).toBe(EventCategory.SECURITY_INCIDENT);
       expect(persistedEvent.level).toBe(EventSeverity.CRITICAL);
       expect(persistedEvent.riskScore).toBe(95);
@@ -265,14 +259,14 @@ describe('AuditCollectorEnhancedService', () => {
     it('should drop events when circuit breaker is open', fakeAsync(() => {
       // Force circuit breaker open
       mockAuditRepository.create.and.returnValue(Promise.reject(new Error('Storage failure')));
-      
+
       for (let i = 0; i < 3; i++) {
         service.recordAuditEvent('blueprint-123', 'test.event', 'user-123').catch(() => {});
         tick();
       }
 
       const callCountBeforeOpen = mockAuditRepository.create.calls.count();
-      
+
       // Try to record another event (should be dropped)
       service.recordAuditEvent('blueprint-123', 'test.event', 'user-123').catch(() => {});
       tick();
@@ -329,7 +323,7 @@ describe('AuditCollectorEnhancedService', () => {
 
       expect(mockAuditRepository.create).toHaveBeenCalledTimes(1);
       const auditEvent = mockAuditRepository.create.calls.mostRecent().args[0];
-      
+
       expect(auditEvent.blueprintId).toBe('blueprint-123');
       expect(auditEvent.eventType).toBe('manual.event');
       expect(auditEvent.actor.id).toBe('user-123');
@@ -373,7 +367,7 @@ describe('AuditCollectorEnhancedService', () => {
 
     it('should track storage failures', fakeAsync(() => {
       mockAuditRepository.create.and.returnValue(Promise.reject(new Error('Failure')));
-      
+
       service.recordAuditEvent('blueprint-123', 'test.event', 'user-123').catch(() => {});
       tick();
 
@@ -383,7 +377,7 @@ describe('AuditCollectorEnhancedService', () => {
 
     it('should provide circuit breaker state in statistics', () => {
       const stats = service.getStatistics();
-      
+
       expect(stats.circuitBreakerState).toBeDefined();
       expect(stats.circuitBreakerState.isOpen).toBe(false);
       expect(stats.circuitBreakerState.consecutiveFailures).toBe(0);
@@ -394,11 +388,7 @@ describe('AuditCollectorEnhancedService', () => {
     it('should log statistics on destroy', () => {
       service.ngOnDestroy();
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        '[AuditCollectorEnhanced]',
-        'Shutting down',
-        jasmine.any(Object)
-      );
+      expect(mockLogger.info).toHaveBeenCalledWith('[AuditCollectorEnhanced]', 'Shutting down', jasmine.any(Object));
     });
   });
 });

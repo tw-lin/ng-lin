@@ -27,10 +27,10 @@ This roadmap defines the **minimal implementation path** to achieve 95% GitHub M
 
 | Component | Location | Reuse Strategy |
 |-----------|----------|----------------|
-| **Event Bus** | `src/app/core/global-event-bus/` | Subscribe to existing topics (blueprint.*, task.*, user.*) |
+| **Event Bus** | `src/app/core/event-bus/` | Subscribe to existing topics (blueprint.*, task.*, user.*) |
 | **Logger Service** | `src/app/core/services/logger/` | Use for audit event logging |
 | **Data Access** | `src/app/core/data-access/` | Extend FirestoreBaseRepository pattern |
-| **Domain Events** | `src/app/core/global-event-bus/domain-events/` | Import and use existing event types |
+| **Domain Events** | `src/app/core/event-bus/domain-events/` | Import and use existing event types |
 | **Guards** | `src/app/core/guards/` | Reuse permission guards for audit UI |
 
 ### Architecture Documents (Reference Only)
@@ -152,7 +152,7 @@ src/app/routes/audit/review/                    # Review UI
 
 ```typescript
 // ✅ CORRECT: Reuse BlueprintEventBus (DO NOT CREATE NEW)
-import { BlueprintEventBus } from '@core/global-event-bus';
+import { BlueprintEventBus } from '@core/event-bus';
 import { inject } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
@@ -428,7 +428,7 @@ match /audit_events/{eventId} {
 
 - [ ] Read AI Character Profile (`docs/⭐️/🤖AI_Character_Profile_Impl.md`)
 - [ ] Read Behavior Guidelines (`docs/⭐️/🧠AI_Behavior_Guidelines.md`)
-- [ ] Verify BlueprintEventBus implementation (`src/app/core/global-event-bus/`)
+- [ ] Verify BlueprintEventBus implementation (`src/app/core/event-bus/`)
 - [ ] Verify Logger Service (`src/app/core/services/logger/`)
 - [ ] Verify FirestoreBaseRepository (`src/app/core/data-access/base/`)
 - [ ] Review SCHEMA_REGISTRY.md for event interfaces

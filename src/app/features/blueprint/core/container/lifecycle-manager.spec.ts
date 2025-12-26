@@ -1,13 +1,88 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { Subject, filter } from 'rxjs';
 
 import { LifecycleManager } from './lifecycle-manager';
 import { ResourceProvider } from './resource-provider';
 import { IExecutionContext, ContextType } from '../context/execution-context.interface';
 import { SharedContext } from '../context/shared-context';
-import { EventBus } from '../events/event-bus';
 import { ModuleStatus } from '../modules/module-status.enum';
 import { IBlueprintModule } from '../modules/module.interface';
+import { IEventBus } from '@core/event-bus/interfaces/event-bus.interface';
+import { DomainEvent } from '@core/event-bus/models';
+
+class StubEventBus implements IEventBus {
+  private readonly stream = new Subject<DomainEvent>();
+
+  async publish(event: DomainEvent): Promise<void> {
+    this.stream.next(event);
+  }
+
+  async publishBatch(events: DomainEvent[]): Promise<void> {
+    events.forEach(evt => this.stream.next(evt));
+  }
+
+  async subscribe(eventType: string, handler: (event: DomainEvent) => void | Promise<void>): Promise<any> {
+    const sub = this.stream.pipe(filter(evt => evt.eventType === eventType)).subscribe(evt => {
+      void handler(evt);
+    });
+    return {
+      eventType,
+      handler,
+      unsubscribe: () => sub.unsubscribe()
+    };
+  }
+
+  async unsubscribe(subscription: { unsubscribe: () => void }): Promise<void> {
+    subscription.unsubscribe();
+  }
+
+  observe(eventType: string) {
+    return this.stream.pipe(filter(evt => evt.eventType === eventType));
+  }
+
+  observeAll() {
+    return this.stream.asObservable();
+  }
+}
+import { IEventBus } from '@core/event-bus/interfaces/event-bus.interface';
+import { DomainEvent } from '@core/event-bus/models';
+import { Subject, filter } from 'rxjs';
+
+class StubEventBus implements IEventBus {
+  private readonly stream = new Subject<DomainEvent>();
+
+  async publish(event: DomainEvent): Promise<void> {
+    this.stream.next(event);
+  }
+
+  async publishBatch(events: DomainEvent[]): Promise<void> {
+    events.forEach(evt => this.stream.next(evt));
+  }
+
+  async subscribe(eventType: string, handler: (event: DomainEvent) => void | Promise<void>): Promise<any> {
+    const sub = this.stream.pipe(filter(evt => evt.eventType === eventType)).subscribe(evt => {
+      void handler(evt);
+    });
+    return {
+      eventType,
+      handler,
+      unsubscribe: () => sub.unsubscribe()
+    };
+  }
+
+  async unsubscribe(subscription: { unsubscribe: () => void }): Promise<void> {
+    subscription.unsubscribe();
+  }
+
+  observe(eventType: string) {
+    return this.stream.pipe(filter(evt => evt.eventType === eventType));
+  }
+
+  observeAll() {
+    return this.stream.asObservable();
+  }
+}
 
 /**
  * Test Module Implementation
@@ -103,19 +178,17 @@ class ErrorModule extends TestModule {
 describe('LifecycleManager', () => {
   let lifecycleManager: LifecycleManager;
   let context: IExecutionContext;
-  let eventBus: EventBus;
+  let eventBus: IEventBus;
   let sharedContext: SharedContext;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [LifecycleManager, EventBus, SharedContext, ResourceProvider]
+      providers: [LifecycleManager, SharedContext, ResourceProvider]
     });
 
     lifecycleManager = TestBed.inject(LifecycleManager);
-    eventBus = TestBed.inject(EventBus);
+    eventBus = new StubEventBus();
     sharedContext = TestBed.inject(SharedContext);
-
-    eventBus.initialize('test-blueprint', 'test-user');
 
     context = {
       blueprintId: 'test-blueprint',
@@ -129,10 +202,6 @@ describe('LifecycleManager', () => {
       resources: TestBed.inject(ResourceProvider),
       sharedContext
     };
-  });
-
-  afterEach(() => {
-    eventBus.dispose();
   });
 
   describe('Initialization', () => {

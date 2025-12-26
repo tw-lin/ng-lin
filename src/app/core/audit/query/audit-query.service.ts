@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { AuditEventRepository, StorageTier, QueryOptions } from '../repositories';
 import { ClassifiedAuditEvent } from '../services';
-import { AuditEvent, AuditLevel, AuditCategory } from '@core/global-event-bus/models';
+import { AuditEvent, AuditLevel, AuditCategory } from '@core/event-bus/models';
 
 /**
  * Timeline Query Options
@@ -88,7 +88,7 @@ export interface TimelineEvent extends ClassifiedAuditEvent {
 
 /**
  * Audit Query Service
- * 
+ *
  * Provides 8 advanced query patterns for audit trail analysis:
  * 1. Timeline Reconstruction - Chronological event sequence
  * 2. Actor Tracking - User/AI/System activity monitoring
@@ -98,7 +98,7 @@ export interface TimelineEvent extends ClassifiedAuditEvent {
  * 6. Search - Full-text event search
  * 7. Change Detection - Before/after comparison
  * 8. Anomaly Detection - Risk-based filtering
- * 
+ *
  * Integration Strategy:
  * ✅ REUSES: AuditEventRepository for data access
  * ✅ EXTENDS: ClassifiedAuditEvent for enhanced metadata
@@ -110,10 +110,10 @@ export class AuditQueryService {
 
   /**
    * Pattern 1: Timeline Reconstruction
-   * 
+   *
    * Reconstruct chronological event timeline with actor correlation.
    * Use cases: Incident investigation, compliance audits, user journey analysis
-   * 
+   *
    * @param options - Timeline query parameters
    * @returns Chronologically ordered events with sequence numbers
    */
@@ -156,10 +156,10 @@ export class AuditQueryService {
 
   /**
    * Pattern 2: Actor Tracking
-   * 
+   *
    * Track all activities performed by a specific actor.
    * Use cases: User behavior analysis, AI decision auditing, system operation monitoring
-   * 
+   *
    * @param options - Actor query parameters
    * @returns All events performed by the actor
    */
@@ -181,10 +181,7 @@ export class AuditQueryService {
 
     // Filter by actor type if specified
     if (options.actorType) {
-      return events.filter(e => 
-        e.actor?.includes(options.actorType!) || 
-        e.eventType.startsWith(options.actorType!)
-      );
+      return events.filter(e => e.actor?.includes(options.actorType!) || e.eventType.startsWith(options.actorType!));
     }
 
     return events;
@@ -192,10 +189,10 @@ export class AuditQueryService {
 
   /**
    * Pattern 3: Entity History
-   * 
+   *
    * Retrieve complete change history for a specific entity.
    * Use cases: Resource audit trail, change tracking, compliance verification
-   * 
+   *
    * @param options - Entity query parameters
    * @returns All events related to the entity
    */
@@ -222,10 +219,10 @@ export class AuditQueryService {
 
   /**
    * Pattern 4: Compliance Reporting
-   * 
+   *
    * Generate compliance reports for specific regulatory frameworks.
    * Use cases: GDPR data access logs, HIPAA audit trails, SOC2 reporting
-   * 
+   *
    * @param options - Compliance query parameters
    * @returns Events relevant to the compliance framework
    */
@@ -241,9 +238,7 @@ export class AuditQueryService {
     const events = await this.repository.query(queryOpts);
 
     // Filter by compliance framework tag
-    let filtered = events.filter(e => 
-      e.complianceTags && e.complianceTags.includes(options.framework)
-    );
+    let filtered = events.filter(e => e.complianceTags && e.complianceTags.includes(options.framework));
 
     // Apply additional filters
     if (options.includeHighRiskOnly) {
@@ -259,22 +254,17 @@ export class AuditQueryService {
 
   /**
    * Pattern 5: Aggregation
-   * 
+   *
    * Perform statistical analysis on audit events.
    * Use cases: Dashboards, trend analysis, capacity planning
-   * 
+   *
    * @param tenantId - Tenant identifier
    * @param startTime - Start of analysis period
    * @param endTime - End of analysis period
    * @param tier - Storage tier to query
    * @returns Aggregated statistics
    */
-  async aggregate(
-    tenantId: string,
-    startTime: Date,
-    endTime: Date,
-    tier: StorageTier = StorageTier.HOT
-  ): Promise<AggregationResult> {
+  async aggregate(tenantId: string, startTime: Date, endTime: Date, tier: StorageTier = StorageTier.HOT): Promise<AggregationResult> {
     const events = await this.repository.query({
       tenantId,
       startTime,
@@ -335,10 +325,10 @@ export class AuditQueryService {
 
   /**
    * Pattern 6: Search
-   * 
+   *
    * Full-text search across audit events.
    * Use cases: Incident investigation, troubleshooting, ad-hoc queries
-   * 
+   *
    * @param tenantId - Tenant identifier
    * @param searchTerm - Search keyword
    * @param options - Additional query options
@@ -359,22 +349,25 @@ export class AuditQueryService {
 
     const lowerSearchTerm = searchTerm.toLowerCase();
 
-    return events.filter(event =>
-      event.eventType.toLowerCase().includes(lowerSearchTerm) ||
-      event.action?.toLowerCase().includes(lowerSearchTerm) ||
-      event.actor?.toLowerCase().includes(lowerSearchTerm) ||
-      event.resourceType?.toLowerCase().includes(lowerSearchTerm) ||
-      event.errorMessage?.toLowerCase().includes(lowerSearchTerm) ||
-      JSON.stringify(event.metadata || {}).toLowerCase().includes(lowerSearchTerm)
+    return events.filter(
+      event =>
+        event.eventType.toLowerCase().includes(lowerSearchTerm) ||
+        event.action?.toLowerCase().includes(lowerSearchTerm) ||
+        event.actor?.toLowerCase().includes(lowerSearchTerm) ||
+        event.resourceType?.toLowerCase().includes(lowerSearchTerm) ||
+        event.errorMessage?.toLowerCase().includes(lowerSearchTerm) ||
+        JSON.stringify(event.metadata || {})
+          .toLowerCase()
+          .includes(lowerSearchTerm)
     );
   }
 
   /**
    * Pattern 7: Change Detection
-   * 
+   *
    * Compare two time periods to detect changes.
    * Use cases: Drift detection, anomaly identification, trend analysis
-   * 
+   *
    * @param tenantId - Tenant identifier
    * @param period1Start - Start of first period
    * @param period1End - End of first period
@@ -417,10 +410,10 @@ export class AuditQueryService {
 
   /**
    * Pattern 8: Anomaly Detection
-   * 
+   *
    * Identify high-risk or unusual events requiring attention.
    * Use cases: Security monitoring, proactive alerting, risk management
-   * 
+   *
    * @param tenantId - Tenant identifier
    * @param options - Detection parameters
    * @returns High-risk or anomalous events
@@ -457,18 +450,15 @@ export class AuditQueryService {
 
   /**
    * Get Recent Critical Events
-   * 
+   *
    * Quick access to recent critical security events.
    * Use cases: Real-time monitoring, incident response
-   * 
+   *
    * @param tenantId - Tenant identifier
    * @param hours - Number of hours to look back (default: 24)
    * @returns Recent critical events
    */
-  async getRecentCriticalEvents(
-    tenantId: string,
-    hours: number = 24
-  ): Promise<ClassifiedAuditEvent[]> {
+  async getRecentCriticalEvents(tenantId: string, hours: number = 24): Promise<ClassifiedAuditEvent[]> {
     const endTime = new Date();
     const startTime = new Date(endTime.getTime() - hours * 60 * 60 * 1000);
 
@@ -484,22 +474,17 @@ export class AuditQueryService {
 
   /**
    * Get AI Decision History
-   * 
+   *
    * Track all AI agent decisions for transparency and auditing.
    * Use cases: AI governance, explainability, decision review
-   * 
+   *
    * @param tenantId - Tenant identifier
    * @param aiAgentId - Specific AI agent identifier (optional)
    * @param startTime - Start time (optional)
    * @param endTime - End time (optional)
    * @returns AI decision events
    */
-  async getAIDecisions(
-    tenantId: string,
-    aiAgentId?: string,
-    startTime?: Date,
-    endTime?: Date
-  ): Promise<ClassifiedAuditEvent[]> {
+  async getAIDecisions(tenantId: string, aiAgentId?: string, startTime?: Date, endTime?: Date): Promise<ClassifiedAuditEvent[]> {
     const events = await this.repository.query({
       tenantId,
       actor: aiAgentId,
@@ -510,10 +495,6 @@ export class AuditQueryService {
     });
 
     // Filter for AI-related events
-    return events.filter(e => 
-      e.eventType.startsWith('ai.') || 
-      e.aiGenerated === true ||
-      e.complianceTags?.includes('AI_GOVERNANCE')
-    );
+    return events.filter(e => e.eventType.startsWith('ai.') || e.aiGenerated === true || e.complianceTags?.includes('AI_GOVERNANCE'));
   }
 }

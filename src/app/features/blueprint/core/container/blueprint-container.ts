@@ -9,6 +9,7 @@
  */
 
 import { signal } from '@angular/core';
+import { IEventBus } from '@core/event-bus/interfaces/event-bus.interface';
 
 import { IBlueprintContainer } from './blueprint-container.interface';
 import { LifecycleManager } from './lifecycle-manager';
@@ -21,9 +22,8 @@ import { IBlueprintConfig } from '../config/blueprint-config.interface';
 import { IExecutionContext, ContextType } from '../context/execution-context.interface';
 import { SharedContext } from '../context/shared-context';
 import { TenantInfo } from '../context/tenant-info.interface';
-import { EventBus } from '../events/event-bus';
-import { IEventBus } from '../events/event-bus.interface';
 import { BlueprintEventType } from '../events/event-types';
+import { BlueprintDomainEvent } from '../events/blueprint-domain-event';
 import { ModuleStatus } from '../modules/module-status.enum';
 import { IBlueprintModule } from '../modules/module.interface';
 
@@ -71,9 +71,13 @@ export class BlueprintContainer implements IBlueprintContainer {
   // Tenant info
   private tenantInfo?: TenantInfo;
 
-  constructor(config: IBlueprintConfig) {
+  constructor(config: IBlueprintConfig, dependencies: { eventBus: IEventBus }) {
     this.id = config.blueprintId;
     this.config = config;
+    if (!dependencies?.eventBus) {
+      throw new Error('BlueprintContainer requires core IEventBus instance');
+    }
+    this.eventBus = dependencies.eventBus;
   }
 
   /**
@@ -90,7 +94,6 @@ export class BlueprintContainer implements IBlueprintContainer {
       // Initialize core components
       this.moduleRegistry = new ModuleRegistry();
       this.lifecycleManager = new LifecycleManager();
-      this.eventBus = new EventBus();
       this.resourceProvider = new ResourceProvider();
       this.sharedContext = new SharedContext();
 
@@ -110,26 +113,34 @@ export class BlueprintContainer implements IBlueprintContainer {
       }
 
       // Emit container initialized event
-      this.eventBus.emit(
-        BlueprintEventType.CONTAINER_INITIALIZED,
-        {
-          containerId: this.id,
-          config: this.config
-        },
-        'container'
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.CONTAINER_INITIALIZED,
+          {
+            containerId: this.id,
+            config: this.config
+          },
+          this.id,
+          'container'
+        )
       );
 
       this.status.set('ready');
     } catch (error) {
       this.status.set('error');
-      this.eventBus?.emit(
-        BlueprintEventType.CONTAINER_ERROR,
-        {
-          containerId: this.id,
-          error: error instanceof Error ? error.message : String(error)
-        },
-        'container'
-      );
+      if (this.eventBus) {
+        await this.eventBus.publish(
+          new BlueprintDomainEvent(
+            BlueprintEventType.CONTAINER_ERROR,
+            {
+              containerId: this.id,
+              error: error instanceof Error ? error.message : String(error)
+            },
+            this.id,
+            'container'
+          )
+        );
+      }
       throw error;
     }
   }
@@ -145,12 +156,15 @@ export class BlueprintContainer implements IBlueprintContainer {
     try {
       this.status.set('running');
 
-      this.eventBus.emit(
-        BlueprintEventType.CONTAINER_STARTING,
-        {
-          containerId: this.id
-        },
-        'container'
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.CONTAINER_STARTING,
+          {
+            containerId: this.id
+          },
+          this.id,
+          'container'
+        )
       );
 
       // Get all registered modules
@@ -173,23 +187,29 @@ export class BlueprintContainer implements IBlueprintContainer {
         }
       }
 
-      this.eventBus.emit(
-        BlueprintEventType.CONTAINER_STARTED,
-        {
-          containerId: this.id,
-          modulesStarted: resolution.loadOrder.length
-        },
-        'container'
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.CONTAINER_STARTED,
+          {
+            containerId: this.id,
+            modulesStarted: resolution.loadOrder.length
+          },
+          this.id,
+          'container'
+        )
       );
     } catch (error) {
       this.status.set('error');
-      this.eventBus.emit(
-        BlueprintEventType.CONTAINER_ERROR,
-        {
-          containerId: this.id,
-          error: error instanceof Error ? error.message : String(error)
-        },
-        'container'
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.CONTAINER_ERROR,
+          {
+            containerId: this.id,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          this.id,
+          'container'
+        )
       );
       throw error;
     }
@@ -206,12 +226,15 @@ export class BlueprintContainer implements IBlueprintContainer {
     try {
       this.status.set('stopping');
 
-      this.eventBus.emit(
-        BlueprintEventType.CONTAINER_STOPPING,
-        {
-          containerId: this.id
-        },
-        'container'
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.CONTAINER_STOPPING,
+          {
+            containerId: this.id
+          },
+          this.id,
+          'container'
+        )
       );
 
       // Get all running modules (in reverse order)
@@ -224,23 +247,29 @@ export class BlueprintContainer implements IBlueprintContainer {
 
       this.status.set('stopped');
 
-      this.eventBus.emit(
-        BlueprintEventType.CONTAINER_STOPPED,
-        {
-          containerId: this.id,
-          modulesStopped: readyModules.length
-        },
-        'container'
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.CONTAINER_STOPPED,
+          {
+            containerId: this.id,
+            modulesStopped: readyModules.length
+          },
+          this.id,
+          'container'
+        )
       );
     } catch (error) {
       this.status.set('error');
-      this.eventBus.emit(
-        BlueprintEventType.CONTAINER_ERROR,
-        {
-          containerId: this.id,
-          error: error instanceof Error ? error.message : String(error)
-        },
-        'container'
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.CONTAINER_ERROR,
+          {
+            containerId: this.id,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          this.id,
+          'container'
+        )
       );
       throw error;
     }
@@ -264,9 +293,6 @@ export class BlueprintContainer implements IBlueprintContainer {
 
       // Clear shared context
       this.sharedContext?.clearAll();
-
-      // Dispose event bus
-      this.eventBus?.dispose();
 
       this.status.set('uninitialized');
       this.moduleCount.set(0);
@@ -306,14 +332,17 @@ export class BlueprintContainer implements IBlueprintContainer {
       this.moduleCount.set(this.moduleRegistry.list().length);
 
       // Emit event
-      this.eventBus.emit(
-        BlueprintEventType.MODULE_LOADED,
-        {
-          moduleId: module.id,
-          moduleName: module.name,
-          version: module.version
-        },
-        module.id
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.MODULE_LOADED,
+          {
+            moduleId: module.id,
+            moduleName: module.name,
+            version: module.version
+          },
+          this.id,
+          module.id
+        )
       );
 
       // Auto-start if container is running
@@ -322,14 +351,17 @@ export class BlueprintContainer implements IBlueprintContainer {
         await this.lifecycleManager.ready(module.id);
       }
     } catch (error) {
-      this.eventBus.emit(
-        BlueprintEventType.MODULE_ERROR,
-        {
-          moduleId: module.id,
-          moduleName: module.name,
-          error: error instanceof Error ? error.message : String(error)
-        },
-        module.id
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.MODULE_ERROR,
+          {
+            moduleId: module.id,
+            moduleName: module.name,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          this.id,
+          module.id
+        )
       );
       throw error;
     }
@@ -367,22 +399,28 @@ export class BlueprintContainer implements IBlueprintContainer {
       this.moduleCount.set(this.moduleRegistry.list().length);
 
       // Emit event
-      this.eventBus.emit(
-        BlueprintEventType.MODULE_UNLOADED,
-        {
-          moduleId,
-          moduleName: module.name
-        },
-        moduleId
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.MODULE_UNLOADED,
+          {
+            moduleId,
+            moduleName: module.name
+          },
+          this.id,
+          moduleId
+        )
       );
     } catch (error) {
-      this.eventBus.emit(
-        BlueprintEventType.MODULE_ERROR,
-        {
-          moduleId,
-          error: error instanceof Error ? error.message : String(error)
-        },
-        moduleId
+      await this.eventBus.publish(
+        new BlueprintDomainEvent(
+          BlueprintEventType.MODULE_ERROR,
+          {
+            moduleId,
+            error: error instanceof Error ? error.message : String(error)
+          },
+          this.id,
+          moduleId
+        )
       );
       throw error;
     }

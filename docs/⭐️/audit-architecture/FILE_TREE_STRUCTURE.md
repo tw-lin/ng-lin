@@ -25,7 +25,7 @@ The audit system must be treated as a **first-class infrastructure concern**, no
 
 ```
 src/app/core/
-├── global-event-bus/                    ← Audit buried here
+├── event-bus/                    ← Audit buried here
 │   ├── services/
 │   │   ├── audit-log.service.ts         ← Core audit service
 │   │   ├── audit-collector.service.ts   ← Collector
@@ -183,7 +183,7 @@ src/app/
 │   │   │
 │   │   └── index.ts                     ← Main barrel export
 │   │
-│   ├── global-event-bus/                ← Event Bus (no audit here)
+│   ├── event-bus/                ← Event Bus (no audit here)
 │   │   ├── services/
 │   │   │   └── blueprint-event-bus.service.ts
 │   │   ├── models/
@@ -226,7 +226,7 @@ docs/⭐️/
 
 | Aspect | Current (As-Is) | Proposed (To-Be) | Improvement |
 |--------|----------------|------------------|-------------|
-| **Discoverability** | Hidden in `global-event-bus/` | Top-level `core/audit-system/` | ✅ Immediate visibility |
+| **Discoverability** | Hidden in `event-bus/` | Top-level `core/audit-system/` | ✅ Immediate visibility |
 | **Layer Organization** | Flat service structure | 8 folders matching 8 layers | ✅ Clear topology |
 | **Schema Management** | Scattered models | Centralized `schemas/` | ✅ Single registry |
 | **Documentation** | Multiple scattered docs | Central index + organized folders | ✅ Central hub |
@@ -253,21 +253,21 @@ mkdir -p src/app/core/audit-system/schemas/{base,user-actions,data-operations,bu
 
 ```bash
 # Copy models to schemas/
-cp src/app/core/global-event-bus/models/audit-event.model.ts \
+cp src/app/core/event-bus/models/audit-event.model.ts \
    src/app/core/audit-system/schemas/base/
 
-cp src/app/core/global-event-bus/models/auth-audit-event.model.ts \
+cp src/app/core/event-bus/models/auth-audit-event.model.ts \
    src/app/core/audit-system/schemas/user-actions/auth-event.model.ts
 
 # Copy services to appropriate layers
-cp src/app/core/global-event-bus/services/audit-collector.service.ts \
+cp src/app/core/event-bus/services/audit-collector.service.ts \
    src/app/core/audit-system/layer-3-collectors/
 
-cp src/app/core/global-event-bus/services/audit-log.service.ts \
+cp src/app/core/event-bus/services/audit-log.service.ts \
    src/app/core/audit-system/layer-6-query/audit-query.service.ts
 
 # Copy decorators
-cp src/app/core/global-event-bus/decorators/auditable.decorator.ts \
+cp src/app/core/event-bus/decorators/auditable.decorator.ts \
    src/app/core/audit-system/decorators/
 ```
 
@@ -275,13 +275,13 @@ cp src/app/core/global-event-bus/decorators/auditable.decorator.ts \
 
 ```typescript
 // Old import
-import { AuditEvent } from '@core/global-event-bus/models/audit-event.model';
+import { AuditEvent } from '@core/event-bus/models/audit-event.model';
 
 // New import (with re-export for backward compatibility)
 import { AuditEvent } from '@core/audit-system/schemas/base';
 
 // Re-export in old location (temporary)
-// src/app/core/global-event-bus/models/audit-event.model.ts
+// src/app/core/event-bus/models/audit-event.model.ts
 export { AuditEvent } from '@core/audit-system/schemas/base';
 ```
 
@@ -309,8 +309,8 @@ export { AuditEvent } from '@core/audit-system/schemas/base';
 
 ```bash
 # After all imports updated, remove old structure
-rm -rf src/app/core/global-event-bus/services/audit-*
-rm -rf src/app/core/global-event-bus/models/*-audit-*
+rm -rf src/app/core/event-bus/services/audit-*
+rm -rf src/app/core/event-bus/models/*-audit-*
 ```
 
 ---

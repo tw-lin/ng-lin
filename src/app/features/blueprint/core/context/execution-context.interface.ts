@@ -4,7 +4,7 @@ import type { SharedContext } from './shared-context';
 import type { TenantInfo } from './tenant-info.interface';
 import type { IBlueprintConfig } from '../config/blueprint-config.interface';
 import type { IResourceProvider } from '../container/resource-provider.interface';
-import type { IEventBus } from '../events/event-bus.interface';
+import type { IEventBus } from '@core/event-bus/interfaces/event-bus.interface';
 
 /**
  * Context Type

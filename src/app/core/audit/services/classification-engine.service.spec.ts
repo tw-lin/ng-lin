@@ -1,13 +1,13 @@
 /**
  * Classification Engine Service - Unit Tests
- * 
+ *
  * Tests for ClassificationEngineService
  * Validates rule matching, risk scoring, and compliance tagging
  */
 
 import { TestBed } from '@angular/core/testing';
 import { ClassificationEngineService, ClassifiedAuditEvent } from './classification-engine.service';
-import { AuditEvent, AuditLevel, AuditCategory } from '../../global-event-bus/models/audit-event.model';
+import { AuditEvent, AuditLevel, AuditCategory } from '../../event-bus/models/audit-event.model';
 
 describe('ClassificationEngineService', () => {
   let service: ClassificationEngineService;
@@ -194,11 +194,7 @@ describe('ClassificationEngineService', () => {
 
   describe('Batch Classification', () => {
     it('should classify multiple events', () => {
-      const events: AuditEvent[] = [
-        createMockEvent('user.login'),
-        createMockEvent('data.created'),
-        createMockEvent('permission.revoked')
-      ];
+      const events: AuditEvent[] = [createMockEvent('user.login'), createMockEvent('data.created'), createMockEvent('permission.revoked')];
 
       const classified = service.classifyBatch(events);
 
@@ -277,10 +273,7 @@ describe('ClassificationEngineService', () => {
 /**
  * Helper function to create mock audit events
  */
-function createMockEvent(
-  eventType: string,
-  result: 'success' | 'failure' | 'partial' = 'success'
-): AuditEvent {
+function createMockEvent(eventType: string, result: 'success' | 'failure' | 'partial' = 'success'): AuditEvent {
   return {
     id: `audit-${Date.now()}`,
     eventId: `event-${Date.now()}`,

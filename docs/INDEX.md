@@ -13,26 +13,93 @@ Complete documentation index for the GigHub Construction Site Progress Tracking 
 ```
 docs/
 ├── ⭐️/                          # Strategic Architecture (Protected)
-├── audit/                        # Global Audit Logging System ✅ COMPLETE
-├── event-bus/                    # Global Event Bus System
-├── identity/                     # Identity & Authentication System
-├── multi-tenancy/                # Multi-Tenancy & Blueprint System
 ├── account/                      # SaaS Account Management
 ├── collaboration/                # Issues, Discussions, Notifications
-├── api/                          # API Specifications
-├── architecture/                 # System Architecture
-├── data-model/                   # Data Models & Schemas
-├── deployment/                   # Deployment Guides
-├── design/                       # UI/UX Design
-├── functions/                    # Cloud Functions
-├── getting-started/              # Quick Start Guides
-├── operations/                   # Operations & Monitoring
-├── overview/                     # Project Overview
-├── principles/                   # Core Principles
-├── reference/                    # Technical Reference
-├── security/                     # Security Guidelines
-└── ui-theme/                     # UI Theme System
+├── strategy-governance/          # Ownership, branching, compliance invariants
+│   ├── architecture/             # System architecture views
+│   ├── overview/                 # Project overview & status
+│   └── principles/               # Core principles and rules
+├── identity-tenancy/             # AuthN/Z, roles, context switch, suites (identity/, multi-tenancy/)
+├── change-control/               # API/data contracts and versioning
+│   ├── api/                      # API/interface specs
+│   └── data-model/               # Data models & schemas
+├── automation-delivery/          # Actions/CI-CD, workflows, functions
+│   ├── event-bus/                # Global Event Bus operational docs
+│   ├── deployment/               # Deployment guides and playbooks
+│   └── functions/                # Cloud Functions docs
+├── observability-operations/     # Monitoring, runbooks, topology
+│   └── operations/               # Ops runbooks and checklists
+├── enablement-experience/        # Onboarding, design system, UI themes
+│   ├── design/                   # UX/design guidelines
+│   ├── getting-started/          # Quick start guides
+│   └── ui-theme/                 # UI theme system
+├── security-compliance/          # Security baselines, audits, validation
+│   └── audit/                    # Global Audit Logging System ✅ COMPLETE
+│   └── security/                 # Security guidelines
+├── legacy-archive/               # Historical/duplicate docs pending rewrite
+└── reference/                    # Technical Reference (cross-cutting)
 ```
+
+---
+
+## 🧭 GitHub Platform–Aligned Structure
+
+The GitHub Platform Architect view treats GitHub as a governable platform. The structure below reflects that lens and is the target information architecture for all docs.
+
+### Platform Pillars (design)
+
+1. **Strategy & Governance** — ownership models, branching policy, risk gates (PR), compliance invariants.
+2. **Identity, Access & Tenancy** — who can act, which blueprint/organization they belong to, and how context switches.
+3. **Source of Truth & Change Control** — repositories, data contracts, interfaces, and change lifecycles.
+4. **Collaboration & Work Management** — issues/discussions/notifications as the social layer.
+5. **Automation & Delivery** — GitHub Actions/CI/CD, event flows, and workflow contracts.
+6. **Security, Compliance & Auditability** — policies, secrets, audit trails, validation reports.
+7. **Observability & Operations** — monitoring, runbooks, SLIs/SLOs, incident response.
+8. **Enablement & Experience** — onboarding, design system, UI themes, references.
+9. **Legacy / To Consolidate** — historical or duplicate docs awaiting consolidation.
+
+### Classification Map (current docs mapped to pillars)
+
+| Pillar | Current coverage |
+| --- | --- |
+| Strategy & Governance | [⭐️/](./⭐️/) (strategic), [strategy-governance/](./strategy-governance/) (includes architecture/, overview/, principles/, Standard.md, Level.md, Platform-0/1/Contract-Management, ng-gighub-tree.md, role.md) |
+| Identity, Access & Tenancy | [identity-tenancy/](./identity-tenancy/) (includes identity/, multi-tenancy/ suites), [account/](./account/) (planned), [SaaS.md](./identity-tenancy/SaaS.md), [saas-ddd-structure.md](./identity-tenancy/saas-ddd-structure.md), [ACCOUNT_CONTEXT_SWITCHER_ANALYSIS.md](./identity-tenancy/ACCOUNT_CONTEXT_SWITCHER_ANALYSIS.md), [ACCOUNT_REORGANIZATION_SUMMARY.md](./identity-tenancy/ACCOUNT_REORGANIZATION_SUMMARY.md) |
+| Source of Truth & Change Control | [change-control/](./change-control/) (api/, data-model/), [reference/](./reference/), [ROUTE_ARCHITECTURE_ANALYSIS.md](./strategy-governance/ROUTE_ARCHITECTURE_ANALYSIS.md), [0.md](./legacy-archive/0.md) |
+| Collaboration & Work Management | (Planned: issues/discussions/notifications) — track gaps in [collaboration/](./collaboration/) |
+| Automation & Delivery | [automation-delivery/](./automation-delivery/) (deployment/, functions/, dev.md, event-bus/), [Global Event Bus.md](./legacy-archive/Global%20Event%20Bus.md), [event-bus(Global Event Bus)-0..9.md](./legacy-archive/event-bus(Global%20Event%20Bus)-0.md) |
+| Security, Compliance & Auditability | [security-compliance/](./security-compliance/) (audit/ suite, security/), [Global Audit Log.md](./security-compliance/Global%20Audit%20Log.md), [Audit Log.md](./security-compliance/Audit%20Log.md), [Identity & Auth.md](./identity-tenancy/Identity%20%26%20Auth.md) |
+| Observability & Operations | [observability-operations/](./observability-operations/) (operations/, topology), [security-compliance/audit/MONITORING_COST_OPTIMIZATION.md](./security-compliance/audit/MONITORING_COST_OPTIMIZATION.md), [Level.md](./strategy-governance/Level.md) (maturity view) |
+| Enablement & Experience | [enablement-experience/](./enablement-experience/) (design/, getting-started/, ui-theme/), [reference/FRONTEND.md](./reference/FRONTEND.md) |
+| Legacy / To Consolidate | [legacy-archive/](./legacy-archive/) (historical event-bus notes, 0.md), [observability-operations/Global全域系統交互拓撲.md](./observability-operations/Global%E5%85%A8%E5%9F%9F%E7%B3%BB%E7%B5%B1%E4%BA%A4%E4%BA%92%E6%8B%93%E6%89%91.md) |
+
+Use the table as the canonical mapping when adding or relocating documents; new docs should declare which pillar they belong to in the opening section.
+
+---
+
+### Ideal Target Directory Layout (GitHub Platform Canonical)
+
+Organize future docs into a predictable, GitHub-governed tree. Create new content under these roots; consolidate legacy items into the matching bucket before adding new folders.
+
+```
+docs/
+├─ ai-governance/              # AI roles, authority boundaries, decision protocols, safety guardrails (protected)
+├─ strategy-governance/        # Ownership, branching, PR policy, risk gates, compliance invariants
+├─ identity-tenancy/           # AuthN/Z, org/blueprint membership, account context switch, roles/permissions
+├─ change-control/             # Repos as contracts, API/interface specs, data contracts, versioning, migrations
+├─ collaboration/              # Issues, discussions, notifications, templates, contribution flows
+├─ automation-delivery/        # Actions/CI-CD, workflows, runners, OIDC, deployment playbooks
+├─ security-compliance/        # Security baselines, secrets, code scanning, audits, validation reports
+├─ observability-operations/   # Monitoring, SLOs/SLIs, runbooks, incident/DR, cost/usage dashboards
+├─ enablement-experience/      # Getting-started, UX/design system, UI themes, reference guides
+└─ legacy-archive/             # Historical/duplicate docs pending rewrite; track migrations here
+```
+
+Naming rules:
+- Prefer lowercase kebab-case directory names above.
+- Files: `<seq>-<area>-<topic>.md` (e.g., `01-strategy-ownership-models.md`).
+- Declare the pillar in the frontmatter or first section for traceability.
+
+Use this layout when creating or moving documents; update the Classification Map after migration.
 
 ---
 
@@ -456,18 +523,19 @@ Before merging documentation changes:
 ## 🔗 Quick Links
 
 ### For Developers
-- [Getting Started](./getting-started/01-dev-quickstart.md) - Development quick start
-- [Architecture Overview](./architecture/01-architecture-overview.md) - System architecture
-- [Core Principles](./principles/01-principles-core-principles.md) - Coding standards
+- [Getting Started](./enablement-experience/getting-started/01-dev-quickstart.md) - Development quick start
+- [Architecture Overview](./strategy-governance/architecture/01-architecture-overview.md) - System architecture
+- [Core Principles](./strategy-governance/principles/01-principles-core-principles.md) - Coding standards
 
 ### For DevOps
-- [Deployment Guide](./deployment/) - Deployment procedures
-- [Operations](./operations/) - Monitoring and operations
-- [Security](./security/01-security-baseline.md) - Security guidelines
+- [Deployment Guide](./automation-delivery/deployment/) - Deployment procedures
+- [Event Bus Docs](./automation-delivery/event-bus/) - Event bus operational docs
+- [Operations](./observability-operations/operations/) - Monitoring and operations
+- [Security](./security-compliance/security/01-security-baseline.md) - Security guidelines
 
 ### For System Administrators
-- [Audit System Runbook](./audit/PRODUCTION_RUNBOOK.md) - Audit operations
-- [Monitoring](./operations/06-monitoring-executive-summary.md) - Monitoring summary
+- [Audit System Runbook](./security-compliance/audit/PRODUCTION_RUNBOOK.md) - Audit operations
+- [Monitoring](./observability-operations/operations/06-monitoring-executive-summary.md) - Monitoring summary
 
 ### For Architects
 - [Strategic Architecture](./⭐️/) - Strategic documents

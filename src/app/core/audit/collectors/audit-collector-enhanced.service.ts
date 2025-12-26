@@ -1,25 +1,25 @@
 /**
  * Enhanced Audit Collector Service (v3.0.0 - Unified Audit Infrastructure)
- * 
+ *
  * Bridges BlueprintEventBus with the new Global Audit System:
  * - Subscribes to domain events (blueprint.*, task.*, user.*, auth.*, etc.)
  * - Auto-classifies events via ClassificationEngineService
  * - Batches events (50 events or 5 seconds whichever first)
  * - Persists to multi-tier Firestore storage via AuditEventRepository
  * - Circuit breaker for storage failures (3 failures → DLQ fallback)
- * 
+ *
  * Integration Strategy:
  * - Extends existing audit-collector.service.ts (v2.0.0) functionality
  * - Reuses BlueprintEventBus subscription patterns
  * - Delegates classification to ClassificationEngineService
  * - Delegates storage to AuditEventRepository
  * - Maintains backward compatibility with manual audit recording
- * 
+ *
  * Architecture Alignment:
  * - Layer 3 (Audit Collector) in 8-layer topology
  * - Connects Layer 1-2 (Event Sources, Event Bus) → Layer 4-6 (Classification, Storage, Query)
  * - Follows GitHub Master System event-driven patterns
- * 
+ *
  * @version 3.0.0
  * @author Audit System Team
  * @date 2025-12-26
@@ -33,8 +33,8 @@ import { buffer, filter } from 'rxjs/operators';
 // Existing infrastructure
 import { BlueprintEventBus } from '@core/services/blueprint-event-bus.service';
 import { LoggerService } from '@core/services/logger';
-import { TenantContextService } from '@core/global-event-bus/services/tenant-context.service';
-import { DomainEvent } from '@core/global-event-bus/models/base-event';
+import { TenantContextService } from '@core/event-bus/services/tenant-context.service';
+import { DomainEvent } from '@core/event-bus/models/base-event';
 
 // New audit infrastructure
 import { ClassificationEngineService } from '../services/classification-engine.service';
@@ -69,17 +69,17 @@ interface CircuitBreakerState {
  * Event subscription topic patterns
  */
 const AUDIT_TOPIC_PATTERNS = [
-  'blueprint.*',       // All blueprint events
-  'task.*',            // All task events
-  'user.*',            // All user events
-  'auth.*',            // All authentication events
-  'permission.*',      // All permission events
-  'data.*',            // All data access events
-  'ai.*',              // All AI decision events
-  'system.*',          // All system events
-  'error.*',           // All error events
-  'security.*',        // All security events
-  'compliance.*'       // All compliance events
+  'blueprint.*', // All blueprint events
+  'task.*', // All task events
+  'user.*', // All user events
+  'auth.*', // All authentication events
+  'permission.*', // All permission events
+  'data.*', // All data access events
+  'ai.*', // All AI decision events
+  'system.*', // All system events
+  'error.*', // All error events
+  'security.*', // All security events
+  'compliance.*' // All compliance events
 ];
 
 @Injectable({ providedIn: 'root' })
@@ -132,14 +132,15 @@ export class AuditCollectorEnhancedService implements OnDestroy {
     this.logger.debug('[AuditCollectorEnhanced]', `Subscribing to ${AUDIT_TOPIC_PATTERNS.length} topic patterns`);
 
     AUDIT_TOPIC_PATTERNS.forEach(pattern => {
-      this.eventBus.subscribe(pattern)
+      this.eventBus
+        .subscribe(pattern)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (event: DomainEvent) => {
             this.stats.eventsCollected++;
             this.eventBuffer$.next(event);
           },
-          error: (error) => {
+          error: error => {
             this.logger.error('[AuditCollectorEnhanced]', `Subscription error for ${pattern}`, error);
           }
         });
@@ -158,9 +159,7 @@ export class AuditCollectorEnhancedService implements OnDestroy {
       buffer(this.eventBuffer$.pipe(filter((_, index) => (index + 1) % this.batchConfig.maxSize === 0)))
     );
 
-    const timeTrigger$ = this.eventBuffer$.pipe(
-      buffer(interval(this.batchConfig.maxWaitMs))
-    );
+    const timeTrigger$ = this.eventBuffer$.pipe(buffer(interval(this.batchConfig.maxWaitMs)));
 
     // Merge both triggers and process batches
     sizeTrigger$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(batch => this.processBatch(batch));
@@ -170,7 +169,10 @@ export class AuditCollectorEnhancedService implements OnDestroy {
       }
     });
 
-    this.logger.info('[AuditCollectorEnhanced]', `Batch processing initialized (max: ${this.batchConfig.maxSize} events, ${this.batchConfig.maxWaitMs}ms)`);
+    this.logger.info(
+      '[AuditCollectorEnhanced]',
+      `Batch processing initialized (max: ${this.batchConfig.maxSize} events, ${this.batchConfig.maxWaitMs}ms)`
+    );
   }
 
   /**
@@ -201,7 +203,7 @@ export class AuditCollectorEnhancedService implements OnDestroy {
       const classifiedEvents = auditEvents.map(event => {
         const classification = this.classificationEngine.classify(event);
         this.stats.eventsClassified++;
-        
+
         return {
           ...event,
           category: classification.category,
@@ -214,7 +216,7 @@ export class AuditCollectorEnhancedService implements OnDestroy {
 
       // Persist batch to Firestore
       await this.auditRepository.createBatch(classifiedEvents);
-      
+
       this.stats.eventsPersisted += classifiedEvents.length;
       this.stats.batchesFlushed++;
       this.resetCircuitBreaker(); // Success - reset failure counter
@@ -231,13 +233,13 @@ export class AuditCollectorEnhancedService implements OnDestroy {
    */
   private convertDomainEventToAuditEvent(domainEvent: DomainEvent): AuditEvent {
     const tenantId = this.extractTenantId(domainEvent);
-    
+
     return {
       id: '', // Will be set by repository
       blueprintId: tenantId || domainEvent.blueprintId || 'unknown',
       timestamp: domainEvent.timestamp || new Date(),
       sequenceNumber: 0, // Will be set by repository
-      
+
       // Actor mapping
       actor: {
         id: domainEvent.userId || domainEvent.actorId || 'system',
@@ -250,13 +252,15 @@ export class AuditCollectorEnhancedService implements OnDestroy {
       eventType: domainEvent.type,
       category: EventCategory.SYSTEM_EVENT, // Will be overridden by classification
       level: EventSeverity.LOW, // Will be overridden by classification
-      
+
       // Entity tracking
-      entity: domainEvent.entityId ? {
-        id: domainEvent.entityId,
-        type: domainEvent.entityType || 'unknown',
-        name: domainEvent.entityName || domainEvent.entityId
-      } : undefined,
+      entity: domainEvent.entityId
+        ? {
+            id: domainEvent.entityId,
+            type: domainEvent.entityType || 'unknown',
+            name: domainEvent.entityName || domainEvent.entityId
+          }
+        : undefined,
 
       // Operation tracking
       operationType: this.inferOperationType(domainEvent.type),
@@ -295,10 +299,7 @@ export class AuditCollectorEnhancedService implements OnDestroy {
    * Priority: blueprintId > tenantId > context service
    */
   private extractTenantId(event: DomainEvent): string | undefined {
-    return event.blueprintId || 
-           (event as any).tenantId || 
-           this.tenantContext.getCurrentTenantId() || 
-           undefined;
+    return event.blueprintId || (event as any).tenantId || this.tenantContext.getCurrentTenantId() || undefined;
   }
 
   /**
@@ -342,7 +343,7 @@ export class AuditCollectorEnhancedService implements OnDestroy {
     if (this.circuitBreaker.consecutiveFailures >= this.circuitBreaker.maxFailures) {
       this.circuitBreaker.isOpen = true;
       this.stats.circuitBreakerTrips++;
-      
+
       this.logger.warn('[AuditCollectorEnhanced]', 'Circuit breaker OPENED due to consecutive failures', {
         failures: this.circuitBreaker.consecutiveFailures,
         resetTimeoutMs: this.circuitBreaker.resetTimeoutMs
@@ -407,11 +408,13 @@ export class AuditCollectorEnhancedService implements OnDestroy {
       eventType,
       category: EventCategory.SYSTEM_EVENT, // Will be classified
       level: EventSeverity.LOW, // Will be classified
-      entity: options.entityId ? {
-        id: options.entityId,
-        type: options.entityType || 'unknown',
-        name: options.entityId
-      } : undefined,
+      entity: options.entityId
+        ? {
+            id: options.entityId,
+            type: options.entityType || 'unknown',
+            name: options.entityId
+          }
+        : undefined,
       operationType: options.operationType,
       changes: options.changes,
       riskScore: 0,

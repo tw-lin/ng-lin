@@ -1,26 +1,26 @@
 /**
  * Audit Classification Engine Service
- * 
+ *
  * 審計分類引擎服務
  * - Integrates with existing AuditCollectorService and AuditLogService
  * - Automatically classifies audit events based on GitHub Master System patterns
  * - Supports 11-category taxonomy with severity leveling
  * - Firebase-native, minimal code approach (extends existing infrastructure)
- * 
+ *
  * Integration Strategy:
  * - REUSES: AuditLevel, AuditCategory enums from existing audit-event.model.ts
  * - EXTENDS: AuditCollectorService with classification logic
  * - NO NEW EVENT BUS: Uses existing BlueprintEventBus infrastructure
- * 
+ *
  * Follows: docs/⭐️/🤖AI_Character_Profile_Impl.md (Minimal Code, Equivalent Outcome)
  * Follows: docs/⭐️/🧠AI_Behavior_Guidelines.md (5-Step Mandatory Workflow)
- * 
+ *
  * @author Audit System Team
  * @version 1.0.0 - Classification Layer (Layer 4)
  */
 
 import { Injectable, inject } from '@angular/core';
-import { AuditLevel, AuditCategory, AuditEvent } from '../../global-event-bus/models/audit-event.model';
+import { AuditLevel, AuditCategory, AuditEvent } from '../../event-bus/models/audit-event.model';
 
 /**
  * Classification Result
@@ -366,14 +366,14 @@ export class ClassificationEngineService {
 
   /**
    * 分類審計事件 (核心方法)
-   * 
+   *
    * @param event - 原始審計事件
    * @returns 分類後的審計事件
    */
   classify(event: AuditEvent): ClassifiedAuditEvent {
     // Find matching rule
     const rule = this.findMatchingRule(event.eventType);
-    
+
     if (!rule) {
       // Fallback to default classification
       return this.applyDefaultClassification(event);
@@ -484,11 +484,7 @@ export class ClassificationEngineService {
    * 私有方法: 檢查是否為高風險操作
    */
   private isHighRiskAction(action: string): boolean {
-    const highRiskKeywords = [
-      'delete', 'remove', 'revoke', 'disable',
-      'admin', 'owner', 'superuser',
-      'password', 'mfa', 'token'
-    ];
+    const highRiskKeywords = ['delete', 'remove', 'revoke', 'disable', 'admin', 'owner', 'superuser', 'password', 'mfa', 'token'];
 
     const actionLower = action.toLowerCase();
     return highRiskKeywords.some(keyword => actionLower.includes(keyword));
